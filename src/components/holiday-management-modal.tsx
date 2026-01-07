@@ -1,8 +1,8 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useState, useEffect, useMemo } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import {
   Dialog,
   DialogContent,
@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from '@/components/ui/dialog';
+} from '@/components/ui/dialog'
 import {
   Form,
   FormControl,
@@ -18,55 +18,58 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { DatePicker } from './date-picker';
-import { ScrollArea } from './ui/scroll-area';
-import { useToast } from '@/hooks/use-toast';
-import {
-  Holiday,
-  HolidayFormData,
-  HolidaySchema,
-} from '@/lib/types';
+} from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { DatePicker } from './date-picker'
+import { ScrollArea } from './ui/scroll-area'
+import { useToast } from '@/hooks/use-toast'
+import { Holiday, HolidayFormData, HolidaySchema } from '@/lib/types'
 import {
   getHolidaysFromStorage,
   createOrUpdateHoliday,
   deleteHoliday,
-} from '@/lib/actions';
-import { Trash2, Edit, PlusCircle } from 'lucide-react';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+} from '@/lib/actions'
+import { Trash2, Edit, PlusCircle } from 'lucide-react'
+import { format, getYear } from 'date-fns'
+import { es } from 'date-fns/locale'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 function HolidayForm({
   holiday,
   onSave,
   onCancel,
 }: {
-  holiday?: Holiday | null;
-  onSave: () => void;
-  onCancel: () => void;
+  holiday?: Holiday | null
+  onSave: () => void
+  onCancel: () => void
 }) {
-  const { toast } = useToast();
+  const { toast } = useToast()
   const form = useForm<HolidayFormData>({
     resolver: zodResolver(HolidaySchema),
     defaultValues: {
       name: holiday?.name || '',
       date: holiday?.date ? new Date(holiday.date) : undefined,
     },
-  });
+  })
 
   const onFormSubmit = async (data: HolidayFormData) => {
-    const result = await createOrUpdateHoliday(data, holiday?.id);
+    const result = await createOrUpdateHoliday(data, holiday?.id)
     toast({
       title: result.success ? 'Éxito' : 'Error',
       description: result.message,
       variant: result.success ? 'default' : 'destructive',
-    });
+    })
     if (result.success) {
-      onSave();
+      onSave()
     }
-  };
+  }
 
   return (
     <Form {...form}>
@@ -103,71 +106,82 @@ function HolidayForm({
         </div>
       </form>
     </Form>
-  );
+  )
 }
 
 export function HolidayManagementModal({
   isOpen,
   onClose,
 }: {
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen: boolean
+  onClose: () => void
 }) {
-  const { toast } = useToast();
-  const [holidays, setHolidays] = useState<Holiday[]>([]);
-  const [editingHoliday, setEditingHoliday] = useState<Holiday | null>(null);
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const { toast } = useToast()
+  const [holidays, setHolidays] = useState<Holiday[]>([])
+  const [editingHoliday, setEditingHoliday] = useState<Holiday | null>(null)
+  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [yearFilter, setYearFilter] = useState<number>(new Date().getFullYear())
 
   const fetchHolidays = () => {
-    const storedHolidays = getHolidaysFromStorage();
-    storedHolidays.sort((a, b) => a.date.getTime() - b.date.getTime());
-    setHolidays(storedHolidays);
-  };
+    const storedHolidays = getHolidaysFromStorage()
+    storedHolidays.sort((a, b) => a.date.getTime() - b.date.getTime())
+    setHolidays(storedHolidays)
+  }
 
   useEffect(() => {
     if (isOpen) {
-      fetchHolidays();
+      fetchHolidays()
     }
-  }, [isOpen]);
+  }, [isOpen])
+
+  const { uniqueYears, filteredHolidays } = useMemo(() => {
+    const years = new Set<number>()
+    holidays.forEach((h) => years.add(getYear(h.date)))
+    const sortedYears = Array.from(years).sort((a, b) => a - b)
+
+    const filtered = holidays.filter((h) => getYear(h.date) === yearFilter)
+
+    return { uniqueYears: sortedYears, filteredHolidays: filtered }
+  }, [holidays, yearFilter])
 
   const handleAddNew = () => {
-    setEditingHoliday(null);
-    setIsFormOpen(true);
-  };
+    setEditingHoliday(null)
+    setIsFormOpen(true)
+  }
 
   const handleEdit = (holiday: Holiday) => {
-    setEditingHoliday(holiday);
-    setIsFormOpen(true);
-  };
+    setEditingHoliday(holiday)
+    setIsFormOpen(true)
+  }
 
   const handleDelete = async (holidayId: string) => {
-    const result = await deleteHoliday(holidayId);
+    const result = await deleteHoliday(holidayId)
     toast({
       title: result.success ? 'Éxito' : 'Error',
       description: result.message,
       variant: result.success ? 'default' : 'destructive',
-    });
+    })
     if (result.success) {
-      fetchHolidays();
+      fetchHolidays()
     }
-  };
+  }
 
   const handleSave = () => {
-    setIsFormOpen(false);
-    setEditingHoliday(null);
-    fetchHolidays();
-  };
-  
+    setIsFormOpen(false)
+    setEditingHoliday(null)
+    fetchHolidays()
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-xl">
+      <DialogContent className="max-w-xl h-[75vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Gestionar Feriados</DialogTitle>
           <DialogDescription>
             Añade, edita o elimina los feriados del calendario.
           </DialogDescription>
         </DialogHeader>
-        <div className="py-4">
+        <div className="flex-1 flex flex-col overflow-hidden">
           {isFormOpen ? (
             <HolidayForm
               holiday={editingHoliday}
@@ -175,16 +189,31 @@ export function HolidayManagementModal({
               onCancel={() => setIsFormOpen(false)}
             />
           ) : (
-            <>
-              <div className="flex justify-end mb-4">
-                 <Button size="sm" onClick={handleAddNew}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Añadir Feriado
+            <div className="flex-1 flex flex-col min-h-0">
+              <div className="flex justify-between items-center mb-4">
+                <Select
+                  value={yearFilter.toString()}
+                  onValueChange={(value) => setYearFilter(Number(value))}
+                >
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Seleccionar año" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {uniqueYears.map((y) => (
+                      <SelectItem key={y} value={y.toString()}>
+                        {y}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button size="sm" onClick={handleAddNew}>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Añadir Feriado
                 </Button>
               </div>
-              <ScrollArea className="h-72">
+              <ScrollArea className="flex-1 -mr-6">
                 <div className="space-y-2 pr-6">
-                  {holidays.map((holiday) => (
+                  {filteredHolidays.map((holiday) => (
                     <div
                       key={holiday.id}
                       className="flex items-center justify-between rounded-md border p-3"
@@ -214,15 +243,22 @@ export function HolidayManagementModal({
                       </div>
                     </div>
                   ))}
+                  {filteredHolidays.length === 0 && (
+                    <div className="text-center text-muted-foreground py-10">
+                      No hay feriados para el año seleccionado.
+                    </div>
+                  )}
                 </div>
               </ScrollArea>
-            </>
+            </div>
           )}
         </div>
-         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cerrar</Button>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Cerrar
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
