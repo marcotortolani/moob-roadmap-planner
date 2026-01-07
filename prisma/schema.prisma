@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL")
+}
+
+model Product {
+  id               String      @id @default(cuid())
+  name             String
+  operator         String
+  country          String
+  language         String
+  startDate        DateTime
+  endDate          DateTime
+  productiveUrl    String?
+  vercelDemoUrl    String?
+  wpContentProdUrl String?
+  wpContentTestUrl String?
+  chatbotUrl       String?
+  comments         String?
+  cardColor        String      @default("#778899")
+  status           Status      @default(PLANNED)
+  milestones       Milestone[]
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+}
+
+model Milestone {
+  id        String   @id @default(cuid())
+  name      String
+  startDate DateTime
+  endDate   DateTime
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Status {
+  PLANNED
+  IN_PROGRESS
+  DEMO_OK
+  LIVE
+}

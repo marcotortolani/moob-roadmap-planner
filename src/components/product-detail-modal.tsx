@@ -1,0 +1,234 @@
+// src/components/product-detail-modal.tsx
+
+'use client';
+
+import { useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Product, User } from '@/lib/types';
+import { STATUS_OPTIONS, MILESTONE_STATUS_OPTIONS } from '@/lib/constants';
+import { COUNTRIES } from '@/lib/countries';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { Calendar, Smartphone, Globe, Link as LinkIcon, MessageSquare, CheckCircle, Circle, Clock, Copy, Edit, FilePlus, User as UserIcon, CalendarClock } from 'lucide-react';
+import { Button } from './ui/button';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
+import ProductForm from './product-form';
+import { useAuth } from '@/context/auth-context';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+
+const getMilestoneStatusInfo = (status: any) => {
+    const statusOption = MILESTONE_STATUS_OPTIONS.find(s => s.value === status);
+    switch (status) {
+        case 'COMPLETED':
+            return { Icon: CheckCircle, color: 'text-green-500', label: statusOption?.label || 'Completado' };
+        case 'IN_PROGRESS':
+            return { Icon: Circle, color: 'text-blue-500', label: statusOption?.label || 'En progreso' };
+        case 'PENDING':
+        default:
+            return { Icon: Clock, color: 'text-gray-500', label: statusOption?.label || 'Programado' };
+    }
+};
+
+function InfoSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <h3 className="mb-2 text-lg font-semibold tracking-tight">{title}</h3>
+      <div className="space-y-2">{children}</div>
+    </div>
+  );
+}
+
+function InfoItem({ icon: Icon, label, value, isLink = false, flag }: { icon: React.ElementType; label:string; value?: string | null; isLink?: boolean, flag?: string | null; }) {
+  const { toast } = useToast();
+  if (!value) return null;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(value);
+    toast({
+      title: 'Copiado!',
+      description: 'El enlace ha sido copiado al portapapeles.',
+    });
+  };
+
+  return (
+    <div className="flex items-start gap-3 text-sm group">
+        <div className="w-4 flex-shrink-0 mt-1 flex items-center text-muted-foreground">
+            {flag ? <span className="text-lg">{flag}</span> : <Icon className="h-4 w-4" />}
+        </div>
+      <div className="flex-1">
+        <p className="font-medium text-foreground">{label}</p>
+        {isLink ? (
+          <div className="flex items-center gap-2">
+            <a href={value} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline break-all">
+              {value}
+            </a>
+            <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={handleCopy}>
+                <Copy className="h-3 w-3" />
+            </Button>
+          </div>
+        ) : (
+          <p className="text-muted-foreground break-words">{value}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+function AuditInfoItem({ icon: Icon, label, user, date }: { icon: React.ElementType, label: string, user?: User | null, date?: Date | null }) {
+    if (!user || !date) return null;
+    return (
+        <div className="flex items-start gap-3 text-sm group">
+            <div className="w-4 flex-shrink-0 mt-1 flex items-center text-muted-foreground">
+                <Icon className="h-4 w-4" />
+            </div>
+            <div className="flex-1">
+                <p className="font-medium text-foreground">{label}</p>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                    <Avatar className="h-5 w-5">
+                        <AvatarImage src={user.avatarUrl} alt={user.name} />
+                        <AvatarFallback>{user.name?.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <span>{user.name}</span>
+                    <span>•</span>
+                    <span>{format(date, "d MMM, yyyy 'a las' HH:mm", { locale: es })}</span>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+export function ProductDetailModal({ product, isOpen, onClose }: { product: Product; isOpen: boolean; onClose: () => void }) {
+  const { user: authUser } = useAuth();
+  const status = STATUS_OPTIONS.find((s) => s.value === product.status);
+  const country = COUNTRIES.find((c) => c.code === product.country);
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent 
+        className="max-w-3xl max-h-[90vh] overflow-y-auto p-0"
+      >
+        <div className="p-6" style={{ borderLeft: `6px solid ${product.cardColor}` }}>
+        <DialogHeader>
+          <div className="flex items-start justify-between">
+            <div>
+                <DialogTitle className="text-2xl font-headline text-foreground">
+                    {product.name}
+                </DialogTitle>
+                <DialogDescription>Detalles completos del producto</DialogDescription>
+            </div>
+            <div className="flex items-center gap-2">
+                {status && <Badge variant="secondary" className="text-base">{status.label}</Badge>}
+                {authUser && (
+                     <Sheet>
+                        <SheetTrigger asChild>
+                            <Button variant="outline" size="icon">
+                                <Edit className="h-4 w-4" />
+                            </Button>
+                        </SheetTrigger>
+                        <SheetContent className="w-full sm:max-w-3xl overflow-y-auto">
+                            <ProductForm product={product} />
+                        </SheetContent>
+                    </Sheet>
+                )}
+            </div>
+          </div>
+        </DialogHeader>
+        
+        <div className="grid gap-6 py-4">
+          <InfoSection title="Información General">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <InfoItem icon={Smartphone} label="Operador" value={product.operator} />
+                <InfoItem icon={Globe} label="País" value={country?.name} flag={country?.flag} />
+                <InfoItem icon={Globe} label="Idioma" value={product.language} />
+            </div>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <InfoItem
+                    icon={Calendar}
+                    label="Fecha de Inicio"
+                    value={format(product.startDate, "d 'de' MMMM, yyyy", { locale: es })}
+                />
+                <InfoItem
+                    icon={Calendar}
+                    label="Fecha de Fin"
+                    value={format(product.endDate, "d 'de' MMMM, yyyy", { locale: es })}
+                />
+            </div>
+          </InfoSection>
+
+          <Separator />
+
+          {product.milestones && product.milestones.length > 0 && (
+            <>
+              <InfoSection title="Hitos Clave">
+                <div className="space-y-4">
+                  {product.milestones.map((milestone) => {
+                     const statusInfo = getMilestoneStatusInfo(milestone.status);
+                     return (
+                        <div key={milestone.id} className="flex items-start gap-4 rounded-md border p-3">
+                             <statusInfo.Icon className={`h-6 w-6 mt-1 flex-shrink-0 ${statusInfo.color}`} />
+                             <div className="flex-1">
+                                <p className="font-semibold">{milestone.name}</p>
+                                <p className="text-sm text-muted-foreground">
+                                    {format(milestone.startDate, 'dd MMM', { locale: es })} - {format(milestone.endDate, 'dd MMM yyyy', { locale: es })}
+                                </p>
+                             </div>
+                             <Badge variant="outline">{statusInfo.label}</Badge>
+                        </div>
+                     )
+                  })}
+                </div>
+              </InfoSection>
+              <Separator />
+            </>
+          )}
+
+          <InfoSection title="URLs">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <InfoItem icon={LinkIcon} label="URL Productiva" value={product.productiveUrl} isLink />
+                <InfoItem icon={LinkIcon} label="URL Demo Vercel" value={product.vercelDemoUrl} isLink />
+                <InfoItem icon={LinkIcon} label="URL Content Prod (WP)" value={product.wpContentProdUrl} isLink />
+                <InfoItem icon={LinkIcon} label="URL Content Test (WP)" value={product.wpContentTestUrl} isLink />
+                <InfoItem icon={LinkIcon} label="URL Chatbot" value={product.chatbotUrl} isLink />
+                {product.customUrls?.map(customUrl => (
+                    <InfoItem key={customUrl.id} icon={FilePlus} label={customUrl.label} value={customUrl.url} isLink />
+                ))}
+            </div>
+          </InfoSection>
+
+          {(product.createdBy || product.updatedBy) && <Separator />}
+
+          <InfoSection title="Historial de Cambios">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <AuditInfoItem icon={UserIcon} label="Creado por" user={product.createdBy} date={product.createdAt} />
+                <AuditInfoItem icon={CalendarClock} label="Última modificación" user={product.updatedBy} date={product.updatedAt} />
+            </div>
+          </InfoSection>
+
+          {product.comments && (
+             <>
+                <Separator />
+                <InfoSection title="Comentarios">
+                    <div className="flex items-start gap-3 text-sm text-muted-foreground p-3 bg-muted/50 rounded-md">
+                        <MessageSquare className="h-4 w-4 flex-shrink-0 mt-1" />
+                        <p className="flex-1 whitespace-pre-wrap">{product.comments}</p>
+                    </div>
+                </InfoSection>
+             </>
+          )}
+        </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
