@@ -8,11 +8,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useFieldArray } from 'react-hook-form';
 import { PlusCircle, Trash2 } from 'lucide-react';
 
-import { ProductFormData, ProductSchema, Product, MilestoneStatus, Status } from '@/lib/types';
-import { createOrUpdateProduct } from '@/lib/actions';
+import { ProductFormData, ProductSchema, Product, MilestoneStatus, Status, Holiday } from '@/lib/types';
+import { createOrUpdateProduct, getHolidaysFromStorage } from '@/lib/actions';
 import { STATUS_OPTIONS, DEFAULT_COLORS, MILESTONE_STATUS_OPTIONS } from '@/lib/constants';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/auth-context';
+import { addBusinessDays, countBusinessDays } from '@/lib/business-days';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -47,6 +50,9 @@ export default function ProductForm({ product }: { product?: Product }) {
   const { toast } = useToast();
   const { user } = useAuth();
   const [isPending, setIsPending] = useState(false);
+  const [holidays, setHolidays] = useState<Holiday[]>([]);
+  const [dateInputMode, setDateInputMode] = useState<'manual' | 'business-days'>('business-days');
+  const [businessDaysCount, setBusinessDaysCount] = useState<number>(1);
 
   const form = useForm<ProductFormData>({
     resolver: zodResolver(ProductSchema),
@@ -79,7 +85,29 @@ export default function ProductForm({ product }: { product?: Product }) {
     control: form.control,
     name: 'customUrls',
   });
-  
+
+  // Load holidays and calculate business days count if editing
+  useEffect(() => {
+    const fetchHolidays = () => {
+      setHolidays(getHolidaysFromStorage());
+    };
+
+    fetchHolidays();
+    window.addEventListener('storage', fetchHolidays);
+
+    // Calculate initial business days if product exists
+    if (product?.startDate && product?.endDate) {
+      const count = countBusinessDays(
+        new Date(product.startDate),
+        new Date(product.endDate),
+        getHolidaysFromStorage()
+      );
+      setBusinessDaysCount(count);
+    }
+
+    return () => window.removeEventListener('storage', fetchHolidays);
+  }, [product]);
+
   const onFormSubmit = async (data: ProductFormData) => {
     if (!user) {
         toast({ title: 'No autorizado', description: 'Debes iniciar sesión para realizar esta acción.', variant: 'destructive' });
@@ -167,36 +195,94 @@ export default function ProductForm({ product }: { product?: Product }) {
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-               <FormField
-                control={form.control}
-                name="startDate"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Fecha de Inicio</FormLabel>
-                    <DatePicker
-                      value={field.value}
-                      onChange={field.onChange}
-                    />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="endDate"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Fecha de Finalización</FormLabel>
-                    <DatePicker
-                      value={field.value}
-                      onChange={field.onChange}
-                    />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            {dateInputMode === 'manual' ? (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="startDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Fecha de Inicio</FormLabel>
+                      <DatePicker
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="endDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Fecha de Finalización</FormLabel>
+                      <DatePicker
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="startDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Fecha de Inicio</FormLabel>
+                      <DatePicker
+                        value={field.value}
+                        onChange={(date) => {
+                          field.onChange(date);
+                          // Auto-calculate end date when start date changes
+                          if (date && businessDaysCount > 0) {
+                            const endDate = addBusinessDays(date, businessDaysCount - 1, holidays);
+                            form.setValue('endDate', endDate);
+                          }
+                        }}
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div>
+                  <FormLabel>Días Laborables de Duración</FormLabel>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={businessDaysCount}
+                    onChange={(e) => {
+                      const count = parseInt(e.target.value) || 1;
+                      setBusinessDaysCount(count);
+
+                      const startDate = form.watch('startDate');
+                      if (startDate) {
+                        const endDate = addBusinessDays(startDate, count - 1, holidays);
+                        form.setValue('endDate', endDate);
+                      }
+                    }}
+                    className="mt-2"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Fecha fin calculada: {form.watch('endDate') ? format(form.watch('endDate'), 'PP', { locale: es }) : '-'}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setDateInputMode(mode => mode === 'manual' ? 'business-days' : 'manual')}
+              className="w-full sm:w-auto"
+            >
+              {dateInputMode === 'manual' ? '📅 Usar días laborables' : '📝 Entrada manual de fechas'}
+            </Button>
           </div>
           
           <Separator />

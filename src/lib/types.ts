@@ -125,3 +125,19 @@ export const UserProfileSchema = z.object({
 });
 
 export type UserProfileFormData = z.infer<typeof UserProfileSchema>;
+
+// Drag and Drop Types
+export type DragCardType = 'first' | 'last' | 'middle' | 'single';
+
+export interface ProductDragData {
+  productId: string;
+  type: DragCardType;
+  date: Date;
+  product: Product;
+}
+
+export interface DayCellDropData {
+  date: Date;
+  isHoliday: boolean;
+  isBusinessDay: boolean;
+}
