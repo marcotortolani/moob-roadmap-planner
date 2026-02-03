@@ -3,6 +3,7 @@
 'use client';
 
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Dialog,
   DialogContent,
@@ -108,6 +109,41 @@ function AuditInfoItem({ icon: Icon, label, user, date }: { icon: React.ElementT
     )
 }
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.1,
+    },
+  },
+  exit: {
+    opacity: 0,
+    transition: {
+      staggerChildren: 0.05,
+      staggerDirection: -1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: 'spring',
+      stiffness: 300,
+      damping: 24,
+    },
+  },
+  exit: {
+    opacity: 0,
+    y: -10,
+  },
+};
+
 export function ProductDetailModal({ product, isOpen, onClose }: { product: Product; isOpen: boolean; onClose: () => void }) {
   const { user: authUser } = useAuth();
   const status = STATUS_OPTIONS.find((s) => s.value === product.status);
@@ -115,10 +151,17 @@ export function ProductDetailModal({ product, isOpen, onClose }: { product: Prod
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent 
+      <DialogContent
         className="max-w-3xl max-h-[90vh] overflow-y-auto p-0"
       >
-        <div className="p-6" style={{ borderLeft: `6px solid ${product.cardColor}` }}>
+        <motion.div
+          className="p-6"
+          style={{ borderLeft: `6px solid ${product.cardColor}` }}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 0.2 }}
+        >
         <DialogHeader>
           <div className="flex items-start justify-between">
             <div>
@@ -144,90 +187,116 @@ export function ProductDetailModal({ product, isOpen, onClose }: { product: Prod
             </div>
           </div>
         </DialogHeader>
-        
-        <div className="grid gap-6 py-4">
-          <InfoSection title="Información General">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <InfoItem icon={Smartphone} label="Operador" value={product.operator} />
-                <InfoItem icon={Globe} label="País" value={country?.name} flag={country?.flag} />
-                <InfoItem icon={Globe} label="Idioma" value={product.language} />
-            </div>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <InfoItem
-                    icon={Calendar}
-                    label="Fecha de Inicio"
-                    value={format(product.startDate, "d 'de' MMMM, yyyy", { locale: es })}
-                />
-                <InfoItem
-                    icon={Calendar}
-                    label="Fecha de Fin"
-                    value={format(product.endDate, "d 'de' MMMM, yyyy", { locale: es })}
-                />
-            </div>
-          </InfoSection>
 
-          <Separator />
+        <motion.div
+          className="grid gap-6 py-4"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+        >
+          <motion.div variants={itemVariants}>
+            <InfoSection title="Información General">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <InfoItem icon={Smartphone} label="Operador" value={product.operator} />
+                  <InfoItem icon={Globe} label="País" value={country?.name} flag={country?.flag} />
+                  <InfoItem icon={Globe} label="Idioma" value={product.language} />
+              </div>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <InfoItem
+                      icon={Calendar}
+                      label="Fecha de Inicio"
+                      value={format(product.startDate, "d 'de' MMMM, yyyy", { locale: es })}
+                  />
+                  <InfoItem
+                      icon={Calendar}
+                      label="Fecha de Fin"
+                      value={format(product.endDate, "d 'de' MMMM, yyyy", { locale: es })}
+                  />
+              </div>
+            </InfoSection>
+          </motion.div>
+
+          <motion.div variants={itemVariants}>
+            <Separator />
+          </motion.div>
 
           {product.milestones && product.milestones.length > 0 && (
             <>
-              <InfoSection title="Hitos Clave">
-                <div className="space-y-4">
-                  {product.milestones.map((milestone) => {
-                     const statusInfo = getMilestoneStatusInfo(milestone.status);
-                     return (
-                        <div key={milestone.id} className="flex items-start gap-4 rounded-md border p-3">
-                             <statusInfo.Icon className={`h-6 w-6 mt-1 flex-shrink-0 ${statusInfo.color}`} />
-                             <div className="flex-1">
-                                <p className="font-semibold">{milestone.name}</p>
-                                <p className="text-sm text-muted-foreground">
-                                    {format(milestone.startDate, 'dd MMM', { locale: es })} - {format(milestone.endDate, 'dd MMM yyyy', { locale: es })}
-                                </p>
-                             </div>
-                             <Badge variant="outline">{statusInfo.label}</Badge>
-                        </div>
-                     )
-                  })}
-                </div>
-              </InfoSection>
-              <Separator />
+              <motion.div variants={itemVariants}>
+                <InfoSection title="Hitos Clave">
+                  <div className="space-y-4">
+                    {product.milestones.map((milestone) => {
+                       const statusInfo = getMilestoneStatusInfo(milestone.status);
+                       return (
+                          <div key={milestone.id} className="flex items-start gap-4 rounded-md border p-3">
+                               <statusInfo.Icon className={`h-6 w-6 mt-1 flex-shrink-0 ${statusInfo.color}`} />
+                               <div className="flex-1">
+                                  <p className="font-semibold">{milestone.name}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                      {format(milestone.startDate, 'dd MMM', { locale: es })} - {format(milestone.endDate, 'dd MMM yyyy', { locale: es })}
+                                  </p>
+                               </div>
+                               <Badge variant="outline">{statusInfo.label}</Badge>
+                          </div>
+                       )
+                    })}
+                  </div>
+                </InfoSection>
+              </motion.div>
+              <motion.div variants={itemVariants}>
+                <Separator />
+              </motion.div>
             </>
           )}
 
-          <InfoSection title="URLs">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <InfoItem icon={LinkIcon} label="URL Productiva" value={product.productiveUrl} isLink />
-                <InfoItem icon={LinkIcon} label="URL Demo Vercel" value={product.vercelDemoUrl} isLink />
-                <InfoItem icon={LinkIcon} label="URL Content Prod (WP)" value={product.wpContentProdUrl} isLink />
-                <InfoItem icon={LinkIcon} label="URL Content Test (WP)" value={product.wpContentTestUrl} isLink />
-                <InfoItem icon={LinkIcon} label="URL Chatbot" value={product.chatbotUrl} isLink />
-                {product.customUrls?.map(customUrl => (
-                    <InfoItem key={customUrl.id} icon={FilePlus} label={customUrl.label} value={customUrl.url} isLink />
-                ))}
-            </div>
-          </InfoSection>
+          <motion.div variants={itemVariants}>
+            <InfoSection title="URLs">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <InfoItem icon={LinkIcon} label="URL Productiva" value={product.productiveUrl} isLink />
+                  <InfoItem icon={LinkIcon} label="URL Demo Vercel" value={product.vercelDemoUrl} isLink />
+                  <InfoItem icon={LinkIcon} label="URL Content Prod (WP)" value={product.wpContentProdUrl} isLink />
+                  <InfoItem icon={LinkIcon} label="URL Content Test (WP)" value={product.wpContentTestUrl} isLink />
+                  <InfoItem icon={LinkIcon} label="URL Chatbot" value={product.chatbotUrl} isLink />
+                  {product.customUrls?.map(customUrl => (
+                      <InfoItem key={customUrl.id} icon={FilePlus} label={customUrl.label} value={customUrl.url} isLink />
+                  ))}
+              </div>
+            </InfoSection>
+          </motion.div>
 
-          {(product.createdBy || product.updatedBy) && <Separator />}
+          {(product.createdBy || product.updatedBy) && (
+            <motion.div variants={itemVariants}>
+              <Separator />
+            </motion.div>
+          )}
 
-          <InfoSection title="Historial de Cambios">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <AuditInfoItem icon={UserIcon} label="Creado por" user={product.createdBy} date={product.createdAt} />
-                <AuditInfoItem icon={CalendarClock} label="Última modificación" user={product.updatedBy} date={product.updatedAt} />
-            </div>
-          </InfoSection>
+          <motion.div variants={itemVariants}>
+            <InfoSection title="Historial de Cambios">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <AuditInfoItem icon={UserIcon} label="Creado por" user={product.createdBy} date={product.createdAt} />
+                  <AuditInfoItem icon={CalendarClock} label="Última modificación" user={product.updatedBy} date={product.updatedAt} />
+              </div>
+            </InfoSection>
+          </motion.div>
 
           {product.comments && (
              <>
-                <Separator />
-                <InfoSection title="Comentarios">
-                    <div className="flex items-start gap-3 text-sm text-muted-foreground p-3 bg-muted/50 rounded-md">
-                        <MessageSquare className="h-4 w-4 flex-shrink-0 mt-1" />
-                        <p className="flex-1 whitespace-pre-wrap">{product.comments}</p>
-                    </div>
-                </InfoSection>
+                <motion.div variants={itemVariants}>
+                  <Separator />
+                </motion.div>
+                <motion.div variants={itemVariants}>
+                  <InfoSection title="Comentarios">
+                      <div className="flex items-start gap-3 text-sm text-muted-foreground p-3 bg-muted/50 rounded-md">
+                          <MessageSquare className="h-4 w-4 flex-shrink-0 mt-1" />
+                          <p className="flex-1 whitespace-pre-wrap">{product.comments}</p>
+                      </div>
+                  </InfoSection>
+                </motion.div>
              </>
           )}
-        </div>
-        </div>
+        </motion.div>
+        </motion.div>
       </DialogContent>
     </Dialog>
   );

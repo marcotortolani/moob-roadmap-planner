@@ -1,23 +1,26 @@
 // src/components/product-form.tsx
 
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useFieldArray } from 'react-hook-form';
-import { PlusCircle, Trash2 } from 'lucide-react';
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useFieldArray } from 'react-hook-form'
 
-import { ProductFormData, ProductSchema, Product, MilestoneStatus, Status, Holiday } from '@/lib/types';
-import { createOrUpdateProduct, getHolidaysFromStorage } from '@/lib/actions';
-import { STATUS_OPTIONS, DEFAULT_COLORS, MILESTONE_STATUS_OPTIONS } from '@/lib/constants';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/context/auth-context';
-import { addBusinessDays, countBusinessDays } from '@/lib/business-days';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import {
+  ProductFormData,
+  ProductSchema,
+  Product,
+  MilestoneStatus,
+  Status,
+} from '@/lib/types'
+import { createOrUpdateProduct } from '@/lib/actions'
+import { STATUS_OPTIONS, DEFAULT_COLORS } from '@/lib/constants'
+import { useToast } from '@/hooks/use-toast'
+import { useAuth } from '@/context/auth-context'
+import { useBusinessDaysCalculator } from '@/hooks/use-business-days-calculator'
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button'
 import {
   Form,
   FormControl,
@@ -25,34 +28,34 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+} from '@/components/ui/form'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@/components/ui/select'
 import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
   SheetFooter,
-} from '@/components/ui/sheet';
-import { Textarea } from '@/components/ui/textarea';
-import { Separator } from '@/components/ui/separator';
-import { ColorPicker } from './color-picker';
-import { DatePicker } from './date-picker';
-import { CountrySelect } from './country-select';
+} from '@/components/ui/sheet'
+import { Textarea } from '@/components/ui/textarea'
+import { Separator } from '@/components/ui/separator'
+import { ColorPicker } from './color-picker'
+import {
+  ProductBasicInfo,
+  ProductDatesSection,
+  ProductUrlsSection,
+  ProductMilestonesSection,
+} from './product-form/index'
 
 export default function ProductForm({ product }: { product?: Product }) {
-  const { toast } = useToast();
-  const { user } = useAuth();
-  const [isPending, setIsPending] = useState(false);
-  const [holidays, setHolidays] = useState<Holiday[]>([]);
-  const [dateInputMode, setDateInputMode] = useState<'manual' | 'business-days'>('business-days');
-  const [businessDaysCount, setBusinessDaysCount] = useState<number>(1);
+  const { toast } = useToast()
+  const { user } = useAuth()
+  const [isPending, setIsPending] = useState(false)
 
   const form = useForm<ProductFormData>({
     resolver: zodResolver(ProductSchema),
@@ -71,68 +74,74 @@ export default function ProductForm({ product }: { product?: Product }) {
       comments: product?.comments || '',
       cardColor: product?.cardColor || DEFAULT_COLORS[0],
       status: (product?.status as Status) || Status.PLANNED,
-      milestones: product?.milestones.map(m => ({...m, status: m.status || 'PENDING', startDate: new Date(m.startDate), endDate: new Date(m.endDate)})) || [],
+      milestones:
+        product?.milestones.map((m) => ({
+          ...m,
+          status: m.status || 'PENDING',
+          startDate: new Date(m.startDate),
+          endDate: new Date(m.endDate),
+        })) || [],
       customUrls: product?.customUrls || [],
     },
-  });
+  })
 
-  const { fields: milestoneFields, append: appendMilestone, remove: removeMilestone } = useFieldArray({
+  const {
+    fields: milestoneFields,
+    append: appendMilestone,
+    remove: removeMilestone,
+  } = useFieldArray({
     control: form.control,
     name: 'milestones',
-  });
-  
-  const { fields: customUrlFields, append: appendCustomUrl, remove: removeCustomUrl } = useFieldArray({
+  })
+
+  const {
+    fields: customUrlFields,
+    append: appendCustomUrl,
+    remove: removeCustomUrl,
+  } = useFieldArray({
     control: form.control,
     name: 'customUrls',
-  });
+  })
 
-  // Load holidays and calculate business days count if editing
-  useEffect(() => {
-    const fetchHolidays = () => {
-      setHolidays(getHolidaysFromStorage());
-    };
-
-    fetchHolidays();
-    window.addEventListener('storage', fetchHolidays);
-
-    // Calculate initial business days if product exists
-    if (product?.startDate && product?.endDate) {
-      const count = countBusinessDays(
-        new Date(product.startDate),
-        new Date(product.endDate),
-        getHolidaysFromStorage()
-      );
-      setBusinessDaysCount(count);
-    }
-
-    return () => window.removeEventListener('storage', fetchHolidays);
-  }, [product]);
+  // Business days calculator hook
+  const {
+    dateInputMode,
+    businessDaysCount,
+    toggleDateInputMode,
+    handleBusinessDaysChange,
+    handleStartDateChange,
+  } = useBusinessDaysCalculator(form, product)
 
   const onFormSubmit = async (data: ProductFormData) => {
     if (!user) {
-        toast({ title: 'No autorizado', description: 'Debes iniciar sesión para realizar esta acción.', variant: 'destructive' });
-        return;
+      toast({
+        title: 'No autorizado',
+        description: 'Debes iniciar sesión para realizar esta acción.',
+        variant: 'destructive',
+      })
+      return
     }
-    setIsPending(true);
-    const result = await createOrUpdateProduct(data, user, product?.id);
-    setIsPending(false);
+    setIsPending(true)
+    const result = await createOrUpdateProduct(data, user, product?.id)
+    setIsPending(false)
 
     toast({
-        title: result.success ? 'Éxito' : 'Error',
-        description: result.message,
-        variant: result.success ? 'default' : 'destructive',
-    });
+      title: result.success ? 'Éxito' : 'Error',
+      description: result.message,
+      variant: result.success ? 'default' : 'destructive',
+    })
 
     if (result.success) {
-      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
     }
-  };
-
+  }
 
   return (
     <>
       <SheetHeader className="px-6 pt-6">
-        <SheetTitle>{product ? 'Editar Producto' : 'Crear Nuevo Producto'}</SheetTitle>
+        <SheetTitle>
+          {product ? 'Editar Producto' : 'Crear Nuevo Producto'}
+        </SheetTitle>
         <SheetDescription>
           {product
             ? 'Actualiza los detalles de tu producto.'
@@ -140,407 +149,116 @@ export default function ProductForm({ product }: { product?: Product }) {
         </SheetDescription>
       </SheetHeader>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-8 px-6 pb-6">
+        <form
+          onSubmit={form.handleSubmit(onFormSubmit)}
+          className="space-y-8 px-6 pb-6"
+        >
+          <ProductBasicInfo control={form.control} />
+
+          <ProductDatesSection
+            control={form.control}
+            watch={form.watch}
+            dateInputMode={dateInputMode}
+            businessDaysCount={businessDaysCount}
+            onToggleDateInputMode={toggleDateInputMode}
+            onBusinessDaysChange={handleBusinessDaysChange}
+            onStartDateChange={handleStartDateChange}
+          />
+
+          <Separator />
+
+          <ProductMilestonesSection
+            control={form.control}
+            milestoneFields={milestoneFields}
+            onAppendMilestone={() =>
+              appendMilestone({
+                name: '',
+                startDate: new Date(),
+                endDate: new Date(),
+                status: MilestoneStatus.PENDING,
+              })
+            }
+            onRemoveMilestone={removeMilestone}
+          />
+
+          <Separator />
+
+          <ProductUrlsSection
+            control={form.control}
+            customUrlFields={customUrlFields}
+            onAppendCustomUrl={() => appendCustomUrl({ label: '', url: '' })}
+            onRemoveCustomUrl={removeCustomUrl}
+          />
+
+          <Separator />
+
           <div className="space-y-4">
-            <h3 className="text-lg font-medium">Información General</h3>
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nombre de producto</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ej: Total Fitness" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <h3 className="text-lg font-medium">Estado y Apariencia</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="operator"
+                name="status"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Operador</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Ej: Movistar" {...field} />
-                    </FormControl>
+                    <FormLabel>
+                      Status <span className="text-destructive">*</span>
+                    </FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger aria-label="Estado del producto">
+                          <SelectValue placeholder="Selecciona un estado" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {STATUS_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               <FormField
                 control={form.control}
-                name="country"
+                name="cardColor"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>País</FormLabel>
-                    <CountrySelect value={field.value} onChange={field.onChange} />
+                    <FormLabel>Color de Tarjeta</FormLabel>
+                    <FormControl>
+                      <ColorPicker
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
-             <FormField
+            <FormField
               control={form.control}
-              name="language"
+              name="comments"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Idioma</FormLabel>
+                  <FormLabel>Comentarios</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ej: Español" {...field} />
+                    <Textarea
+                      placeholder="Añade comentarios o notas relevantes sobre el producto."
+                      className="resize-none"
+                      {...field}
+                      aria-label="Comentarios sobre el producto"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            {dateInputMode === 'manual' ? (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="startDate"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Fecha de Inicio</FormLabel>
-                      <DatePicker
-                        value={field.value}
-                        onChange={field.onChange}
-                      />
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="endDate"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Fecha de Finalización</FormLabel>
-                      <DatePicker
-                        value={field.value}
-                        onChange={field.onChange}
-                      />
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="startDate"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Fecha de Inicio</FormLabel>
-                      <DatePicker
-                        value={field.value}
-                        onChange={(date) => {
-                          field.onChange(date);
-                          // Auto-calculate end date when start date changes
-                          if (date && businessDaysCount > 0) {
-                            const endDate = addBusinessDays(date, businessDaysCount - 1, holidays);
-                            form.setValue('endDate', endDate);
-                          }
-                        }}
-                      />
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div>
-                  <FormLabel>Días Laborables de Duración</FormLabel>
-                  <Input
-                    type="number"
-                    min="1"
-                    value={businessDaysCount}
-                    onChange={(e) => {
-                      const count = parseInt(e.target.value) || 1;
-                      setBusinessDaysCount(count);
-
-                      const startDate = form.watch('startDate');
-                      if (startDate) {
-                        const endDate = addBusinessDays(startDate, count - 1, holidays);
-                        form.setValue('endDate', endDate);
-                      }
-                    }}
-                    className="mt-2"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Fecha fin calculada: {form.watch('endDate') ? format(form.watch('endDate'), 'PP', { locale: es }) : '-'}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setDateInputMode(mode => mode === 'manual' ? 'business-days' : 'manual')}
-              className="w-full sm:w-auto"
-            >
-              {dateInputMode === 'manual' ? '📅 Usar días laborables' : '📝 Entrada manual de fechas'}
-            </Button>
-          </div>
-          
-          <Separator />
-
-          <div className="space-y-4">
-             <h3 className="text-lg font-medium">Hitos del Proyecto</h3>
-             {milestoneFields.map((item, index) => (
-                <div key={item.id} className="flex items-end gap-2 rounded-md border p-4 relative">
-                     <div className="grid flex-1 gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
-                        <FormField
-                        control={form.control}
-                        name={`milestones.${index}.name`}
-                        render={({ field }) => (
-                            <FormItem className="sm:col-span-2 md:col-span-1">
-                            <FormLabel>Nombre del Hito</FormLabel>
-                            <FormControl>
-                                <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name={`milestones.${index}.startDate`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Inicio Hito</FormLabel>
-                              <DatePicker
-                                value={field.value}
-                                onChange={field.onChange}
-                              />
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                         <FormField
-                          control={form.control}
-                          name={`milestones.${index}.endDate`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Fin Hito</FormLabel>
-                              <DatePicker
-                                value={field.value}
-                                onChange={field.onChange}
-                              />
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name={`milestones.${index}.status`}
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Estado Hito</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <FormControl>
-                                        <SelectTrigger>
-                                        <SelectValue placeholder="Estado" />
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        {MILESTONE_STATUS_OPTIONS.map((opt) => (
-                                        <SelectItem key={opt.value} value={opt.value}>
-                                            {opt.label}
-                                        </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                    </div>
-                    <Button type="button" variant="ghost" size="icon" onClick={() => removeMilestone(index)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                </div>
-             ))}
-             <Button type="button" variant="outline" size="sm" onClick={() => appendMilestone({ name: '', startDate: new Date(), endDate: new Date(), status: MilestoneStatus.PENDING })}>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Añadir Hito
-            </Button>
-          </div>
-
-          <Separator />
-
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">URLs y Configuración</h3>
-             <FormField
-                control={form.control}
-                name="productiveUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>URL Productiva</FormLabel>
-                    <FormControl>
-                      <Input placeholder="https://..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="vercelDemoUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>URL Demo Vercel</FormLabel>
-                    <FormControl>
-                      <Input placeholder="https://..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-               <FormField
-                control={form.control}
-                name="wpContentProdUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>URL Content Prod (WordPress)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="https://..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-               <FormField
-                control={form.control}
-                name="wpContentTestUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>URL Content Test (WordPress)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="https://..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-               <FormField
-                control={form.control}
-                name="chatbotUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>URL Chatbot</FormLabel>
-                    <FormControl>
-                      <Input placeholder="https://..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-                <Separator className="my-4"/>
-                <h4 className="text-md font-medium">URLs Personalizadas</h4>
-                {customUrlFields.map((item, index) => (
-                    <div key={item.id} className="flex items-end gap-2 rounded-md border p-4 relative">
-                        <div className="grid flex-1 gap-4 grid-cols-1 sm:grid-cols-2">
-                             <FormField
-                                control={form.control}
-                                name={`customUrls.${index}.label`}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Etiqueta</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="Ej: Diseño Figma" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                                />
-                             <FormField
-                                control={form.control}
-                                name={`customUrls.${index}.url`}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>URL</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="https://..." {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                                />
-                        </div>
-                        <Button type="button" variant="ghost" size="icon" onClick={() => removeCustomUrl(index)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                    </div>
-                ))}
-                 <Button type="button" variant="outline" size="sm" onClick={() => appendCustomUrl({ label: '', url: '' })}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Añadir URL Personalizada
-                </Button>
-          </div>
-
-          <Separator />
-          
-          <div className="space-y-4">
-             <h3 className="text-lg font-medium">Estado y Apariencia</h3>
-             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Status</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                            <SelectTrigger>
-                            <SelectValue placeholder="Selecciona un estado" />
-                            </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                            {STATUS_OPTIONS.map((opt) => (
-                            <SelectItem key={opt.value} value={opt.value}>
-                                {opt.label}
-                            </SelectItem>
-                            ))}
-                        </SelectContent>
-                        </Select>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="cardColor"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Color de Tarjeta</FormLabel>
-                        <FormControl>
-                           <ColorPicker value={field.value} onChange={field.onChange} />
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-             </div>
-              <FormField
-                control={form.control}
-                name="comments"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Comentarios</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Añade comentarios o notas relevantes sobre el producto."
-                        className="resize-none"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
           </div>
 
           <SheetFooter>
@@ -551,5 +269,5 @@ export default function ProductForm({ product }: { product?: Product }) {
         </form>
       </Form>
     </>
-  );
+  )
 }

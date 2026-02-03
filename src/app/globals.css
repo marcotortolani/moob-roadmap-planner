@@ -86,3 +86,125 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  /* Card Utilities */
+  .card-base {
+    @apply rounded-lg p-card-padding shadow-sm bg-card text-card-foreground;
+  }
+
+  .card-hover {
+    @apply rounded-lg p-card-padding shadow-sm hover:shadow-lg transition-shadow bg-card text-card-foreground;
+  }
+
+  .card-interactive {
+    @apply rounded-lg p-card-padding shadow-sm hover:shadow-lg hover:scale-[1.02] transition-all duration-200 bg-card text-card-foreground cursor-pointer;
+  }
+
+  .card-bordered {
+    @apply rounded-lg p-card-padding border bg-card text-card-foreground shadow-sm;
+  }
+
+  /* Badge Utilities */
+  .badge-base {
+    @apply rounded-sm px-1.5 py-1 text-xs font-medium;
+  }
+
+  .badge-outline {
+    @apply rounded-sm px-1.5 py-1 text-xs font-medium border;
+  }
+
+  .badge-pill {
+    @apply rounded-full px-2 py-1 text-xs font-medium;
+  }
+
+  /* Layout Utilities */
+  .container-app {
+    @apply container mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .section-spacing {
+    @apply space-y-section-gap;
+  }
+
+  .grid-responsive {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4;
+  }
+
+  .grid-dashboard {
+    @apply grid gap-4 grid-cols-2 lg:grid-cols-4;
+  }
+
+  /* Flex Utilities */
+  .flex-center {
+    @apply flex items-center justify-center;
+  }
+
+  .flex-between {
+    @apply flex items-center justify-between;
+  }
+
+  .flex-start {
+    @apply flex items-start;
+  }
+
+  /* Text Utilities */
+  .heading-1 {
+    @apply scroll-m-20 text-4xl font-bold font-headline tracking-tight lg:text-5xl;
+  }
+
+  .heading-2 {
+    @apply scroll-m-20 text-3xl font-semibold font-headline tracking-tight;
+  }
+
+  .heading-3 {
+    @apply scroll-m-20 text-2xl font-semibold font-headline tracking-tight;
+  }
+
+  .heading-4 {
+    @apply scroll-m-20 text-xl font-semibold font-headline tracking-tight;
+  }
+
+  .text-muted {
+    @apply text-muted-foreground;
+  }
+
+  /* Input Utilities */
+  .input-with-icon {
+    @apply pl-8;
+  }
+
+  .input-error {
+    @apply border-destructive focus-visible:ring-destructive;
+  }
+
+  /* Status Badge Utilities */
+  .badge-planned {
+    @apply badge-outline bg-slate-400/20 text-slate-700 border-slate-400/30;
+  }
+
+  .badge-in-progress {
+    @apply badge-outline bg-red-500/20 text-red-700 border-red-500/30;
+  }
+
+  .badge-demo-ok {
+    @apply badge-outline bg-yellow-500/20 text-yellow-700 border-yellow-500/30;
+  }
+
+  .badge-live {
+    @apply badge-outline bg-green-500/20 text-green-700 border-green-500/30;
+  }
+
+  /* Animation Utilities */
+  .animate-smooth {
+    @apply transition-all duration-200;
+  }
+
+  .animate-smooth-fast {
+    @apply transition-all duration-150;
+  }
+
+  .animate-smooth-slow {
+    @apply transition-all duration-300;
+  }
+}

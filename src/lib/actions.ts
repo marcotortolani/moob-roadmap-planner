@@ -1,154 +1,201 @@
-'use client';
+'use client'
 
-import { ProductSchema, Product, ProductFormData, Holiday, HolidayFormData, HolidaySchema, User, Milestone, CustomUrl } from './types';
-import { INITIAL_PRODUCTS } from './initial-products';
+import type {
+  Product,
+  ProductFormData,
+  Holiday,
+  HolidayFormData,
+  User,
+  Milestone,
+  CustomUrl,
+} from './types'
+import { ProductSchema, HolidaySchema } from './types'
+import { productRepository, holidayRepository } from '@/data/repositories'
+import { isSuccess } from './errors'
 
-const parseDateFromStorage = (dateString: string | null | undefined): Date | undefined => {
-  if (!dateString) return undefined;
-  return new Date(dateString);
-};
+/**
+ * Legacy response type for backward compatibility
+ */
+interface LegacyResponse {
+  success: boolean
+  message: string
+}
 
-// Helper functions for LocalStorage
-const getFromStorage = <T>(key: string, parseDate: boolean = false): T[] => {
-  if (typeof window === 'undefined') return [];
-  const data = localStorage.getItem(key);
-  if (!data) return [];
+/**
+ * Raw types from localStorage (before date parsing)
+ */
+interface RawMilestone {
+  id: string
+  name: string
+  startDate: string
+  endDate: string
+  status: string
+  productId: string
+}
+
+interface RawProduct {
+  id: string
+  name: string
+  operator: string
+  country: string
+  language: string
+  startDate: string
+  endDate: string
+  productiveUrl?: string | null
+  vercelDemoUrl?: string | null
+  wpContentProdUrl?: string | null
+  wpContentTestUrl?: string | null
+  chatbotUrl?: string | null
+  comments?: string | null
+  cardColor: string
+  status: string
+  milestones?: RawMilestone[]
+  customUrls?: CustomUrl[]
+  createdBy: User
+  createdAt?: string
+  updatedBy?: User | null
+  updatedAt?: string | null
+}
+
+interface RawHoliday {
+  id: string
+  name: string
+  date: string
+}
+
+/**
+ * Get all products from storage
+ * This function maintains backward compatibility with existing code
+ * Note: This is a synchronous wrapper around async repository
+ */
+export const getProductsFromStorage = (): Product[] => {
+  if (typeof window === 'undefined') return []
+
+  // Direct localStorage access for synchronous behavior
+  // This maintains backward compatibility while using repository internally
+  const data = localStorage.getItem('products')
+  if (!data) {
+    // Initialize with empty and let repository handle initialization
+    productRepository.getAll()
+    return []
+  }
+
   try {
-    const parsedData = JSON.parse(data);
-
-    if (parseDate && Array.isArray(parsedData)) {
-       return parsedData.map((item: any) => {
-          const newItem = { ...item };
-          if (item.date) newItem.date = parseDateFromStorage(item.date);
-          if (item.startDate) newItem.startDate = parseDateFromStorage(item.startDate);
-          if (item.endDate) newItem.endDate = parseDateFromStorage(item.endDate);
-           if (item.milestones) {
-              newItem.milestones = item.milestones.map((m: any) => ({
-                  ...m,
-                  startDate: parseDateFromStorage(m.startDate),
-                  endDate: parseDateFromStorage(m.endDate),
-              }));
-          }
-          if (item.createdAt) newItem.createdAt = parseDateFromStorage(item.createdAt);
-          if (item.updatedAt) newItem.updatedAt = parseDateFromStorage(item.updatedAt);
-          return newItem;
-      });
+    const parsedData: unknown = JSON.parse(data)
+    if (Array.isArray(parsedData)) {
+      return parsedData.map((item: RawProduct): Product => ({
+        ...item,
+        startDate: new Date(item.startDate),
+        endDate: new Date(item.endDate),
+        milestones: item.milestones?.map((m: RawMilestone): Milestone => ({
+          ...m,
+          startDate: new Date(m.startDate),
+          endDate: new Date(m.endDate),
+        })) || [],
+        createdAt: item.createdAt ? new Date(item.createdAt) : undefined,
+        updatedAt: item.updatedAt ? new Date(item.updatedAt) : undefined,
+      }))
     }
-
-    return parsedData;
-  } catch(e) {
-    console.error("Failed to parse from storage", e);
-    return [];
+    return []
+  } catch (error) {
+    console.error('Failed to parse products from storage', error)
+    return []
   }
 }
 
-const saveToStorage = (key: string, data: any[]) => {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem(key, JSON.stringify(data));
-  window.dispatchEvent(new Event('storage'));
-};
-
-export const getProductsFromStorage = (): Product[] => {
-    if (typeof window === 'undefined') return [];
-    
-    let products = getFromStorage<Product>('products', true);
-
-    if (products.length === 0) {
-        console.log('No products found in localStorage, loading initial data.');
-        const initialProducts = INITIAL_PRODUCTS as any[];
-        saveToStorage('products', initialProducts);
-        products = getFromStorage<Product>('products', true);
-    }
-    
-    return products;
-};
-
-const saveProductsToStorage = (products: Product[]) => {
-    saveToStorage('products', products);
-};
-
+/**
+ * Create or update a product
+ * @param formData Product form data
+ * @param user Current user
+ * @param productId Optional product ID for updates
+ */
 export async function createOrUpdateProduct(
   formData: ProductFormData,
   user: User,
-  productId?: string
-): Promise<{ success: boolean; message: string }> {
-
-  const validatedFields = ProductSchema.safeParse(formData);
+  productId?: string,
+): Promise<LegacyResponse> {
+  // Validate form data
+  const validatedFields = ProductSchema.safeParse(formData)
 
   if (!validatedFields.success) {
-    console.error(validatedFields.error.flatten().fieldErrors);
+    console.error(validatedFields.error.flatten().fieldErrors)
     return {
       success: false,
       message: 'Error de validación. Por favor, revise los campos.',
-    };
+    }
   }
-  
-  const { milestones, customUrls, ...productData } = validatedFields.data;
+
+  const { milestones, customUrls, ...productData } = validatedFields.data
 
   try {
-    let products = getProductsFromStorage();
-    const now = new Date();
-
     if (productId) {
-      // Update
-      products = products.map(p => {
-        if (p.id === productId) {
-          const updatedMilestones: Milestone[] = milestones?.map(m => ({
-            id: m.id || crypto.randomUUID(),
-            name: m.name,
-            startDate: m.startDate,
-            endDate: m.endDate,
-            status: m.status,
-            productId: productId,
-          })) || [];
+      // Update existing product
+      const updatedMilestones: Milestone[] =
+        milestones?.map((m) => ({
+          id: m.id || crypto.randomUUID(),
+          name: m.name,
+          startDate: m.startDate,
+          endDate: m.endDate,
+          status: m.status,
+          productId: productId,
+        })) || []
 
-          const updatedCustomUrls: CustomUrl[] = customUrls?.map(u => ({
-            id: u.id || crypto.randomUUID(),
-            label: u.label,
-            url: u.url,
-          })) || [];
+      const updatedCustomUrls: CustomUrl[] =
+        customUrls?.map((u) => ({
+          id: u.id || crypto.randomUUID(),
+          label: u.label,
+          url: u.url,
+        })) || []
 
-          return {
-            ...p,
-            ...productData,
-            // Convertir undefined a null para campos opcionales
-            productiveUrl: productData.productiveUrl || null,
-            vercelDemoUrl: productData.vercelDemoUrl || null,
-            wpContentProdUrl: productData.wpContentProdUrl || null,
-            wpContentTestUrl: productData.wpContentTestUrl || null,
-            chatbotUrl: productData.chatbotUrl || null,
-            comments: productData.comments || null,
-            milestones: updatedMilestones,
-            customUrls: updatedCustomUrls,
-            updatedBy: user,
-            updatedAt: now,
-          };
-        }
-        return p;
-      });
-    } else {
-      // Create
-      const newProductId = crypto.randomUUID();
-      
-      const newMilestones: Milestone[] = milestones?.map(m => ({
-        id: crypto.randomUUID(),
-        name: m.name,
-        startDate: m.startDate,
-        endDate: m.endDate,
-        status: m.status,
-        productId: newProductId,
-      })) || [];
-
-      const newCustomUrls: CustomUrl[] = customUrls?.map(u => ({
-        id: crypto.randomUUID(),
-        label: u.label,
-        url: u.url,
-      })) || [];
-
-      const newProduct: Product = {
-        id: newProductId,
+      const updateData: Partial<Product> = {
         ...productData,
-        // Convertir undefined a null para campos opcionales
+        productiveUrl: productData.productiveUrl || null,
+        vercelDemoUrl: productData.vercelDemoUrl || null,
+        wpContentProdUrl: productData.wpContentProdUrl || null,
+        wpContentTestUrl: productData.wpContentTestUrl || null,
+        chatbotUrl: productData.chatbotUrl || null,
+        comments: productData.comments || null,
+        milestones: updatedMilestones,
+        customUrls: updatedCustomUrls,
+        updatedBy: user,
+      }
+
+      const result = await productRepository.update(productId, updateData)
+
+      if (isSuccess(result)) {
+        return {
+          success: true,
+          message: 'Producto actualizado con éxito.',
+        }
+      } else {
+        return {
+          success: false,
+          message: result.message,
+        }
+      }
+    } else {
+      // Create new product
+      const newProductId = crypto.randomUUID()
+
+      const newMilestones: Milestone[] =
+        milestones?.map((m) => ({
+          id: crypto.randomUUID(),
+          name: m.name,
+          startDate: m.startDate,
+          endDate: m.endDate,
+          status: m.status,
+          productId: newProductId,
+        })) || []
+
+      const newCustomUrls: CustomUrl[] =
+        customUrls?.map((u) => ({
+          id: crypto.randomUUID(),
+          label: u.label,
+          url: u.url,
+        })) || []
+
+      const newProduct = {
+        ...productData,
         productiveUrl: productData.productiveUrl || null,
         vercelDemoUrl: productData.vercelDemoUrl || null,
         wpContentProdUrl: productData.wpContentProdUrl || null,
@@ -158,104 +205,184 @@ export async function createOrUpdateProduct(
         milestones: newMilestones,
         customUrls: newCustomUrls,
         createdBy: user,
-        createdAt: now,
+        createdAt: new Date(),
         updatedBy: null,
         updatedAt: null,
-      };
-      products.push(newProduct);
-    }
+      } as Omit<Product, 'id'>
 
-    saveProductsToStorage(products);
-    
-    return {
-      success: true,
-      message: `Producto ${productId ? 'actualizado' : 'creado'} con éxito.`,
-    };
+      const result = await productRepository.create(newProduct)
+
+      if (isSuccess(result)) {
+        return {
+          success: true,
+          message: 'Producto creado con éxito.',
+        }
+      } else {
+        return {
+          success: false,
+          message: result.message,
+        }
+      }
+    }
   } catch (error) {
-    console.error(error);
+    console.error('Error in createOrUpdateProduct:', error)
     return {
       success: false,
       message: 'Ocurrió un error en el servidor.',
-    };
+    }
   }
 }
 
-export async function deleteProduct(productId: string): Promise<{ success: boolean; message: string }> {
-    if (!productId) {
-        return { success: false, message: "ID de producto no proporcionado."};
-    }
-    try {
-        let products = getProductsFromStorage();
-        products = products.filter(p => p.id !== productId);
-        saveProductsToStorage(products);
-        return { success: true, message: "Producto eliminado con éxito." };
-    } catch (error) {
-        console.error(error);
-        return { success: false, message: "Error al eliminar el producto."};
-    }
-}
-
-// Holiday Actions
-
-export const getHolidaysFromStorage = (): Holiday[] => {
-    return getFromStorage<Holiday>('holidays', true);
-}
-
-export const saveHolidaysToStorage = (holidays: Holiday[]) => {
-    saveToStorage('holidays', holidays);
-};
-
-export async function createOrUpdateHoliday(
-  formData: HolidayFormData,
-  holidayId?: string
-): Promise<{ success: boolean; message: string }> {
-
-  const validatedFields = HolidaySchema.safeParse(formData);
-
-  if (!validatedFields.success) {
-    console.error(validatedFields.error.flatten().fieldErrors);
-    return {
-      success: false,
-      message: 'Error de validación. Por favor, revise los campos.',
-    };
+/**
+ * Delete a product
+ * @param productId Product ID to delete
+ */
+export async function deleteProduct(
+  productId: string,
+): Promise<LegacyResponse> {
+  if (!productId) {
+    return { success: false, message: 'ID de producto no proporcionado.' }
   }
 
   try {
-    let holidays = getHolidaysFromStorage();
-    if (holidayId) {
-      holidays = holidays.map(h => h.id === holidayId ? { ...validatedFields.data, id: holidayId } : h);
+    const result = await productRepository.delete(productId)
+
+    if (isSuccess(result)) {
+      return { success: true, message: 'Producto eliminado con éxito.' }
     } else {
-      const newHoliday: Holiday = {
-        id: crypto.randomUUID(),
-        ...validatedFields.data,
-      };
-      holidays.push(newHoliday);
+      return { success: false, message: result.message }
     }
-    saveHolidaysToStorage(holidays);
-    return {
-      success: true,
-      message: `Feriado ${holidayId ? 'actualizado' : 'creado'} con éxito.`,
-    };
   } catch (error) {
-    console.error(error);
-    return {
-      success: false,
-      message: 'Ocurrió un error en el servidor.',
-    };
+    console.error('Error in deleteProduct:', error)
+    return { success: false, message: 'Error al eliminar el producto.' }
   }
 }
 
-export async function deleteHoliday(holidayId: string): Promise<{ success: boolean; message: string }> {
-    if (!holidayId) {
-        return { success: false, message: "ID de feriado no proporcionado."};
+/**
+ * Get all holidays from storage
+ * This function maintains backward compatibility with existing code
+ * Note: This is a synchronous wrapper for backward compatibility
+ */
+export const getHolidaysFromStorage = (): Holiday[] => {
+  if (typeof window === 'undefined') return []
+
+  // Direct localStorage access for synchronous behavior
+  const data = localStorage.getItem('holidays')
+  if (!data) return []
+
+  try {
+    const parsedData: unknown = JSON.parse(data)
+    if (Array.isArray(parsedData)) {
+      return parsedData.map((item: RawHoliday): Holiday => ({
+        ...item,
+        date: new Date(item.date),
+      }))
     }
-    try {
-        let holidays = getHolidaysFromStorage();
-        holidays = holidays.filter(h => h.id !== holidayId);
-        saveHolidaysToStorage(holidays);
-        return { success: true, message: "Feriado eliminado con éxito." };
-    } catch (error) {
-        console.error(error);
-        return { success: false, message: "Error al eliminar el feriado."};
+    return []
+  } catch (error) {
+    console.error('Failed to parse holidays from storage', error)
+    return []
+  }
+}
+
+/**
+ * Save holidays to storage
+ * This function maintains backward compatibility
+ * @deprecated Use holidayRepository directly instead
+ */
+export const saveHolidaysToStorage = (holidays: Holiday[]): void => {
+  if (typeof window === 'undefined') return
+
+  // Trigger storage event for backward compatibility
+  localStorage.setItem('holidays', JSON.stringify(holidays))
+  window.dispatchEvent(new Event('storage'))
+}
+
+/**
+ * Create or update a holiday
+ * @param formData Holiday form data
+ * @param holidayId Optional holiday ID for updates
+ */
+export async function createOrUpdateHoliday(
+  formData: HolidayFormData,
+  holidayId?: string,
+): Promise<LegacyResponse> {
+  // Validate form data
+  const validatedFields = HolidaySchema.safeParse(formData)
+
+  if (!validatedFields.success) {
+    console.error(validatedFields.error.flatten().fieldErrors)
+    return {
+      success: false,
+      message: 'Error de validación. Por favor, revise los campos.',
     }
+  }
+
+  try {
+    if (holidayId) {
+      // Update existing holiday
+      const result = await holidayRepository.update(
+        holidayId,
+        validatedFields.data,
+      )
+
+      if (isSuccess(result)) {
+        return {
+          success: true,
+          message: 'Feriado actualizado con éxito.',
+        }
+      } else {
+        return {
+          success: false,
+          message: result.message,
+        }
+      }
+    } else {
+      // Create new holiday
+      const result = await holidayRepository.create(validatedFields.data)
+
+      if (isSuccess(result)) {
+        return {
+          success: true,
+          message: 'Feriado creado con éxito.',
+        }
+      } else {
+        return {
+          success: false,
+          message: result.message,
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error in createOrUpdateHoliday:', error)
+    return {
+      success: false,
+      message: 'Ocurrió un error en el servidor.',
+    }
+  }
+}
+
+/**
+ * Delete a holiday
+ * @param holidayId Holiday ID to delete
+ */
+export async function deleteHoliday(
+  holidayId: string,
+): Promise<LegacyResponse> {
+  if (!holidayId) {
+    return { success: false, message: 'ID de feriado no proporcionado.' }
+  }
+
+  try {
+    const result = await holidayRepository.delete(holidayId)
+
+    if (isSuccess(result)) {
+      return { success: true, message: 'Feriado eliminado con éxito.' }
+    } else {
+      return { success: false, message: result.message }
+    }
+  } catch (error) {
+    console.error('Error in deleteHoliday:', error)
+    return { success: false, message: 'Error al eliminar el feriado.' }
+  }
 }

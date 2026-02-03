@@ -43,13 +43,13 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6">
-      <Link href="/" className="flex items-center gap-2 mr-auto">
-        <Logo className="h-6 w-6 text-primary" />
+      <Link href="/" className="flex items-center gap-2 mr-auto" aria-label="Ir al inicio">
+        <Logo className="h-6 w-6 text-primary" aria-hidden="true" />
         <h1 className="font-headline text-lg font-semibold md:text-xl">
           Roadmap Planner
         </h1>
       </Link>
-      <div className="flex items-center justify-end gap-2 sm:gap-4">
+      <nav className="flex items-center justify-end gap-2 sm:gap-4" role="navigation" aria-label="Navegación principal">
         {user && isMainPage && <ViewSwitcher />}
 
         {user && (
@@ -58,33 +58,33 @@ export function Header() {
             <div className="hidden lg:flex items-center gap-2">
               {!isMainPage && (
                   <Button asChild variant="ghost" size="sm">
-                      <Link href="/">
-                          <Home className="h-4 w-4 mr-2" />
+                      <Link href="/" aria-current={isMainPage ? 'page' : undefined}>
+                          <Home className="h-4 w-4 mr-2" aria-hidden="true" />
                           Inicio
                       </Link>
                   </Button>
               )}
               <Button asChild variant={pathname === '/dashboard' ? 'secondary' : 'ghost'} size="sm">
-                  <Link href="/dashboard">
-                      <LayoutDashboard className="h-4 w-4 mr-2" />
+                  <Link href="/dashboard" aria-current={pathname === '/dashboard' ? 'page' : undefined}>
+                      <LayoutDashboard className="h-4 w-4 mr-2" aria-hidden="true" />
                       Dashboard
                   </Link>
               </Button>
               <Sheet>
                 <SheetTrigger asChild>
-                  <Button>
-                    <PlusCircle className="h-5 w-5 mr-2" />
+                  <Button aria-label="Crear nuevo producto">
+                    <PlusCircle className="h-5 w-5 mr-2" aria-hidden="true" />
                     Nuevo Producto
                   </Button>
                 </SheetTrigger>
-                <SheetContent className="w-full sm:max-w-3xl overflow-y-auto">
+                <SheetContent className="w-full sm:max-w-3xl overflow-y-auto" aria-label="Formulario de nuevo producto">
                   <ProductForm />
                 </SheetContent>
               </Sheet>
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full" aria-label={`Menú de usuario: ${user.name}`}>
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={user.avatarUrl} alt={user.name} />
                       <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
@@ -109,11 +109,12 @@ export function Header() {
             <div className="lg:hidden">
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <Menu className="h-6 w-6" />
+                  <Button variant="ghost" size="icon" aria-label="Abrir menú de navegación">
+                    <Menu className="h-6 w-6" aria-hidden="true" />
+                    <span className="sr-only">Menú</span>
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="w-3/4">
+                <SheetContent side="left" className="w-3/4" aria-label="Menú de navegación móvil">
                     <div className="flex flex-col h-full">
                          <div className="p-4 border-b">
                             <div className="flex items-center gap-3">
@@ -128,19 +129,19 @@ export function Header() {
                             </div>
                         </div>
 
-                        <nav className="flex-1 py-4 px-2 space-y-1">
+                        <nav className="flex-1 py-4 px-2 space-y-1" aria-label="Navegación móvil">
                              {!isMainPage && (
-                                <Button variant="ghost" className="w-full justify-start" onClick={() => handleNavigation('/')}>
-                                    <Home className="mr-2 h-4 w-4" />
+                                <Button variant="ghost" className="w-full justify-start" onClick={() => handleNavigation('/')} aria-current={isMainPage ? 'page' : undefined}>
+                                    <Home className="mr-2 h-4 w-4" aria-hidden="true" />
                                     Inicio
                                 </Button>
                             )}
-                            <Button variant={pathname === '/dashboard' ? 'secondary' : 'ghost'} className="w-full justify-start" onClick={() => handleNavigation('/dashboard')}>
-                                <LayoutDashboard className="mr-2 h-4 w-4" />
+                            <Button variant={pathname === '/dashboard' ? 'secondary' : 'ghost'} className="w-full justify-start" onClick={() => handleNavigation('/dashboard')} aria-current={pathname === '/dashboard' ? 'page' : undefined}>
+                                <LayoutDashboard className="mr-2 h-4 w-4" aria-hidden="true" />
                                 Dashboard
                             </Button>
-                            <Button variant="ghost" className="w-full justify-start" onClick={() => handleNavigation('/profile')}>
-                                <User className="mr-2 h-4 w-4" />
+                            <Button variant="ghost" className="w-full justify-start" onClick={() => handleNavigation('/profile')} aria-current={pathname === '/profile' ? 'page' : undefined}>
+                                <User className="mr-2 h-4 w-4" aria-hidden="true" />
                                 Perfil
                             </Button>
                              <Sheet>
@@ -168,7 +169,7 @@ export function Header() {
             </div>
           </>
         )}
-      </div>
+      </nav>
     </header>
   );
 }

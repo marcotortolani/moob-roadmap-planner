@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import type { Product } from '@/lib/types';
 import { ProductCard } from './product-card';
 import {
@@ -7,6 +8,30 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { startOfQuarter, endOfQuarter, getYear } from 'date-fns';
+
+// Animation variants for product cards
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.05,
+    },
+  },
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: 'spring',
+      stiffness: 300,
+      damping: 24,
+    },
+  },
+};
 
 interface ProductListProps {
   products: Product[];
@@ -88,11 +113,18 @@ export function ProductList({
                             Q{quarter}
                           </AccordionTrigger>
                           <AccordionContent className="p-4 pt-0">
-                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                            <motion.div
+                              className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                              variants={containerVariants}
+                              initial="hidden"
+                              animate="visible"
+                            >
                               {quarterProducts.map((product) => (
-                                <ProductCard key={product.id} product={product} />
+                                <motion.div key={product.id} variants={cardVariants}>
+                                  <ProductCard product={product} />
+                                </motion.div>
                               ))}
-                            </div>
+                            </motion.div>
                           </AccordionContent>
                         </AccordionItem>
                       );
@@ -143,11 +175,18 @@ export function ProductList({
                            Q{quarter}
                         </AccordionTrigger>
                         <AccordionContent className="p-4 pt-0">
-                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                            <motion.div
+                              className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                              variants={containerVariants}
+                              initial="hidden"
+                              animate="visible"
+                            >
                                 {quarterProducts.map((product) => (
-                                    <ProductCard key={product.id} product={product} />
+                                    <motion.div key={product.id} variants={cardVariants}>
+                                      <ProductCard product={product} />
+                                    </motion.div>
                                 ))}
-                            </div>
+                            </motion.div>
                         </AccordionContent>
                     </AccordionItem>
                 )
@@ -166,11 +205,18 @@ export function ProductList({
               {yearFilter} / Q{quarterFilter}
             </h2>
         )}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <motion.div
+          className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
           {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <motion.div key={product.id} variants={cardVariants}>
+              <ProductCard product={product} />
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
     </div>
   );
 }
