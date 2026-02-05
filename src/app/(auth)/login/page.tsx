@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/context/auth-context'
 import { Eye, EyeOff } from 'lucide-react'
@@ -36,7 +35,6 @@ const LoginSchema = z.object({
 type LoginFormData = z.infer<typeof LoginSchema>
 
 export default function LoginPage() {
-  const searchParams = useSearchParams()
   const { login } = useAuth()
   const { toast } = useToast()
   const [isPending, setIsPending] = useState(false)
@@ -50,17 +48,17 @@ export default function LoginPage() {
     },
   })
 
-  // Check for blocked user error
+  // Check for blocked user error from URL params
   useEffect(() => {
-    const error = searchParams.get('error')
-    if (error === 'blocked') {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('error') === 'blocked') {
       toast({
         title: 'Cuenta bloqueada',
         description: 'Tu cuenta ha sido bloqueada. Contacta al administrador para más información.',
         variant: 'destructive',
       })
     }
-  }, [searchParams, toast])
+  }, [toast])
 
   const onFormSubmit = async (data: LoginFormData) => {
     setIsPending(true)

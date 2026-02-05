@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
-import type { User as SupabaseUser } from '@supabase/supabase-js'
+import type { User as SupabaseUser, AuthChangeEvent, Session } from '@supabase/supabase-js'
 import type { User } from '@/lib/types'
 import { getCurrentUser } from '@/app/actions/auth'
 import { getQueryClient } from '@/lib/react-query/client'
@@ -140,7 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
       if (event === 'SIGNED_IN' && session?.user) {
         try {
           const userData = await fetchUserData(session.user)
@@ -355,14 +355,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="h-16 w-16 animate-spin rounded-full border-4 border-dashed border-primary"></div>
-      </div>
-    )
-  }
-
+  // IMPORTANT: Always render children through the Provider.
+  // Previously, `if (loading) return <spinner>` blocked ALL rendering,
+  // preventing React Query hooks from mounting and making Supabase requests.
+  // The middleware already validates auth cookies, so data fetching can
+  // start immediately. User info (name, avatar, role) loads asynchronously.
   return (
     <AuthContext.Provider
       value={{
