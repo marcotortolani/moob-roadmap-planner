@@ -28,6 +28,10 @@ export interface ProductFilters {
 
 /**
  * Fetch all products with optional filters
+ *
+ * NOTE: This is optimized for LIST view - doesn't fetch creator/updater info
+ * to reduce JOINs and improve performance. For full product details with user info,
+ * use fetchProduct(id) or useProduct(id) hook.
  */
 async function fetchProducts(filters?: ProductFilters): Promise<Product[]> {
   let query = supabase
@@ -35,9 +39,7 @@ async function fetchProducts(filters?: ProductFilters): Promise<Product[]> {
     .select(`
       *,
       milestones(*),
-      customUrls:custom_urls(*),
-      createdBy:created_by_id(id, email, first_name, last_name, avatar_url),
-      updatedBy:updated_by_id(id, email, first_name, last_name, avatar_url)
+      customUrls:custom_urls(*)
     `)
     .order('start_date', { ascending: false })
 
