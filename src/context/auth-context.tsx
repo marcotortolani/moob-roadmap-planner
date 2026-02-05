@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 import type { User } from '@/lib/types'
+import { getCurrentUser } from '@/app/actions/auth'
 
 interface AuthContextType {
   user: User | null
@@ -32,6 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const isUpdatingPassword = useRef(false)
+  const hasInitialized = useRef(false) // Prevent double initialization
   const router = useRouter()
 
   // Transform Supabase user to app User
@@ -106,6 +108,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Initialize auth state
   useEffect(() => {
+    // Prevent double initialization (strict mode, HMR, etc.)
+    if (hasInitialized.current) {
+      console.log('🔐 [Auth Init] Already initialized, skipping')
+      return
+    }
+    hasInitialized.current = true
+
     // Safety timeout: if auth doesn't load in 10 seconds, stop loading
     const safetyTimeout = setTimeout(() => {
       console.warn('⏱️ Auth initialization timeout - forcing loading to false')
@@ -114,38 +123,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const initAuth = async () => {
       try {
-        console.log('🔐 [Auth Init] Starting...')
+        console.log('🔐 [Auth Init] Starting (via server action)...')
 
-        // Add timeout to getSession call specifically
-        const sessionPromise = supabase.auth.getSession()
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('getSession timeout')), 5000)
-        )
+        // Use server action instead of client getSession()
+        // This is more reliable and doesn't suffer from timeout issues
+        const { user: userData, error } = await getCurrentUser()
 
-        const { data: { session } } = await Promise.race([
-          sessionPromise,
-          timeoutPromise
-        ]).catch((error) => {
-          console.error('🔐 [Auth Init] getSession failed:', error)
-          return { data: { session: null } }
+        console.log('🔐 [Auth Init] Server response:', {
+          hasUser: !!userData,
+          error,
         })
 
-        console.log('🔐 [Auth Init] Session:', !!session)
-
-        if (session?.user) {
-          try {
-            console.log('🔐 [Auth Init] Fetching user data...')
-            const userData = await fetchUserData(session.user)
-            setUser(userData)
-            console.log('🔐 [Auth Init] User data loaded')
-          } catch (error) {
-            // User was deleted, fetchUserData already signed them out
-            console.error('Error fetching user data, user will be signed out:', error)
-            setUser(null)
-          }
+        if (error) {
+          console.error('🔐 [Auth Init] Error:', error)
+          setUser(null)
+        } else if (userData) {
+          console.log('🔐 [Auth Init] User loaded:', userData.email)
+          setUser(userData)
+        } else {
+          console.log('🔐 [Auth Init] No user')
+          setUser(null)
         }
       } catch (error) {
         console.error('Auth initialization error:', error)
+        setUser(null)
       } finally {
         clearTimeout(safetyTimeout)
         setLoading(false)
@@ -161,32 +162,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('🔐 [Auth Change] Event:', event, 'Has session:', !!session)
 
-      // Note: We don't skip the entire handler during password update
-      // because that would cause a deadlock. Instead, fetchUserData()
-      // will return early with basic user data when isUpdatingPassword is true.
-
-      if (session?.user) {
+      // For client-side auth events (login, logout), we can use the session
+      // For token refresh or other edge cases, fall back to server action
+      if (event === 'SIGNED_IN' && session?.user) {
         try {
-          // fetchUserData will skip DB queries and retries if isUpdatingPassword is true
+          // On explicit sign in, fetch user data directly
           const userData = await fetchUserData(session.user)
           setUser(userData)
         } catch (error) {
-          // User was deleted, fetchUserData already signed them out
-          console.error('Error fetching user data, user will be signed out:', error)
+          console.error('Error fetching user data on sign in:', error)
           setUser(null)
         }
-      } else {
+      } else if (event === 'SIGNED_OUT') {
         setUser(null)
-      }
-
-      // IMPORTANT: Only set loading to false during initial auth
-      // Don't show loading screen for token refreshes or other auth changes
-      // The initial auth useEffect will handle setting loading to false
-
-      // Handle specific events
-      if (event === 'SIGNED_OUT') {
         router.push('/login')
+      } else if (event === 'TOKEN_REFRESHED') {
+        console.log('🔐 [Auth Change] Token refreshed, re-validating user...')
+        // Use server action for token refresh to ensure data is fresh
+        try {
+          const { user: userData, error } = await getCurrentUser()
+          if (error || !userData) {
+            console.warn('🔐 [Auth Change] User not found after token refresh')
+            setUser(null)
+          } else {
+            setUser(userData)
+          }
+        } catch (error) {
+          console.error('Error re-validating user after token refresh:', error)
+        }
       }
+      // Ignore other events like INITIAL_SESSION (handled by useEffect)
     })
 
     return () => {
