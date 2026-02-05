@@ -5,8 +5,7 @@
 // NOTE: 'export const dynamic' was removed from here because route segment
 // configs are IGNORED in 'use client' files. It's now in layout.tsx (server component).
 
-import { Suspense, useState, useEffect } from 'react'
-import { useSearchParams, useRouter, usePathname } from 'next/navigation'
+import { useState, useEffect, useCallback } from 'react'
 import { ProductList } from '@/components/product-list'
 import { ProductCalendar } from '@/components/product-calendar'
 import { FloatingActionButton } from '@/components/floating-action-button'
@@ -168,32 +167,62 @@ function ViewSkeleton() {
   )
 }
 
-function HomePageContent() {
-  const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const currentView = searchParams.get('view') || 'list'
+/**
+ * Read the current view from URL search params or localStorage.
+ * Uses native browser APIs instead of useSearchParams() to avoid
+ * requiring a Suspense boundary. Cached RSC payloads with an unresolved
+ * Suspense fallback would prevent child components from ever mounting,
+ * causing the "infinite skeleton" bug.
+ */
+function useViewParam(): string {
+  const [view, setView] = useState<string>('list')
+
+  const syncView = useCallback(() => {
+    const params = new URLSearchParams(window.location.search)
+    const urlView = params.get('view')
+    const savedView = localStorage.getItem('productView')
+
+    // URL param takes precedence, then localStorage, then default 'list'
+    const resolvedView = urlView || savedView || 'list'
+
+    // Sync URL if it doesn't have the view param
+    if (!urlView && savedView) {
+      const newParams = new URLSearchParams(window.location.search)
+      newParams.set('view', savedView)
+      window.history.replaceState(null, '', `?${newParams.toString()}`)
+    }
+
+    setView(resolvedView)
+  }, [])
 
   useEffect(() => {
-    const savedView = localStorage.getItem('productView')
-    const currentViewInParams = searchParams.get('view')
+    syncView()
 
-    if (savedView && savedView !== currentViewInParams) {
-      const params = new URLSearchParams(searchParams.toString())
-      params.set('view', savedView)
-      router.replace(`${pathname}?${params.toString()}`)
+    // Listen for popstate (back/forward navigation)
+    window.addEventListener('popstate', syncView)
+
+    // Listen for custom viewchange events from ViewSwitcher
+    const handleViewChange = (e: Event) => {
+      const detail = (e as CustomEvent<string>).detail
+      if (detail) setView(detail)
     }
-  }, [searchParams, router, pathname])
+    window.addEventListener('viewchange', handleViewChange)
 
-  return <ProductsData view={currentView} />
+    return () => {
+      window.removeEventListener('popstate', syncView)
+      window.removeEventListener('viewchange', handleViewChange)
+    }
+  }, [syncView])
+
+  return view
 }
 
 export default function HomePage() {
+  const currentView = useViewParam()
+
   return (
     <>
-      <Suspense fallback={<ViewSkeleton />}>
-        <HomePageContent />
-      </Suspense>
+      <ProductsData view={currentView} />
       {/* <DebugPanel /> */}
     </>
   )

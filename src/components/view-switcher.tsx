@@ -2,31 +2,51 @@
 
 'use client';
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { List, Calendar } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 
+/**
+ * ViewSwitcher uses native browser APIs instead of useSearchParams/router.push
+ * to avoid Suspense boundaries and cached RSC payload issues.
+ * Dispatches a custom 'viewchange' event so the home page can react.
+ */
 export function ViewSwitcher() {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const currentView = searchParams.get('view') || 'list';
+  const [currentView, setCurrentView] = useState('list');
 
-  const createQueryString = useCallback(
-    (name: string, value: string) => {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set(name, value);
-      return params.toString();
-    },
-    [searchParams]
-  );
+  // Read initial view from URL or localStorage on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlView = params.get('view');
+    const savedView = localStorage.getItem('productView');
+    setCurrentView(urlView || savedView || 'list');
+
+    // Listen for view changes from other sources (e.g., popstate)
+    const handleViewChange = (e: Event) => {
+      const detail = (e as CustomEvent<string>).detail;
+      if (detail) setCurrentView(detail);
+    };
+    window.addEventListener('viewchange', handleViewChange);
+    return () => window.removeEventListener('viewchange', handleViewChange);
+  }, []);
 
   const handleToggle = () => {
     const newView = currentView === 'list' ? 'calendar' : 'list';
+
+    // Update state
+    setCurrentView(newView);
+
+    // Persist to localStorage
     localStorage.setItem('productView', newView);
-    router.push(pathname + '?' + createQueryString('view', newView));
+
+    // Update URL without Next.js router (avoids RSC payload fetch)
+    const params = new URLSearchParams(window.location.search);
+    params.set('view', newView);
+    window.history.pushState(null, '', `${window.location.pathname}?${params.toString()}`);
+
+    // Notify other components (home page) about the view change
+    window.dispatchEvent(new CustomEvent('viewchange', { detail: newView }));
   };
 
   return (
@@ -39,8 +59,8 @@ export function ViewSwitcher() {
       <div
         className={cn(
           'absolute inset-y-1 rounded-md bg-background shadow-sm transition-all duration-200 ease-in-out',
-          currentView === 'list' 
-            ? 'left-1 right-[calc(50%+2px)] sm:right-[calc(60%+2px)]' 
+          currentView === 'list'
+            ? 'left-1 right-[calc(50%+2px)] sm:right-[calc(60%+2px)]'
             : 'left-[calc(50%+2px)] sm:left-[calc(40%+2px)] right-1'
         )}
       />
@@ -49,8 +69,8 @@ export function ViewSwitcher() {
       <div
         className={cn(
           'relative z-10 flex items-center gap-2 px-3 py-1.5 transition-colors duration-200',
-          currentView === 'list' 
-            ? 'text-foreground' 
+          currentView === 'list'
+            ? 'text-foreground'
             : 'text-muted-foreground'
         )}
       >
@@ -62,8 +82,8 @@ export function ViewSwitcher() {
       <div
         className={cn(
           'relative z-10 flex items-center gap-2 px-3 py-1.5 transition-colors duration-200',
-          currentView === 'calendar' 
-            ? 'text-foreground' 
+          currentView === 'calendar'
+            ? 'text-foreground'
             : 'text-muted-foreground'
         )}
       >
@@ -73,62 +93,3 @@ export function ViewSwitcher() {
     </button>
   );
 }
-
-
-// 'use client';
-
-// import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-// import { useCallback } from 'react';
-// import { List, Calendar } from 'lucide-react';
-
-// import { Button } from '@/components/ui/button';
-// import { cn } from '@/lib/utils';
-
-// export function ViewSwitcher() {
-//   const router = useRouter();
-//   const pathname = usePathname();
-//   const searchParams = useSearchParams();
-//   const currentView = searchParams.get('view') || 'list';
-
-//   const createQueryString = useCallback(
-//     (name: string, value: string) => {
-//       const params = new URLSearchParams(searchParams.toString());
-//       params.set(name, value);
-//       return params.toString();
-//     },
-//     [searchParams]
-//   );
-
-//   return (
-//     <div className="flex items-center gap-1 rounded-lg bg-gray-300 p-1">
-//       <Button
-//         variant="ghost"
-//         size="sm"
-//         onClick={() => router.push(pathname + '?' + createQueryString('view', 'list'))}
-//         className={cn(
-//           'gap-2',
-//           currentView === 'list' 
-//             ? 'bg-background text-foreground shadow-sm' 
-//             : 'text-muted-foreground'
-//         )}
-//       >
-//         <List className="h-4 w-4" />
-//         <span className="hidden sm:inline">Lista</span>
-//       </Button>
-//       <Button
-//         variant="ghost"
-//         size="sm"
-//         onClick={() => router.push(pathname + '?' + createQueryString('view', 'calendar'))}
-//         className={cn(
-//           'gap-2',
-//           currentView === 'calendar' 
-//             ? 'bg-background text-foreground shadow-sm' 
-//             : 'text-muted-foreground'
-//         )}
-//       >
-//         <Calendar className="h-4 w-4" />
-//         <span className="hidden sm:inline">Calendario</span>
-//       </Button>
-//     </div>
-//   );
-// }

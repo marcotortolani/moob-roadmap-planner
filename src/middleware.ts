@@ -72,12 +72,19 @@ export async function middleware(request: NextRequest) {
   // not here. The previous approach queried the DB on EVERY request, adding
   // ~100-300ms latency to every page navigation.
 
-  // Prevent CDN and browser from caching HTML responses with stale auth state.
+  // Prevent CDN and browser from caching HTML/RSC responses with stale auth state.
   // Static assets are excluded by the matcher config below.
   response.headers.set(
     'Cache-Control',
     'private, no-cache, no-store, max-age=0, must-revalidate'
   )
+  // Vercel-specific: Tell Vercel's CDN not to cache this response
+  response.headers.set('CDN-Cache-Control', 'no-store')
+  // Standard proxy header: Tell upstream proxies/CDNs not to cache
+  response.headers.set('Surrogate-Control', 'no-store')
+  // Vary on everything to prevent any proxy from serving cached responses
+  // to different users (different cookies = different auth state)
+  response.headers.set('Vary', '*')
 
   return response
 }

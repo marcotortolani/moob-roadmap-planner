@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/context/auth-context'
 import { Eye, EyeOff } from 'lucide-react'
@@ -36,7 +36,6 @@ const LoginSchema = z.object({
 type LoginFormData = z.infer<typeof LoginSchema>
 
 export default function LoginPage() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const { login } = useAuth()
   const { toast } = useToast()
@@ -80,7 +79,10 @@ export default function LoginPage() {
           title: '¡Bienvenido!',
           description: 'Has iniciado sesión correctamente.',
         })
-        router.push('/')
+        // Force a full page load instead of client-side navigation.
+        // router.push() can use cached RSC payloads from the browser's HTTP cache,
+        // which may contain stale Suspense fallbacks from old static builds.
+        window.location.href = '/'
       }
     } catch (error) {
       toast({
