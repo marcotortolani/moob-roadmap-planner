@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -46,7 +46,7 @@ const ResetPasswordSchema = z
 
 type ResetPasswordFormData = z.infer<typeof ResetPasswordSchema>
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { updatePassword } = useAuth()
@@ -267,5 +267,20 @@ export default function ResetPasswordPage() {
         </Form>
       </CardContent>
     </Card>
+  )
+}
+
+// Wrapper with Suspense for Next.js 15 useSearchParams compatibility
+export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-screen items-center justify-center">
+          <div className="h-16 w-16 animate-spin rounded-full border-4 border-dashed border-primary"></div>
+        </div>
+      }
+    >
+      <ResetPasswordForm />
+    </Suspense>
   )
 }

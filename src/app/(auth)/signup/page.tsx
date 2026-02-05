@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -49,7 +49,7 @@ const SignupSchema = z
 
 type SignupFormData = z.infer<typeof SignupSchema>
 
-export default function SignupPage() {
+function SignupForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { signup } = useAuth()
@@ -548,5 +548,20 @@ export default function SignupPage() {
         </Form>
       </CardContent>
     </Card>
+  )
+}
+
+// Wrapper with Suspense for Next.js 15 useSearchParams compatibility
+export default function SignupPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-screen items-center justify-center">
+          <div className="h-16 w-16 animate-spin rounded-full border-4 border-dashed border-primary"></div>
+        </div>
+      }
+    >
+      <SignupForm />
+    </Suspense>
   )
 }
