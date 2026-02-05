@@ -106,16 +106,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Initialize auth state
   useEffect(() => {
+    // Safety timeout: if auth doesn't load in 10 seconds, stop loading
+    const safetyTimeout = setTimeout(() => {
+      console.warn('⏱️ Auth initialization timeout - forcing loading to false')
+      setLoading(false)
+    }, 10000)
+
     const initAuth = async () => {
       try {
+        console.log('🔐 [Auth Init] Starting...')
         const {
           data: { session },
         } = await supabase.auth.getSession()
 
+        console.log('🔐 [Auth Init] Session:', !!session)
+
         if (session?.user) {
           try {
+            console.log('🔐 [Auth Init] Fetching user data...')
             const userData = await fetchUserData(session.user)
             setUser(userData)
+            console.log('🔐 [Auth Init] User data loaded')
           } catch (error) {
             // User was deleted, fetchUserData already signed them out
             console.error('Error fetching user data, user will be signed out:', error)
@@ -125,7 +136,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (error) {
         console.error('Auth initialization error:', error)
       } finally {
+        clearTimeout(safetyTimeout)
         setLoading(false)
+        console.log('🔐 [Auth Init] Complete')
       }
     }
 
@@ -135,6 +148,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('🔐 [Auth Change] Event:', event, 'Has session:', !!session)
+
       // Note: We don't skip the entire handler during password update
       // because that would cause a deadlock. Instead, fetchUserData()
       // will return early with basic user data when isUpdatingPassword is true.
@@ -153,7 +168,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null)
       }
 
-      setLoading(false)
+      // IMPORTANT: Only set loading to false during initial auth
+      // Don't show loading screen for token refreshes or other auth changes
+      // The initial auth useEffect will handle setting loading to false
 
       // Handle specific events
       if (event === 'SIGNED_OUT') {
