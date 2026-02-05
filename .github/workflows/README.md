@@ -98,11 +98,11 @@ Deberías ver una respuesta como:
 
 ### 📅 Calendario de Ejecución
 
-- **Frecuencia**: Cada 5 días
+- **Frecuencia**: Cada 2 días
 - **Hora**: 10:00 AM UTC (7:00 AM Argentina)
 - **Zona horaria**: UTC
 
-**Cron schedule**: `0 10 */5 * *`
+**Cron schedule**: `0 10 */2 * *`
 
 ### 🔍 Monitorear Ejecuciones
 
