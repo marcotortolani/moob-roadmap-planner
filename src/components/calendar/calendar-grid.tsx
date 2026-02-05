@@ -6,6 +6,8 @@ import {
   getDay,
   isWithinInterval,
   isSameDay,
+  eachDayOfInterval,
+  startOfDay,
 } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { CalendarDayCell } from './calendar-day-cell'
@@ -39,6 +41,7 @@ interface CalendarGridProps {
   onSelectProduct: (product: Product) => void
   dragState: DragState | null
   previewDates: PreviewDates | null
+  canEditProducts: boolean
 }
 
 export function CalendarGrid({
@@ -50,6 +53,7 @@ export function CalendarGrid({
   onSelectProduct,
   dragState,
   previewDates,
+  canEditProducts,
 }: CalendarGridProps) {
   const weekDays = useMemo(() => {
     const firstDayOfWeek = startOfWeek(new Date(), {
@@ -74,18 +78,35 @@ export function CalendarGrid({
   const productCardTypes = useMemo(() => {
     const types = new Map<string, DragCardType>()
     products.forEach((product) => {
+      // Use getBusinessDaysInRange to get only business days (excludes weekends AND holidays)
+      // This matches the draggable days in the calendar
       const businessDays = getBusinessDaysInRange(
         product.startDate,
         product.endDate,
         holidays,
       )
-      businessDays.forEach((day, index) => {
+
+      // Mark ALL calendar days for this product, not just business days
+      // This ensures products show on all days but only business days are draggable
+      const allDays = eachDayOfInterval({
+        start: product.startDate,
+        end: product.endDate,
+      })
+
+      allDays.forEach((day) => {
         const key = `${product.id}-${format(day, 'yyyy-MM-dd')}`
-        if (businessDays.length === 1) {
+        const businessDayIndex = businessDays.findIndex((bd) =>
+          isSameDay(bd, day),
+        )
+
+        if (businessDayIndex === -1) {
+          // Not a business day - mark as middle (not draggable)
+          types.set(key, 'middle')
+        } else if (businessDays.length === 1) {
           types.set(key, 'single')
-        } else if (index === 0) {
+        } else if (businessDayIndex === 0) {
           types.set(key, 'first')
-        } else if (index === businessDays.length - 1) {
+        } else if (businessDayIndex === businessDays.length - 1) {
           types.set(key, 'last')
         } else {
           types.set(key, 'middle')
@@ -96,9 +117,16 @@ export function CalendarGrid({
   }, [products, holidays])
 
   const getProductsForDay = (day: Date): Product[] => {
-    return products.filter((p) =>
-      isWithinInterval(day, { start: p.startDate, end: p.endDate }),
-    )
+    // Normalize all dates to start of day to avoid timezone issues
+    const normalizedDay = startOfDay(day)
+    return products.filter((p) => {
+      const normalizedStart = startOfDay(p.startDate)
+      const normalizedEnd = startOfDay(p.endDate)
+      return isWithinInterval(normalizedDay, {
+        start: normalizedStart,
+        end: normalizedEnd,
+      })
+    })
   }
 
   const getMilestoneForDay = (
@@ -152,6 +180,7 @@ export function CalendarGrid({
             dragState={dragState}
             previewDates={previewDates}
             holidays={holidays}
+            canEditProducts={canEditProducts}
           />
         )
       })}

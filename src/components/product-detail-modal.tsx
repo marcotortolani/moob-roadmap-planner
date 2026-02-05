@@ -11,6 +11,16 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Product, User } from '@/lib/types';
@@ -18,7 +28,7 @@ import { STATUS_OPTIONS, MILESTONE_STATUS_OPTIONS } from '@/lib/constants';
 import { COUNTRIES } from '@/lib/countries';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Calendar, Smartphone, Globe, Link as LinkIcon, MessageSquare, CheckCircle, Circle, Clock, Copy, Edit, FilePlus, User as UserIcon, CalendarClock } from 'lucide-react';
+import { Calendar, Smartphone, Globe, Link as LinkIcon, MessageSquare, CheckCircle, Circle, Clock, Copy, Edit, FilePlus, User as UserIcon, CalendarClock, Trash2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -26,6 +36,9 @@ import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
 import ProductForm from './product-form';
 import { useAuth } from '@/context/auth-context';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { usePermissionChecks } from '@/lib/rbac/hooks';
+import { useDeleteProduct } from '@/hooks/queries';
+import { ProductHistory } from './product-history';
 
 const getMilestoneStatusInfo = (status: any) => {
     const statusOption = MILESTONE_STATUS_OPTIONS.find(s => s.value === status);
@@ -146,8 +159,21 @@ const itemVariants = {
 
 export function ProductDetailModal({ product, isOpen, onClose }: { product: Product; isOpen: boolean; onClose: () => void }) {
   const { user: authUser } = useAuth();
+  const { canEditProducts, canDeleteProducts } = usePermissionChecks();
+  const deleteProductMutation = useDeleteProduct();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const status = STATUS_OPTIONS.find((s) => s.value === product.status);
   const country = COUNTRIES.find((c) => c.code === product.country);
+
+  const handleDelete = async () => {
+    try {
+      await deleteProductMutation.mutateAsync(product.id);
+      setShowDeleteConfirm(false);
+      onClose();
+    } catch (error) {
+      console.error('Error deleting product:', error);
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -172,7 +198,7 @@ export function ProductDetailModal({ product, isOpen, onClose }: { product: Prod
             </div>
             <div className="flex items-center gap-2">
                 {status && <Badge variant="secondary" className="text-base">{status.label}</Badge>}
-                {authUser && (
+                {canEditProducts && (
                      <Sheet>
                         <SheetTrigger asChild>
                             <Button variant="outline" size="icon">
@@ -183,6 +209,16 @@ export function ProductDetailModal({ product, isOpen, onClose }: { product: Prod
                             <ProductForm product={product} />
                         </SheetContent>
                     </Sheet>
+                )}
+                {canDeleteProducts && (
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setShowDeleteConfirm(true)}
+                        className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                    >
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
                 )}
             </div>
           </div>
@@ -273,10 +309,7 @@ export function ProductDetailModal({ product, isOpen, onClose }: { product: Prod
 
           <motion.div variants={itemVariants}>
             <InfoSection title="Historial de Cambios">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <AuditInfoItem icon={UserIcon} label="Creado por" user={product.createdBy} date={product.createdAt} />
-                  <AuditInfoItem icon={CalendarClock} label="Última modificación" user={product.updatedBy} date={product.updatedAt} />
-              </div>
+              <ProductHistory productId={product.id} />
             </InfoSection>
           </motion.div>
 
@@ -298,6 +331,29 @@ export function ProductDetailModal({ product, isOpen, onClose }: { product: Prod
         </motion.div>
         </motion.div>
       </DialogContent>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente el producto
+              &quot;{product.name}&quot; y todos sus hitos asociados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteProductMutation.isPending}
+            >
+              {deleteProductMutation.isPending ? 'Eliminando...' : 'Eliminar Producto'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

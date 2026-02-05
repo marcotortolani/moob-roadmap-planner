@@ -2,7 +2,7 @@
 
 import { cn } from '@/lib/utils';
 import { DEFAULT_COLORS } from '@/lib/constants';
-import { Check } from 'lucide-react';
+import { Check, Palette } from 'lucide-react';
 
 interface ColorPickerProps {
   value: string;
@@ -26,18 +26,20 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
           )}
         </button>
       ))}
-      <div className="relative h-8 w-8 rounded-full border-2 border-dashed">
+      <div
+        className="relative h-8 w-8 rounded-full border-2 border-dashed border-muted-foreground/50 hover:border-primary hover:scale-110 transition-all"
+        style={{ backgroundColor: value }}
+      >
         <input
           type="color"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className="h-full w-full cursor-pointer appearance-none rounded-full border-none bg-transparent p-0 opacity-0"
-          aria-label="Custom color picker"
+          aria-label="Personalizar color"
         />
-        <div
-          className="pointer-events-none absolute inset-0 rounded-full"
-          style={{ backgroundColor: value }}
-        />
+        <div className="pointer-events-none absolute inset-0 rounded-full flex items-center justify-center">
+          <Palette className="h-4 w-4" style={{ color: '#FFFFFF' }} />
+        </div>
       </div>
     </div>
   );

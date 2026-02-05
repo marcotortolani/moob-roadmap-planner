@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { getYear, getQuarter, startOfQuarter, endOfQuarter } from 'date-fns'
 import type { Product, Status } from '@/lib/types'
-import { getProductsFromStorage } from '@/lib/actions'
+import { useProducts } from '@/hooks/queries'
 import { useDebounce } from './use-debounce'
 
 export type SortOption = 'name-asc' | 'name-desc' | 'date-asc' | 'date-desc'
@@ -15,8 +15,8 @@ export type FilterType =
   | 'quarter'
 
 export function useProductFiltering() {
-  const [products, setProducts] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
+  // Fetch products using React Query
+  const { data: products = [], isLoading: loading } = useProducts()
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState('')
@@ -32,24 +32,6 @@ export function useProductFiltering() {
     getQuarter(new Date()),
   )
   const [sortOption, setSortOption] = useState<SortOption>('date-asc')
-
-  // Fetch products
-  const fetchProducts = useCallback(() => {
-    setLoading(true)
-    if (typeof window !== 'undefined') {
-      const storedProducts = getProductsFromStorage()
-      setProducts(storedProducts)
-    }
-    setLoading(false)
-  }, [])
-
-  useEffect(() => {
-    fetchProducts()
-    window.addEventListener('storage', fetchProducts)
-    return () => {
-      window.removeEventListener('storage', fetchProducts)
-    }
-  }, [fetchProducts])
 
   // Extract unique values for filters
   const { uniqueOperators, uniqueCountries, uniqueLanguages, uniqueYears } =

@@ -4,6 +4,8 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { AuthProvider } from '@/context/auth-context';
 import { GoogleAnalytics } from '@/components/google-analytics';
+import { ReactQueryProvider } from '@/lib/react-query/provider';
+import { ErrorBoundary } from '@/components/error-boundary';
 
 export const metadata: Metadata = {
   title: 'Product Roadmap Planner',
@@ -25,12 +27,16 @@ export default function RootLayout({
         <GoogleAnalytics />
       </head>
       <body suppressHydrationWarning>
-        <AuthProvider>
-            <div className="font-body antialiased" suppressHydrationWarning>
+        <ErrorBoundary>
+          <ReactQueryProvider>
+            <AuthProvider>
+              <div className="font-body antialiased" suppressHydrationWarning>
                 {children}
-            </div>
-            <Toaster />
-        </AuthProvider>
+              </div>
+              <Toaster />
+            </AuthProvider>
+          </ReactQueryProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

@@ -14,11 +14,11 @@ import {
   MilestoneStatus,
   Status,
 } from '@/lib/types'
-import { createOrUpdateProduct } from '@/lib/actions'
 import { STATUS_OPTIONS, DEFAULT_COLORS } from '@/lib/constants'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/context/auth-context'
 import { useBusinessDaysCalculator } from '@/hooks/use-business-days-calculator'
+import { useCreateProduct, useUpdateProduct } from '@/hooks/queries'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -55,7 +55,12 @@ import {
 export default function ProductForm({ product }: { product?: Product }) {
   const { toast } = useToast()
   const { user } = useAuth()
-  const [isPending, setIsPending] = useState(false)
+  const createProduct = useCreateProduct()
+  const updateProduct = useUpdateProduct()
+
+  const isPending = product
+    ? updateProduct.isPending
+    : createProduct.isPending
 
   const form = useForm<ProductFormData>({
     resolver: zodResolver(ProductSchema),
@@ -112,7 +117,7 @@ export default function ProductForm({ product }: { product?: Product }) {
     handleStartDateChange,
   } = useBusinessDaysCalculator(form, product)
 
-  const onFormSubmit = async (data: ProductFormData) => {
+  const onFormSubmit = (data: ProductFormData) => {
     if (!user) {
       toast({
         title: 'No autorizado',
@@ -121,18 +126,33 @@ export default function ProductForm({ product }: { product?: Product }) {
       })
       return
     }
-    setIsPending(true)
-    const result = await createOrUpdateProduct(data, user, product?.id)
-    setIsPending(false)
 
-    toast({
-      title: result.success ? 'Éxito' : 'Error',
-      description: result.message,
-      variant: result.success ? 'default' : 'destructive',
-    })
+    const productData = {
+      ...data,
+      createdById: user.id,
+      updatedById: user.id,
+    }
 
-    if (result.success) {
-      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    if (product) {
+      // Update existing product
+      updateProduct.mutate(
+        {
+          id: product.id,
+          ...productData,
+        },
+        {
+          onSuccess: () => {
+            document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+          },
+        }
+      )
+    } else {
+      // Create new product
+      createProduct.mutate(productData as any, {
+        onSuccess: () => {
+          document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+        },
+      })
     }
   }
 

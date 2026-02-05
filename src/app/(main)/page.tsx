@@ -6,8 +6,10 @@ import { Suspense, useState, useEffect } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { ProductList } from '@/components/product-list'
 import { ProductCalendar } from '@/components/product-calendar'
+import { FloatingActionButton } from '@/components/floating-action-button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useProductFiltering } from '@/hooks/use-product-filtering'
+// import { DebugPanel } from '@/components/debug-panel'
 import {
   FiltersBar,
   FiltersSheet,
@@ -139,6 +141,9 @@ function ProductsData({ view }: { view: string }) {
           )}
         </ViewTransitionWrapper>
       </div>
+
+      {/* Floating Action Button for creating new products */}
+      <FloatingActionButton />
     </div>
   )
 }
@@ -182,8 +187,11 @@ function HomePageContent() {
 
 export default function HomePage() {
   return (
-    <Suspense fallback={<ViewSkeleton />}>
-      <HomePageContent />
-    </Suspense>
+    <>
+      <Suspense fallback={<ViewSkeleton />}>
+        <HomePageContent />
+      </Suspense>
+      {/* <DebugPanel /> */}
+    </>
   )
 }

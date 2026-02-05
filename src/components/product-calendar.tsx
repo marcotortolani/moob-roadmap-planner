@@ -30,29 +30,23 @@ import {
   CalendarDragOverlay,
 } from './calendar'
 import { useCalendarDrag } from '@/hooks/use-calendar-drag'
-import {
-  getHolidaysFromStorage,
-  saveHolidaysToStorage,
-} from '@/lib/actions'
-import { INITIAL_HOLIDAYS } from '@/lib/holidays'
+import { useHolidays } from '@/hooks/queries'
 import { useAuth } from '@/context/auth-context'
 import { useToast } from '@/hooks/use-toast'
+import { usePermissionChecks } from '@/lib/rbac/hooks'
 import type { Product, Holiday } from '@/lib/types'
-
-const parseHolidayDate = (dateString: string): Date => {
-  const date = new Date(dateString)
-  const userTimezoneOffset = date.getTimezoneOffset() * 60000
-  return new Date(date.getTime() + userTimezoneOffset)
-}
 
 export function ProductCalendar({ products }: { products: Product[] }) {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
-  const [holidays, setHolidays] = useState<Holiday[]>([])
   const [isHolidayModalOpen, setIsHolidayModalOpen] = useState(false)
 
   const { user } = useAuth()
   const { toast } = useToast()
+  const { canEditProducts } = usePermissionChecks()
+
+  // Fetch holidays using React Query
+  const { data: holidays = [] } = useHolidays()
 
   // Configure DnD sensors
   const sensors = useSensors(
@@ -68,27 +62,6 @@ export function ProductCalendar({ products }: { products: Product[] }) {
       },
     }),
   )
-
-  // Fetch holidays on mount and listen for storage changes
-  useEffect(() => {
-    const fetchHolidays = () => {
-      let storedHolidays = getHolidaysFromStorage()
-      if (storedHolidays.length === 0) {
-        // When initializing from JSON, parse dates correctly
-        storedHolidays = INITIAL_HOLIDAYS.map((h) => ({
-          ...h,
-          date: parseHolidayDate(h.date),
-          id: crypto.randomUUID(),
-        }))
-        saveHolidaysToStorage(storedHolidays)
-      }
-      setHolidays(storedHolidays)
-    }
-
-    fetchHolidays()
-    window.addEventListener('storage', fetchHolidays)
-    return () => window.removeEventListener('storage', fetchHolidays)
-  }, [])
 
   // Calculate days to display in calendar
   const daysInMonth = useMemo(() => {
@@ -173,11 +146,11 @@ export function ProductCalendar({ products }: { products: Product[] }) {
   return (
     <TooltipProvider>
       <DndContext
-        sensors={sensors}
+        sensors={canEditProducts ? sensors : []}
         collisionDetection={closestCenter}
-        onDragStart={handleDragStart}
-        onDragMove={handleDragMove}
-        onDragEnd={handleDragEnd}
+        onDragStart={canEditProducts ? handleDragStart : undefined}
+        onDragMove={canEditProducts ? handleDragMove : undefined}
+        onDragEnd={canEditProducts ? handleDragEnd : undefined}
       >
         <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-2 sm:p-4 flex flex-col h-full">
           <CalendarHeader
@@ -197,6 +170,7 @@ export function ProductCalendar({ products }: { products: Product[] }) {
             onSelectProduct={handleSelectProduct}
             dragState={dragState}
             previewDates={previewDates}
+            canEditProducts={canEditProducts}
           />
         </div>
 

@@ -1,0 +1,44 @@
+name: Keep Supabase Active
+
+# Run every 5 days to prevent database pause (free tier pauses after 7 days)
+on:
+  schedule:
+    # Runs at 10:00 AM UTC every 5 days
+    # Cron format: minute hour day-of-month month day-of-week
+    - cron: '0 10 */5 * *'
+
+  # Allow manual trigger from GitHub Actions tab
+  workflow_dispatch:
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🏓 Ping keep-alive endpoint
+        run: |
+          echo "🔄 Sending keep-alive request to Vercel deployment..."
+
+          response=$(curl -s -w "\n%{http_code}" -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.VERCEL_APP_URL }}/api/cron/keep-alive")
+
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | head -n-1)
+
+          echo "📊 Response:"
+          echo "$body" | jq '.' || echo "$body"
+
+          if [ "$http_code" -eq 200 ]; then
+            echo "✅ Keep-alive successful!"
+            exit 0
+          else
+            echo "❌ Keep-alive failed with status code: $http_code"
+            exit 1
+          fi
+
+      - name: 📝 Log execution
+        if: always()
+        run: |
+          echo "Execution time: $(date -u)"
+          echo "Next run: in 5 days"

@@ -43,6 +43,7 @@ interface CalendarDayCellProps {
   dragState: DragState | null
   previewDates: PreviewDates | null
   holidays: Holiday[]
+  canEditProducts: boolean
 }
 
 export const CalendarDayCell = memo(function CalendarDayCell({
@@ -57,6 +58,7 @@ export const CalendarDayCell = memo(function CalendarDayCell({
   dragState,
   previewDates,
   holidays,
+  canEditProducts,
 }: CalendarDayCellProps) {
   const dateStr = format(day, 'yyyy-MM-dd')
   const isBusinessDayValue = businessDayMap.get(dateStr) || false
@@ -77,7 +79,7 @@ export const CalendarDayCell = memo(function CalendarDayCell({
         backgroundColor:
           isOver && isBusinessDayValue && !holiday
             ? 'rgba(100, 116, 139, 0.1)'
-            : 'transparent',
+            : 'rgba(0, 0, 0, 0)',
       }}
       transition={{ duration: 0.2 }}
       className={cn(
@@ -107,7 +109,8 @@ export const CalendarDayCell = memo(function CalendarDayCell({
           const cardType = getProductCardType(productEvent, day)
           const milestoneEvent = getMilestoneForDay(day, productEvent.id)
           const isDraggable =
-            cardType === 'first' || cardType === 'last' || cardType === 'single'
+            canEditProducts &&
+            (cardType === 'first' || cardType === 'last' || cardType === 'single')
 
           // Check if this is being dragged
           const isBeingDragged = dragState?.productId === productEvent.id

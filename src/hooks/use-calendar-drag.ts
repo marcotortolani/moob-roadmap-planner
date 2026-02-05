@@ -5,7 +5,6 @@ import type { DragStartEvent, DragMoveEvent, DragEndEvent } from '@dnd-kit/core'
 import type {
   Product,
   Holiday,
-  ProductFormData,
   ProductDragData,
   DayCellDropData,
 } from '@/lib/types'
@@ -14,7 +13,7 @@ import {
   subtractBusinessDays,
   countBusinessDays,
 } from '@/lib/business-days'
-import { createOrUpdateProduct } from '@/lib/actions'
+import { useUpdateProduct } from '@/hooks/queries'
 import type { User } from '@/lib/types'
 
 interface DragState {
@@ -47,6 +46,7 @@ export function useCalendarDrag({
 }: UseCalendarDragProps) {
   const [dragState, setDragState] = useState<DragState | null>(null)
   const [previewDates, setPreviewDates] = useState<PreviewDates | null>(null)
+  const updateProductMutation = useUpdateProduct()
 
   const handleDragStart = useCallback(
     (event: DragStartEvent) => {
@@ -167,26 +167,14 @@ export function useCalendarDrag({
         return
       }
 
-      const updatedProduct: ProductFormData = {
-        ...product,
-        startDate: newStartDate,
-        endDate: newEndDate,
-        // Map null fields to empty strings for Zod validation
-        productiveUrl: product.productiveUrl || '',
-        vercelDemoUrl: product.vercelDemoUrl || '',
-        wpContentProdUrl: product.wpContentProdUrl || '',
-        wpContentTestUrl: product.wpContentTestUrl || '',
-        chatbotUrl: product.chatbotUrl || '',
-        comments: product.comments || '',
-      }
+      try {
+        // Use React Query mutation
+        await updateProductMutation.mutateAsync({
+          id: product.id,
+          startDate: newStartDate,
+          endDate: newEndDate,
+        })
 
-      const result = await createOrUpdateProduct(
-        updatedProduct,
-        user,
-        product.id,
-      )
-
-      if (result.success) {
         const businessDaysCount = countBusinessDays(
           newStartDate,
           newEndDate,
@@ -196,14 +184,15 @@ export function useCalendarDrag({
         onSuccess(
           `${product.name} - ${businessDaysCount} ${businessDaysCount === 1 ? 'día' : 'días'} laborables\nDesde ${format(newStartDate, 'PP', { locale: es })}\nHasta ${format(newEndDate, 'PP', { locale: es })}`,
         )
-      } else {
-        onError(result.message)
+      } catch (error) {
+        console.error('Error updating product dates:', error)
+        onError('Error al actualizar las fechas del producto')
       }
 
       setDragState(null)
       setPreviewDates(null)
     },
-    [dragState, holidays, products, user, onSuccess, onError],
+    [dragState, holidays, products, user, onSuccess, onError, updateProductMutation],
   )
 
   return {

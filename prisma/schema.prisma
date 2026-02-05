@@ -5,39 +5,16 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  directUrl = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
-model Product {
-  id               String      @id @default(cuid())
-  name             String
-  operator         String
-  country          String
-  language         String
-  startDate        DateTime
-  endDate          DateTime
-  productiveUrl    String?
-  vercelDemoUrl    String?
-  wpContentProdUrl String?
-  wpContentTestUrl String?
-  chatbotUrl       String?
-  comments         String?
-  cardColor        String      @default("#778899")
-  status           Status      @default(PLANNED)
-  milestones       Milestone[]
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
-}
+// ============ ENUMS ============
 
-model Milestone {
-  id        String   @id @default(cuid())
-  name      String
-  startDate DateTime
-  endDate   DateTime
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  productId String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+enum Role {
+  ADMIN
+  USER
+  GUEST
+  BLOCKED
 }
 
 enum Status {
@@ -45,4 +22,190 @@ enum Status {
   IN_PROGRESS
   DEMO_OK
   LIVE
+}
+
+enum MilestoneStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
+enum ChangeType {
+  CREATED
+  UPDATED
+  DELETED
+}
+
+// ============ MODELS ============
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  firstName String?  @map("first_name")
+  lastName  String?  @map("last_name")
+  avatarUrl String?  @map("avatar_url")
+  role      Role     @default(USER)
+
+  // Supabase auth user ID (UUID from auth.users)
+  authUserId String @unique @map("auth_user_id")
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  productsCreated Product[]        @relation("ProductCreator")
+  productsUpdated Product[]        @relation("ProductUpdater")
+  invitationsSent Invitation[]     @relation("InvitationSender")
+  productHistory  ProductHistory[] @relation("ProductHistoryUser")
+
+  @@index([email])
+  @@index([role])
+  @@index([authUserId])
+  @@map("users")
+}
+
+model Invitation {
+  id     String           @id @default(cuid())
+  email  String
+  role   Role
+  token  String           @unique @default(cuid())
+  status InvitationStatus @default(PENDING)
+
+  // Expiration handling
+  expiresAt DateTime @map("expires_at")
+
+  // Relations
+  sentBy   User   @relation("InvitationSender", fields: [sentById], references: [id], onDelete: Cascade)
+  sentById String @map("sent_by_id")
+
+  // Timestamps
+  createdAt  DateTime  @default(now()) @map("created_at")
+  acceptedAt DateTime? @map("accepted_at")
+
+  @@index([email])
+  @@index([token])
+  @@index([status])
+  @@index([expiresAt])
+  @@map("invitations")
+}
+
+model Product {
+  id               String  @id @default(cuid())
+  name             String
+  operator         String
+  country          String
+  language         String
+  startDate        DateTime @map("start_date")
+  endDate          DateTime @map("end_date")
+  productiveUrl    String?  @map("productive_url")
+  vercelDemoUrl    String?  @map("vercel_demo_url")
+  wpContentProdUrl String?  @map("wp_content_prod_url")
+  wpContentTestUrl String?  @map("wp_content_test_url")
+  chatbotUrl       String?  @map("chatbot_url")
+  comments         String?  @db.Text
+  cardColor        String   @default("#778899") @map("card_color")
+  status           Status   @default(PLANNED)
+
+  // Relations
+  milestones Milestone[]
+  customUrls CustomUrl[]
+  history    ProductHistory[]
+
+  createdBy   User   @relation("ProductCreator", fields: [createdById], references: [id])
+  createdById String @map("created_by_id")
+
+  updatedBy   User?   @relation("ProductUpdater", fields: [updatedById], references: [id], onDelete: SetNull)
+  updatedById String? @map("updated_by_id")
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@index([operator])
+  @@index([country])
+  @@index([startDate])
+  @@index([endDate])
+  @@index([createdById])
+  @@index([createdAt])
+  @@map("products")
+}
+
+model ProductHistory {
+  id         String     @id @default(cuid())
+  changeType ChangeType @map("change_type")
+
+  // What changed
+  fieldName  String?    @map("field_name")  // e.g., "status", "name", "startDate"
+  oldValue   String?    @map("old_value")   // JSON string of old value
+  newValue   String?    @map("new_value")   // JSON string of new value
+
+  // Who made the change
+  changedBy   User   @relation("ProductHistoryUser", fields: [changedById], references: [id])
+  changedById String @map("changed_by_id")
+
+  // When it happened
+  changedAt DateTime @default(now()) @map("changed_at")
+
+  // Which product
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String  @map("product_id")
+
+  @@index([productId])
+  @@index([changedAt])
+  @@index([changedById])
+  @@map("product_history")
+}
+
+model Milestone {
+  id        String          @id @default(cuid())
+  name      String
+  startDate DateTime        @map("start_date")
+  endDate   DateTime        @map("end_date")
+  status    MilestoneStatus @default(PENDING)
+
+  // Relations
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String  @map("product_id")
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([productId])
+  @@index([status])
+  @@index([startDate])
+  @@map("milestones")
+}
+
+model CustomUrl {
+  id    String @id @default(cuid())
+  label String
+  url   String
+
+  // Relations
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String  @map("product_id")
+
+  @@index([productId])
+  @@map("custom_urls")
+}
+
+model Holiday {
+  id   String   @id @default(cuid())
+  date DateTime @unique
+  name String
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([date])
+  @@map("holidays")
 }

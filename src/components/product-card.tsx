@@ -16,6 +16,8 @@ import type { Product, Status } from '@/lib/types'
 import { STATUS_OPTIONS } from '@/lib/constants'
 import { COUNTRIES } from '@/lib/countries'
 import { useAuth } from '@/context/auth-context'
+import { usePermissionChecks } from '@/lib/rbac/hooks'
+import { useDeleteProduct } from '@/hooks/queries'
 
 import {
   Card,
@@ -45,7 +47,6 @@ import {
 import { Button } from './ui/button'
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet'
 import ProductForm from './product-form'
-import { deleteProduct } from '@/lib/actions'
 import { useToast } from '@/hooks/use-toast'
 import { ProductDetailModal } from './product-detail-modal'
 import { cn } from '@/lib/utils'
@@ -94,6 +95,8 @@ export const ProductCard = memo(function ProductCard({
 }) {
   const { toast } = useToast()
   const { user } = useAuth()
+  const { canEditProducts, canDeleteProducts } = usePermissionChecks()
+  const deleteProductMutation = useDeleteProduct()
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   // Memoize computed values
@@ -118,14 +121,9 @@ export const ProductCard = memo(function ProductCard({
   )
 
   // Memoize callbacks
-  const handleDelete = useCallback(async () => {
-    const result = await deleteProduct(product.id)
-    toast({
-      title: result.success ? 'Éxito' : 'Error',
-      description: result.message,
-      variant: result.success ? 'default' : 'destructive',
-    })
-  }, [product.id, toast])
+  const handleDelete = useCallback(() => {
+    deleteProductMutation.mutate(product.id)
+  }, [product.id, deleteProductMutation])
 
   const handleOpenModal = useCallback(() => {
     setIsModalOpen(true)
@@ -164,7 +162,7 @@ export const ProductCard = memo(function ProductCard({
                 {status.label}
               </Badge>
             )}
-            {user && (
+            {user && (canEditProducts || canDeleteProducts) && (
               <Sheet>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -178,42 +176,46 @@ export const ProductCard = memo(function ProductCard({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <SheetTrigger asChild>
-                      <DropdownMenuItem>
-                        <Edit className="mr-2 h-4 w-4" />
-                        Editar
-                      </DropdownMenuItem>
-                    </SheetTrigger>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <DropdownMenuItem
-                          className="text-destructive focus:text-destructive"
-                          onSelect={(e) => e.preventDefault()}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Eliminar
+                    {canEditProducts && (
+                      <SheetTrigger asChild>
+                        <DropdownMenuItem>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Editar
                         </DropdownMenuItem>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Esta acción no se puede deshacer. Esto eliminará
-                            permanentemente el producto y todos sus datos
-                            asociados.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={handleDelete}
-                            className="bg-destructive hover:bg-destructive/90"
+                      </SheetTrigger>
+                    )}
+                    {canDeleteProducts && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            onSelect={(e) => e.preventDefault()}
                           >
+                            <Trash2 className="mr-2 h-4 w-4" />
                             Eliminar
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                          </DropdownMenuItem>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Esta acción no se puede deshacer. Esto eliminará
+                              permanentemente el producto y todos sus datos
+                              asociados.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={handleDelete}
+                              className="bg-destructive hover:bg-destructive/90"
+                            >
+                              Eliminar
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
                 <SheetContent className="w-full sm:max-w-3xl overflow-y-auto">

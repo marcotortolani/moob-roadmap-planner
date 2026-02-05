@@ -4,11 +4,12 @@
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, LogOut, LayoutDashboard, Home, Menu, User } from 'lucide-react';
+import { PlusCircle, LogOut, LayoutDashboard, Home, Menu, User, Mail } from 'lucide-react';
 import { Logo } from '@/components/icons/logo';
 import { ViewSwitcher } from './view-switcher';
 import ProductForm from './product-form';
 import { useAuth } from '@/context/auth-context';
+import { usePermissionChecks } from '@/lib/rbac/hooks';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -24,6 +25,7 @@ import { Separator } from './ui/separator';
 
 export function Header() {
   const { user, logout } = useAuth();
+  const { canCreateInvitations, canCreateProducts } = usePermissionChecks();
   const router = useRouter();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -70,17 +72,27 @@ export function Header() {
                       Dashboard
                   </Link>
               </Button>
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button aria-label="Crear nuevo producto">
-                    <PlusCircle className="h-5 w-5 mr-2" aria-hidden="true" />
-                    Nuevo Producto
-                  </Button>
-                </SheetTrigger>
-                <SheetContent className="w-full sm:max-w-3xl overflow-y-auto" aria-label="Formulario de nuevo producto">
-                  <ProductForm />
-                </SheetContent>
-              </Sheet>
+              {canCreateInvitations && (
+                <Button asChild variant={pathname === '/invitations' ? 'secondary' : 'ghost'} size="sm">
+                    <Link href="/invitations" aria-current={pathname === '/invitations' ? 'page' : undefined}>
+                        <Mail className="h-4 w-4 mr-2" aria-hidden="true" />
+                        Invitaciones
+                    </Link>
+                </Button>
+              )}
+              {canCreateProducts && (
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button aria-label="Crear nuevo producto">
+                      <PlusCircle className="h-5 w-5 mr-2" aria-hidden="true" />
+                      Nuevo Producto
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent className="w-full sm:max-w-3xl overflow-y-auto" aria-label="Formulario de nuevo producto">
+                    <ProductForm />
+                  </SheetContent>
+                </Sheet>
+              )}
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -140,11 +152,18 @@ export function Header() {
                                 <LayoutDashboard className="mr-2 h-4 w-4" aria-hidden="true" />
                                 Dashboard
                             </Button>
+                            {canCreateInvitations && (
+                              <Button variant={pathname === '/invitations' ? 'secondary' : 'ghost'} className="w-full justify-start" onClick={() => handleNavigation('/invitations')} aria-current={pathname === '/invitations' ? 'page' : undefined}>
+                                  <Mail className="mr-2 h-4 w-4" aria-hidden="true" />
+                                  Invitaciones
+                              </Button>
+                            )}
                             <Button variant="ghost" className="w-full justify-start" onClick={() => handleNavigation('/profile')} aria-current={pathname === '/profile' ? 'page' : undefined}>
                                 <User className="mr-2 h-4 w-4" aria-hidden="true" />
                                 Perfil
                             </Button>
-                             <Sheet>
+                            {canCreateProducts && (
+                              <Sheet>
                                 <SheetTrigger asChild>
                                    <Button variant="ghost" className="w-full justify-start">
                                       <PlusCircle className="mr-2 h-4 w-4" />
@@ -154,7 +173,8 @@ export function Header() {
                                 <SheetContent className="w-full sm:max-w-3xl overflow-y-auto">
                                     <ProductForm />
                                 </SheetContent>
-                            </Sheet>
+                              </Sheet>
+                            )}
                         </nav>
                         
                         <div className="mt-auto p-4 border-t">

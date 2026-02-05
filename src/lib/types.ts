@@ -7,7 +7,9 @@ export type User = {
     id: string;
     name: string;
     email: string;
+    role: 'ADMIN' | 'USER' | 'GUEST' | 'BLOCKED';
     avatarUrl?: string;
+    authUserId?: string; // Supabase auth user ID
 }
 
 export enum Status {
@@ -120,8 +122,9 @@ export const HolidaySchema = z.object({
 export type HolidayFormData = z.infer<typeof HolidaySchema>;
 
 export const UserProfileSchema = z.object({
-    name: z.string().min(1, 'El nombre es requerido.'),
-    avatarUrl: z.string().url('URL de avatar inválida').or(z.literal('')).optional(),
+    firstName: z.string().min(1, 'El nombre es requerido.'),
+    lastName: z.string().min(1, 'El apellido es requerido.'),
+    avatarUrl: z.string().optional(),
 });
 
 export type UserProfileFormData = z.infer<typeof UserProfileSchema>;

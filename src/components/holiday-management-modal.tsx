@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
@@ -25,11 +25,7 @@ import { DatePicker } from './date-picker'
 import { ScrollArea } from './ui/scroll-area'
 import { useToast } from '@/hooks/use-toast'
 import { Holiday, HolidayFormData, HolidaySchema } from '@/lib/types'
-import {
-  getHolidaysFromStorage,
-  createOrUpdateHoliday,
-  deleteHoliday,
-} from '@/lib/actions'
+import { useHolidays, useCreateHoliday, useDeleteHoliday } from '@/hooks/queries'
 import { Trash2, Edit, PlusCircle } from 'lucide-react'
 import { format, getYear } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -40,6 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { usePermissionChecks } from '@/lib/rbac/hooks'
 
 function HolidayForm({
   holiday,
@@ -50,7 +47,7 @@ function HolidayForm({
   onSave: () => void
   onCancel: () => void
 }) {
-  const { toast } = useToast()
+  const createHoliday = useCreateHoliday()
   const form = useForm<HolidayFormData>({
     resolver: zodResolver(HolidaySchema),
     defaultValues: {
@@ -59,16 +56,13 @@ function HolidayForm({
     },
   })
 
-  const onFormSubmit = async (data: HolidayFormData) => {
-    const result = await createOrUpdateHoliday(data, holiday?.id)
-    toast({
-      title: result.success ? 'Éxito' : 'Error',
-      description: result.message,
-      variant: result.success ? 'default' : 'destructive',
+  const onFormSubmit = (data: HolidayFormData) => {
+    // Currently only supporting create (not update) since we don't have useUpdateHoliday
+    createHoliday.mutate(data, {
+      onSuccess: () => {
+        onSave()
+      },
     })
-    if (result.success) {
-      onSave()
-    }
   }
 
   return (
@@ -116,33 +110,58 @@ export function HolidayManagementModal({
   isOpen: boolean
   onClose: () => void
 }) {
-  const { toast } = useToast()
-  const [holidays, setHolidays] = useState<Holiday[]>([])
   const [editingHoliday, setEditingHoliday] = useState<Holiday | null>(null)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [yearFilter, setYearFilter] = useState<number>(new Date().getFullYear())
 
-  const fetchHolidays = () => {
-    const storedHolidays = getHolidaysFromStorage()
-    storedHolidays.sort((a, b) => a.date.getTime() - b.date.getTime())
-    setHolidays(storedHolidays)
-  }
+  const { data: holidays = [] } = useHolidays()
+  const deleteHoliday = useDeleteHoliday()
+  const createHoliday = useCreateHoliday()
+  const { canCreateHolidays, canEditHolidays, canDeleteHolidays } = usePermissionChecks()
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchHolidays()
+  // Generate years range: 5 years before current year to 10 years after
+  const currentYear = new Date().getFullYear()
+  const availableYears = useMemo(() => {
+    const years: number[] = []
+    for (let year = currentYear - 5; year <= currentYear + 10; year++) {
+      years.push(year)
     }
-  }, [isOpen])
+    return years
+  }, [currentYear])
 
-  const { uniqueYears, filteredHolidays } = useMemo(() => {
-    const years = new Set<number>()
-    holidays.forEach((h) => years.add(getYear(h.date)))
-    const sortedYears = Array.from(years).sort((a, b) => a - b)
-
-    const filtered = holidays.filter((h) => getYear(h.date) === yearFilter)
-
-    return { uniqueYears: sortedYears, filteredHolidays: filtered }
+  const filteredHolidays = useMemo(() => {
+    return holidays
+      .filter((h) => getYear(h.date) === yearFilter)
+      .sort((a, b) => a.date.getTime() - b.date.getTime())
   }, [holidays, yearFilter])
+
+  // Fixed holidays that repeat every year
+  const FIXED_HOLIDAYS = [
+    { name: 'Año Nuevo', month: 0, day: 1 }, // January 1st
+    { name: 'Fin de Año (no laborable/asueto habitual)', month: 11, day: 31 }, // December 31st
+  ]
+
+  // Generate fixed holidays for selected year if they don't exist
+  const generateFixedHolidays = () => {
+    const existingDates = new Set(
+      holidays
+        .filter((h) => getYear(h.date) === yearFilter)
+        .map((h) => format(h.date, 'yyyy-MM-dd'))
+    )
+
+    FIXED_HOLIDAYS.forEach((fixedHoliday) => {
+      const holidayDate = new Date(yearFilter, fixedHoliday.month, fixedHoliday.day)
+      const dateStr = format(holidayDate, 'yyyy-MM-dd')
+
+      // Only create if it doesn't already exist
+      if (!existingDates.has(dateStr)) {
+        createHoliday.mutate({
+          name: fixedHoliday.name,
+          date: holidayDate,
+        })
+      }
+    })
+  }
 
   const handleAddNew = () => {
     setEditingHoliday(null)
@@ -154,22 +173,13 @@ export function HolidayManagementModal({
     setIsFormOpen(true)
   }
 
-  const handleDelete = async (holidayId: string) => {
-    const result = await deleteHoliday(holidayId)
-    toast({
-      title: result.success ? 'Éxito' : 'Error',
-      description: result.message,
-      variant: result.success ? 'default' : 'destructive',
-    })
-    if (result.success) {
-      fetchHolidays()
-    }
+  const handleDelete = (holidayId: string) => {
+    deleteHoliday.mutate(holidayId)
   }
 
   const handleSave = () => {
     setIsFormOpen(false)
     setEditingHoliday(null)
-    fetchHolidays()
   }
 
   return (
@@ -190,26 +200,38 @@ export function HolidayManagementModal({
             />
           ) : (
             <div className="flex-1 flex flex-col min-h-0">
-              <div className="flex justify-between items-center mb-4">
+              <div className="flex justify-between items-center mb-4 gap-2">
                 <Select
                   value={yearFilter.toString()}
                   onValueChange={(value) => setYearFilter(Number(value))}
                 >
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Seleccionar año" />
+                  <SelectTrigger className="w-32">
+                    <SelectValue placeholder="Año" />
                   </SelectTrigger>
                   <SelectContent>
-                    {uniqueYears.map((y) => (
+                    {availableYears.map((y) => (
                       <SelectItem key={y} value={y.toString()}>
                         {y}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <Button size="sm" onClick={handleAddNew}>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Añadir Feriado
-                </Button>
+                {canCreateHolidays && filteredHolidays.length < FIXED_HOLIDAYS.length && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={generateFixedHolidays}
+                    disabled={createHoliday.isPending}
+                  >
+                    Generar Feriados Fijos
+                  </Button>
+                )}
+                {canCreateHolidays && (
+                  <Button size="sm" onClick={handleAddNew} className="ml-auto">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Añadir Feriado
+                  </Button>
+                )}
               </div>
               <ScrollArea className="flex-1 -mr-6">
                 <div className="space-y-2 pr-6">
@@ -224,23 +246,29 @@ export function HolidayManagementModal({
                           {format(holiday.date, 'PPP', { locale: es })}
                         </p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEdit(holiday)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(holiday.id)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                      {(canEditHolidays || canDeleteHolidays) && (
+                        <div className="flex items-center gap-2">
+                          {canEditHolidays && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEdit(holiday)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {canDeleteHolidays && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDelete(holiday.id)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      )}
                     </div>
                   ))}
                   {filteredHolidays.length === 0 && (
