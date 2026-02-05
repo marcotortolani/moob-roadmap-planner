@@ -1,3 +1,4 @@
+import { memo, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import type { Product } from '@/lib/types';
 import { ProductCard } from './product-card';
@@ -39,11 +40,59 @@ interface ProductListProps {
   quarterFilter: number | 'all';
 }
 
-export function ProductList({
+export const ProductList = memo(function ProductList({
   products,
   yearFilter,
   quarterFilter,
 }: ProductListProps) {
+  // Memoize expensive year/quarter grouping calculations
+  const productsByYear = useMemo(() => {
+    if (yearFilter !== 'all') return null
+    const byYear: Record<string, Record<string, Product[]>> = {}
+
+    products.forEach((product) => {
+      const startYear = getYear(product.startDate)
+      const endYear = getYear(product.endDate)
+
+      for (let year = startYear; year <= endYear; year++) {
+        if (!byYear[year]) {
+          byYear[year] = { 1: [], 2: [], 3: [], 4: [] }
+        }
+
+        for (let q = 1; q <= 4; q++) {
+          const quarterStartDate = startOfQuarter(new Date(year, (q - 1) * 3))
+          const quarterEndDate = endOfQuarter(new Date(year, (q - 1) * 3))
+
+          if (product.startDate <= quarterEndDate && product.endDate >= quarterStartDate) {
+            if (!byYear[year][q].some((p) => p.id === product.id)) {
+              byYear[year][q].push(product)
+            }
+          }
+        }
+      }
+    })
+
+    return byYear
+  }, [products, yearFilter])
+
+  const productsByQuarter = useMemo(() => {
+    if (yearFilter === 'all' || quarterFilter !== 'all') return null
+    const byQuarter: Record<string, Product[]> = { 1: [], 2: [], 3: [], 4: [] }
+
+    products.forEach((product) => {
+      for (let q = 1; q <= 4; q++) {
+        const quarterStartDate = startOfQuarter(new Date(yearFilter as number, (q - 1) * 3))
+        const quarterEndDate = endOfQuarter(new Date(yearFilter as number, (q - 1) * 3))
+
+        if (product.startDate <= quarterEndDate && product.endDate >= quarterStartDate) {
+          byQuarter[q].push(product)
+        }
+      }
+    })
+
+    return byQuarter
+  }, [products, yearFilter, quarterFilter])
+
   if (products.length === 0) {
     return (
       <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm">
@@ -59,36 +108,7 @@ export function ProductList({
     );
   }
 
-  const shouldGroupByQuarter =
-    yearFilter !== 'all' && quarterFilter === 'all';
-
-  const shouldGroupByYear = yearFilter === 'all';
-
-  if (shouldGroupByYear) {
-    const productsByYear: Record<string, Record<string, Product[]>> = {};
-
-    products.forEach((product) => {
-        const startYear = getYear(product.startDate);
-        const endYear = getYear(product.endDate);
-
-        for (let year = startYear; year <= endYear; year++) {
-            if (!productsByYear[year]) {
-                productsByYear[year] = { 1: [], 2: [], 3: [], 4: [] };
-            }
-
-            for (let q = 1; q <= 4; q++) {
-                const quarterStartDate = startOfQuarter(new Date(year, (q - 1) * 3));
-                const quarterEndDate = endOfQuarter(new Date(year, (q - 1) * 3));
-
-                if (product.startDate <= quarterEndDate && product.endDate >= quarterStartDate) {
-                    if (!productsByYear[year][q].some(p => p.id === product.id)) {
-                      productsByYear[year][q].push(product);
-                    }
-                }
-            }
-        }
-    });
-
+  if (productsByYear) {
     const sortedYears = Object.keys(productsByYear).sort((a,b) => parseInt(b) - parseInt(a));
 
      return (
@@ -139,32 +159,7 @@ export function ProductList({
   }
 
 
-  if (shouldGroupByQuarter) {
-    const productsByQuarter: Record<string, Product[]> = {
-      1: [],
-      2: [],
-      3: [],
-      4: [],
-    };
-
-    products.forEach((product) => {
-      for (let q = 1; q <= 4; q++) {
-        const quarterStartDate = startOfQuarter(
-          new Date(yearFilter as number, (q - 1) * 3)
-        );
-        const quarterEndDate = endOfQuarter(
-          new Date(yearFilter as number, (q - 1) * 3)
-        );
-
-        if (
-          product.startDate <= quarterEndDate &&
-          product.endDate >= quarterStartDate
-        ) {
-          productsByQuarter[q].push(product);
-        }
-      }
-    });
-    
+  if (productsByQuarter) {
     return (
         <Accordion type="multiple" defaultValue={['1', '2', '3', '4']} className="w-full space-y-4">
             {Object.entries(productsByQuarter).map(([quarter, quarterProducts]) => {
@@ -219,4 +214,4 @@ export function ProductList({
         </motion.div>
     </div>
   );
-}
+})

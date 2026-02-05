@@ -13,8 +13,8 @@ function makeQueryClient() {
         // Cache time: Unused data is garbage collected after 5 minutes
         gcTime: 5 * 60 * 1000,
 
-        // Refetch on window focus disabled (can be enabled per-query)
-        refetchOnWindowFocus: false,
+        // Refetch on window focus to recover from stale states
+        refetchOnWindowFocus: true,
 
         // Refetch on reconnect enabled
         refetchOnReconnect: true,

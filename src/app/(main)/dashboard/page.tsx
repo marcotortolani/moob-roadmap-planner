@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -14,11 +14,9 @@ import {
   TrendingUp,
   Clock,
   Target,
-  CheckCircle2,
   Zap,
 } from 'lucide-react'
-import type { Product } from '@/lib/types'
-import { getProductsFromStorage } from '@/lib/actions'
+import { useProducts } from '@/hooks/queries'
 import { ProductsByStatusChart } from '@/components/charts/products-by-status-chart'
 import { ProductsByCountryChart } from '@/components/charts/products-by-country-chart'
 import { TimelineChart } from '@/components/charts/timeline-chart'
@@ -72,29 +70,14 @@ const cardVariants = {
 }
 
 export default function DashboardPage() {
-  const [allProducts, setAllProducts] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
+  // Use React Query (same cache as main page) instead of localStorage
+  const { data: allProducts = [], isLoading: loading } = useProducts()
 
   const [searchTerm, setSearchTerm] = useState('')
   const [languageFilter, setLanguageFilter] = useState('all')
   const [yearFilter, setYearFilter] = useState<number | 'all'>('all')
   const [quarterFilter, setQuarterFilter] = useState<number | 'all'>('all')
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
-
-  const fetchProducts = () => {
-    setLoading(true)
-    const storedProducts = getProductsFromStorage()
-    setAllProducts(storedProducts)
-    setLoading(false)
-  }
-
-  useEffect(() => {
-    fetchProducts()
-    window.addEventListener('storage', fetchProducts)
-    return () => {
-      window.removeEventListener('storage', fetchProducts)
-    }
-  }, [])
 
   const { uniqueLanguages, uniqueYears } = useMemo(() => {
     const languages = new Set<string>()

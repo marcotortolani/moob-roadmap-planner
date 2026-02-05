@@ -30,20 +30,11 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Prevent aggressive caching of HTML pages
-  async headers() {
-    return [
-      {
-        source: '/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=0, must-revalidate',
-          },
-        ],
-      },
-    ]
-  },
+  // Cache headers are now handled by Next.js automatically:
+  // - Dynamic pages (force-dynamic in layout): private, no-cache, no-store
+  // - Static assets (_next/static): immutable, long cache
+  // The previous 'public, max-age=0' header was causing Vercel CDN to cache
+  // dynamic HTML responses, serving stale pages with unresolved Suspense.
 };
 
 export default nextConfig;

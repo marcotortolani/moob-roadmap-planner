@@ -2,8 +2,8 @@
 
 'use client'
 
-// Force dynamic rendering to prevent static generation with stale data
-export const dynamic = 'force-dynamic'
+// NOTE: 'export const dynamic' was removed from here because route segment
+// configs are IGNORED in 'use client' files. It's now in layout.tsx (server component).
 
 import { Suspense, useState, useEffect } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'

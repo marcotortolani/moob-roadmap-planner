@@ -30,7 +30,6 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { RoleBadge } from '@/components/rbac/role-badge';
-import { Separator } from '@/components/ui/separator';
 
 // Password change schema
 const PasswordChangeSchema = z
@@ -80,20 +79,15 @@ export default function ProfilePage() {
   });
 
   const onFormSubmit = async (data: UserProfileFormData) => {
-    console.log('📝 [Profile] Form submitted:', data);
     setIsPending(true);
 
     try {
-      console.log('📝 [Profile] Calling updateUser...');
-      // Combine firstName and lastName for the API
       const { error } = await updateUser({
         name: `${data.firstName} ${data.lastName}`.trim(),
         avatarUrl: data.avatarUrl,
       });
-      console.log('📝 [Profile] updateUser returned:', { error });
 
       if (error) {
-        console.error('📝 [Profile] Update error:', error);
         toast({
           title: 'Error',
           description: error.message || 'No se pudo actualizar el perfil.',
@@ -102,20 +96,17 @@ export default function ProfilePage() {
         return;
       }
 
-      console.log('📝 [Profile] Update successful!');
       toast({
         title: 'Perfil actualizado',
         description: 'Tu información ha sido guardada.',
       });
-    } catch (error) {
-      console.error('📝 [Profile] Unexpected error:', error);
+    } catch {
       toast({
         title: 'Error',
         description: 'Ocurrió un error al actualizar el perfil.',
         variant: 'destructive',
       });
     } finally {
-      console.log('📝 [Profile] Setting isPending to false');
       setIsPending(false);
     }
   };
@@ -125,25 +116,19 @@ export default function ProfilePage() {
   };
 
   const onPasswordSubmit = async (data: PasswordChangeFormData) => {
-    console.log('🔐 [onPasswordSubmit] Starting password change...')
     setIsPasswordPending(true);
 
     try {
-      console.log('🔐 [onPasswordSubmit] Calling updatePassword...')
       const result = await Promise.race([
         updatePassword(data.newPassword),
         new Promise<{ error: Error }>((_, reject) =>
           setTimeout(() => {
-            console.error('⏱️ [onPasswordSubmit] Timeout reached after 15s')
             reject(new Error('Timeout: La solicitud tardó demasiado'))
-          }, 15000)  // Reducido a 15 segundos
+          }, 15000)
         )
       ]);
 
-      console.log('🔐 [onPasswordSubmit] updatePassword returned:', result)
-
       if (result.error) {
-        console.error('🔐 [onPasswordSubmit] Error updating password:', result.error)
         toast({
           title: 'Error',
           description: result.error.message || 'No se pudo actualizar la contraseña.',
@@ -153,17 +138,14 @@ export default function ProfilePage() {
         return;
       }
 
-      console.log('🔐 [onPasswordSubmit] Password updated successfully!')
       toast({
         title: 'Contraseña actualizada',
         description: 'Tu contraseña ha sido actualizada exitosamente.',
       });
-      // Reset form
       passwordForm.reset();
       setIsPasswordPending(false);
 
     } catch (error: any) {
-      console.error('🔐 [onPasswordSubmit] Caught error:', error)
 
       // Handle specific error types
       let errorMessage = 'Ocurrió un error al actualizar la contraseña.';

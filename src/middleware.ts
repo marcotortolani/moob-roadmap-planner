@@ -68,24 +68,16 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/', request.url))
   }
 
-  // If has session, check if user is BLOCKED (but only on protected routes)
-  if (session && !isPublicRoute && !isPublicApiRoute) {
-    const { data: dbUser, error } = await supabase
-      .from('users')
-      .select('role')
-      .eq('auth_user_id', user.id)
-      .single()
+  // BLOCKED user check is handled in AuthProvider (auth-context.tsx) on login,
+  // not here. The previous approach queried the DB on EVERY request, adding
+  // ~100-300ms latency to every page navigation.
 
-    if (!error && dbUser && dbUser.role === 'BLOCKED') {
-      // Sign out blocked user
-      await supabase.auth.signOut()
-
-      // Redirect to login with error message
-      const loginUrl = new URL('/login', request.url)
-      loginUrl.searchParams.set('error', 'blocked')
-      return NextResponse.redirect(loginUrl)
-    }
-  }
+  // Prevent CDN and browser from caching HTML responses with stale auth state.
+  // Static assets are excluded by the matcher config below.
+  response.headers.set(
+    'Cache-Control',
+    'private, no-cache, no-store, max-age=0, must-revalidate'
+  )
 
   return response
 }

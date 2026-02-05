@@ -133,13 +133,31 @@ async function fetchProduct(id: string): Promise<Product> {
 }
 
 /**
- * Hook to fetch a single product by ID
+ * Hook to fetch a single product by ID.
+ * Uses list cache as initialData to avoid redundant fetch when product
+ * is already available from the list query.
  */
 export function useProduct(id: string) {
+  const queryClient = useQueryClient()
+
   return useQuery({
     queryKey: productKeys.detail(id),
     queryFn: () => fetchProduct(id),
-    enabled: !!id, // Only fetch if id is provided
+    enabled: !!id,
+    initialData: () => {
+      // Check all list query caches for this product
+      const listQueries = queryClient.getQueriesData<Product[]>({
+        queryKey: productKeys.lists(),
+      })
+      for (const [, data] of listQueries) {
+        const product = data?.find((p) => p.id === id)
+        if (product) return product
+      }
+      return undefined
+    },
+    // Mark initialData as potentially stale so detail query still fetches
+    // fresh data with user relations in background
+    initialDataUpdatedAt: 0,
   })
 }
 
@@ -265,9 +283,8 @@ export function useCreateProduct() {
   return useMutation({
     mutationFn: createProduct,
     onSuccess: async (newProduct) => {
-      // Invalidate and refetch immediately
+      // Invalidate triggers automatic refetch of active queries
       await queryClient.invalidateQueries({ queryKey: productKeys.all })
-      await queryClient.refetchQueries({ queryKey: productKeys.all })
 
       toast({
         title: 'Éxito',
@@ -387,11 +404,10 @@ export function useUpdateProduct() {
   return useMutation({
     mutationFn: updateProduct,
     onSuccess: async (data) => {
-      // Update specific product query
+      // Update specific product in cache immediately
       queryClient.setQueryData(productKeys.detail(data.id), data)
-      // Invalidate and refetch all product queries immediately
+      // Invalidate triggers automatic refetch of active queries
       await queryClient.invalidateQueries({ queryKey: productKeys.all })
-      await queryClient.refetchQueries({ queryKey: productKeys.all })
 
       toast({
         title: 'Éxito',

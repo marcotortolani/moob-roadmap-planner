@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase/client'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 import type { User } from '@/lib/types'
 import { getCurrentUser } from '@/app/actions/auth'
+import { getQueryClient } from '@/lib/react-query/client'
 
 interface AuthContextType {
   user: User | null
@@ -56,9 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabaseUser: SupabaseUser,
     retryCount = 0
   ): Promise<User> => {
-    // Skip retries if we're updating password to avoid conflicts
     if (isUpdatingPassword.current) {
-      console.log('⏭️ Skipping fetchUserData during password update')
       return transformUser(supabaseUser)
     }
 
@@ -72,11 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .single()
 
     if (error) {
-      console.error(`Error fetching user data (attempt ${retryCount + 1}/${MAX_RETRIES + 1}):`, error)
-
-      // Skip retries if we're updating password
       if (isUpdatingPassword.current) {
-        console.log('⏭️ Skipping retry during password update')
         return transformUser(supabaseUser)
       }
 
@@ -86,15 +81,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         retryCount < MAX_RETRIES
       ) {
         const delay = RETRY_DELAYS[retryCount]
-        console.log(`⏳ User record not found yet. Retrying in ${delay}ms... (attempt ${retryCount + 1}/${MAX_RETRIES})`)
-
         await new Promise(resolve => setTimeout(resolve, delay))
         return fetchUserData(supabaseUser, retryCount + 1)
       }
 
       // If still not found after all retries, sign out
       if (error.code === 'PGRST116' || error.message?.includes('0 rows')) {
-        console.warn('❌ User record not found in database after all retries. Signing out...')
         await supabase.auth.signOut()
         throw new Error('Usuario eliminado del sistema o no se pudo crear correctamente. Por favor contacta al administrador.')
       }
@@ -102,46 +94,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return transformUser(supabaseUser)
     }
 
-    console.log('✅ User record found successfully')
     return transformUser(supabaseUser, data)
   }
 
   // Initialize auth state
   useEffect(() => {
     // Prevent double initialization (strict mode, HMR, etc.)
-    if (hasInitialized.current) {
-      console.log('🔐 [Auth Init] Already initialized, skipping')
-      return
-    }
+    if (hasInitialized.current) return
     hasInitialized.current = true
 
     // Safety timeout: if auth doesn't load in 10 seconds, stop loading
     const safetyTimeout = setTimeout(() => {
-      console.warn('⏱️ Auth initialization timeout - forcing loading to false')
       setLoading(false)
     }, 10000)
 
     const initAuth = async () => {
       try {
-        console.log('🔐 [Auth Init] Starting (via server action)...')
-
-        // Use server action instead of client getSession()
-        // This is more reliable and doesn't suffer from timeout issues
         const { user: userData, error } = await getCurrentUser()
 
-        console.log('🔐 [Auth Init] Server response:', {
-          hasUser: !!userData,
-          error,
-        })
-
         if (error) {
-          console.error('🔐 [Auth Init] Error:', error)
           setUser(null)
         } else if (userData) {
-          console.log('🔐 [Auth Init] User loaded:', userData.email)
+          // Check if user is BLOCKED (replaces per-request middleware check)
+          if (userData.role === 'BLOCKED') {
+            await supabase.auth.signOut()
+            setUser(null)
+            router.push('/login?error=blocked')
+            return
+          }
           setUser(userData)
         } else {
-          console.log('🔐 [Auth Init] No user')
           setUser(null)
         }
       } catch (error) {
@@ -150,7 +132,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } finally {
         clearTimeout(safetyTimeout)
         setLoading(false)
-        console.log('🔐 [Auth Init] Complete')
       }
     }
 
@@ -160,38 +141,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('🔐 [Auth Change] Event:', event, 'Has session:', !!session)
-
-      // For client-side auth events (login, logout), we can use the session
-      // For token refresh or other edge cases, fall back to server action
       if (event === 'SIGNED_IN' && session?.user) {
         try {
-          // On explicit sign in, fetch user data directly
           const userData = await fetchUserData(session.user)
           setUser(userData)
-        } catch (error) {
-          console.error('Error fetching user data on sign in:', error)
+        } catch {
           setUser(null)
         }
       } else if (event === 'SIGNED_OUT') {
         setUser(null)
         router.push('/login')
       } else if (event === 'TOKEN_REFRESHED') {
-        console.log('🔐 [Auth Change] Token refreshed, re-validating user...')
-        // Use server action for token refresh to ensure data is fresh
         try {
           const { user: userData, error } = await getCurrentUser()
           if (error || !userData) {
-            console.warn('🔐 [Auth Change] User not found after token refresh')
             setUser(null)
           } else {
             setUser(userData)
           }
-        } catch (error) {
-          console.error('Error re-validating user after token refresh:', error)
+        } catch {
+          // Token refresh failed silently - user stays logged in with current data
         }
       }
-      // Ignore other events like INITIAL_SESSION (handled by useEffect)
     })
 
     return () => {
@@ -220,6 +191,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
 
           setUser(userData)
+
+          // Invalidate all React Query caches to ensure fresh data after login
+          const queryClient = getQueryClient()
+          queryClient.invalidateQueries()
         } catch (error) {
           // User was deleted or blocked, already signed out
           throw error
@@ -278,6 +253,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Logout
   const logout = async () => {
+    // Clear all React Query caches to prevent stale data on next login
+    const queryClient = getQueryClient()
+    queryClient.clear()
+
     await supabase.auth.signOut()
     setUser(null)
   }
@@ -285,18 +264,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Update user - using API route instead of direct Supabase client
   const updateUser = async (updates: Partial<User>) => {
     try {
-      console.log('🔄 [updateUser] Starting update via API...', { updates, user })
-
       if (!user) throw new Error('No user logged in')
 
-      console.log('🔄 [updateUser] Calling /api/profile/update...')
-
-      // Call API route instead of using Supabase client directly
       const response = await fetch('/api/profile/update', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: updates.name || user.name,
           avatarUrl: updates.avatarUrl !== undefined ? updates.avatarUrl : user.avatarUrl,
@@ -305,27 +277,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const result = await response.json()
 
-      console.log('🔄 [updateUser] API response:', { status: response.status, result })
-
       if (!response.ok) {
         throw new Error(result.error || 'Error al actualizar el perfil')
       }
 
-      // Update local state with API response
-      console.log('🔄 [updateUser] Updating local state...')
-      const updatedUser = {
+      setUser({
         ...user,
         name: result.data.firstName && result.data.lastName
           ? `${result.data.firstName} ${result.data.lastName}`
           : user.name,
         avatarUrl: result.data.avatarUrl || user.avatarUrl,
-      }
-      setUser(updatedUser)
+      })
 
-      console.log('✅ [updateUser] Update completed successfully!')
       return { error: null }
     } catch (error) {
-      console.error('❌ [updateUser] Error:', error)
       return { error: error as Error }
     }
   }
@@ -348,58 +313,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Update password - using API route instead of direct Supabase client
   const updatePassword = async (newPassword: string) => {
     try {
-      console.log('🔐 [updatePassword] Starting password update via API...')
-
-      // Set flag to prevent auth state change conflicts
       isUpdatingPassword.current = true
-      console.log('🔐 [updatePassword] Flag set, calling API...')
 
-      // Call API route with fetch timeout
       const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 12000) // 12 second timeout
-
-      console.log('🔐 [updatePassword] Fetching /api/profile/change-password...')
+      const timeoutId = setTimeout(() => controller.abort(), 12000)
 
       const response = await fetch('/api/profile/change-password', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ newPassword }),
         signal: controller.signal,
       }).finally(() => {
         clearTimeout(timeoutId)
       })
 
-      console.log('🔐 [updatePassword] API response status:', response.status)
-
       const result = await response.json()
 
-      console.log('🔐 [updatePassword] API response data:', {
-        success: result.success,
-        error: result.error,
-      })
-
       if (!response.ok) {
-        console.error('🔐 [updatePassword] API error:', result.error)
         isUpdatingPassword.current = false
         return { error: new Error(result.error || 'Error al actualizar la contraseña') }
       }
 
-      console.log('🔐 [updatePassword] Password updated successfully')
-
-      // Wait a bit before clearing the flag to let auth settle
+      // Let auth state settle before clearing the flag
       setTimeout(() => {
-        console.log('🔐 [updatePassword] Clearing flag')
         isUpdatingPassword.current = false
       }, 1000)
 
       return { error: null }
     } catch (error: any) {
-      console.error('🔐 [updatePassword] Caught error:', error)
       isUpdatingPassword.current = false
 
-      // Handle AbortError (timeout)
       if (error.name === 'AbortError') {
         return {
           error: new Error(

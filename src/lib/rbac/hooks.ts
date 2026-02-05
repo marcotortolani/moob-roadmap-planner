@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo, useCallback } from 'react'
 import { useAuth } from '@/context/auth-context'
 import {
   type Role,
@@ -132,49 +133,57 @@ export function useRoleMetadata() {
 export function usePermissionChecks() {
   const role = useRole()
 
-  return {
-    role,
-    isAdmin: role ? isAdmin(role) : false,
-    isUser: role === 'USER',
-    isGuest: role === 'GUEST',
-    isUserOrHigher: role ? isUserOrHigher(role) : false,
-
-    // Products
-    canViewProducts: role ? can(role, 'products', 'view') : false,
-    canCreateProducts: role ? can(role, 'products', 'create') : false,
-    canEditProducts: role ? can(role, 'products', 'edit') : false,
-    canDeleteProducts: role ? can(role, 'products', 'delete') : false,
-
-    // Milestones
-    canViewMilestones: role ? can(role, 'milestones', 'view') : false,
-    canCreateMilestones: role ? can(role, 'milestones', 'create') : false,
-    canEditMilestones: role ? can(role, 'milestones', 'edit') : false,
-    canDeleteMilestones: role ? can(role, 'milestones', 'delete') : false,
-
-    // Holidays
-    canViewHolidays: role ? can(role, 'holidays', 'view') : false,
-    canCreateHolidays: role ? can(role, 'holidays', 'create') : false,
-    canEditHolidays: role ? can(role, 'holidays', 'edit') : false,
-    canDeleteHolidays: role ? can(role, 'holidays', 'delete') : false,
-
-    // Invitations
-    canViewInvitations: role ? can(role, 'invitations', 'view') : false,
-    canCreateInvitations: role ? can(role, 'invitations', 'create') : false,
-
-    // Users
-    canViewUsers: role ? can(role, 'users', 'view') : false,
-    canEditUsers: role ? can(role, 'users', 'edit') : false,
-    canDeleteUsers: role ? can(role, 'users', 'delete') : false,
-    canManageUsers: role ? canManageUsers(role) : false,
-
-    // Dashboard & Profile
-    canViewDashboard: role ? can(role, 'dashboard', 'view') : false,
-    canViewProfile: role ? can(role, 'profile', 'view') : false,
-    canEditProfile: role ? can(role, 'profile', 'edit') : false,
-
-    // Generic check function
-    can: (resource: Resource, action: Action) => {
+  const canCheck = useCallback(
+    (resource: Resource, action: Action) => {
       return role ? can(role, resource, action) : false
     },
-  }
+    [role]
+  )
+
+  return useMemo(
+    () => ({
+      role,
+      isAdmin: role ? isAdmin(role) : false,
+      isUser: role === 'USER',
+      isGuest: role === 'GUEST',
+      isUserOrHigher: role ? isUserOrHigher(role) : false,
+
+      // Products
+      canViewProducts: role ? can(role, 'products', 'view') : false,
+      canCreateProducts: role ? can(role, 'products', 'create') : false,
+      canEditProducts: role ? can(role, 'products', 'edit') : false,
+      canDeleteProducts: role ? can(role, 'products', 'delete') : false,
+
+      // Milestones
+      canViewMilestones: role ? can(role, 'milestones', 'view') : false,
+      canCreateMilestones: role ? can(role, 'milestones', 'create') : false,
+      canEditMilestones: role ? can(role, 'milestones', 'edit') : false,
+      canDeleteMilestones: role ? can(role, 'milestones', 'delete') : false,
+
+      // Holidays
+      canViewHolidays: role ? can(role, 'holidays', 'view') : false,
+      canCreateHolidays: role ? can(role, 'holidays', 'create') : false,
+      canEditHolidays: role ? can(role, 'holidays', 'edit') : false,
+      canDeleteHolidays: role ? can(role, 'holidays', 'delete') : false,
+
+      // Invitations
+      canViewInvitations: role ? can(role, 'invitations', 'view') : false,
+      canCreateInvitations: role ? can(role, 'invitations', 'create') : false,
+
+      // Users
+      canViewUsers: role ? can(role, 'users', 'view') : false,
+      canEditUsers: role ? can(role, 'users', 'edit') : false,
+      canDeleteUsers: role ? can(role, 'users', 'delete') : false,
+      canManageUsers: role ? canManageUsers(role) : false,
+
+      // Dashboard & Profile
+      canViewDashboard: role ? can(role, 'dashboard', 'view') : false,
+      canViewProfile: role ? can(role, 'profile', 'view') : false,
+      canEditProfile: role ? can(role, 'profile', 'edit') : false,
+
+      // Generic check function
+      can: canCheck,
+    }),
+    [role, canCheck]
+  )
 }
