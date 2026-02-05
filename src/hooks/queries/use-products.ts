@@ -1,8 +1,9 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { productRepository } from '@/data/repositories'
-import type { Product, ProductFormData } from '@/lib/types'
+import { supabase } from '@/lib/supabase/client'
+import { parseISO, startOfDay } from 'date-fns'
+import type { Product } from '@/lib/types'
 import { useToast } from '@/hooks/use-toast'
 
 /**
@@ -26,26 +27,107 @@ export interface ProductFilters {
 }
 
 /**
- * Hook to fetch all products
- * Uses repository pattern - currently configured for localStorage
+ * Fetch all products with optional filters
+ */
+async function fetchProducts(filters?: ProductFilters): Promise<Product[]> {
+  let query = supabase
+    .from('products')
+    .select(`
+      *,
+      milestones(*),
+      customUrls:custom_urls(*),
+      createdBy:created_by_id(id, email, first_name, last_name, avatar_url),
+      updatedBy:updated_by_id(id, email, first_name, last_name, avatar_url)
+    `)
+    .order('start_date', { ascending: false })
+
+  // Apply filters
+  if (filters?.status) {
+    query = query.eq('status', filters.status)
+  }
+  if (filters?.operator) {
+    query = query.eq('operator', filters.operator)
+  }
+  if (filters?.country) {
+    query = query.eq('country', filters.country)
+  }
+  if (filters?.language) {
+    query = query.eq('language', filters.language)
+  }
+
+  const { data, error } = await query
+
+  if (error) {
+    console.error('Error fetching products:', error)
+    throw new Error(error.message)
+  }
+
+  // Transform to match Product type
+  return (data || []).map((product) => ({
+    ...product,
+    // Parse dates and normalize to start of day to avoid timezone issues
+    startDate: startOfDay(parseISO(product.start_date)),
+    endDate: startOfDay(parseISO(product.end_date)),
+    cardColor: product.card_color || generateRandomColor(),
+    milestones: product.milestones?.map((m: any) => ({
+      ...m,
+      startDate: startOfDay(parseISO(m.start_date)),
+      endDate: startOfDay(parseISO(m.end_date)),
+    })) || [],
+    customUrls: product.customUrls || [],
+  })) as Product[]
+}
+
+/**
+ * Hook to fetch all products with optional filters
  */
 export function useProducts(filters?: ProductFilters) {
   return useQuery({
     queryKey: productKeys.list(filters),
-    queryFn: async () => {
-      console.log('📦 [useProducts] Fetching from repository...')
-      const result = await productRepository.getAll()
-
-      if (result.success && result.data) {
-        console.log('📦 [useProducts] Loaded', result.data.length, 'products')
-        return result.data
-      }
-
-      console.error('📦 [useProducts] Error:', result.error)
-      return []
-    },
+    queryFn: () => fetchProducts(filters),
     staleTime: 30 * 1000, // 30 seconds
   })
+}
+
+/**
+ * Fetch a single product by ID
+ */
+async function fetchProduct(id: string): Promise<Product> {
+  const { data, error } = await supabase
+    .from('products')
+    .select(`
+      *,
+      milestones(*),
+      customUrls:custom_urls(*),
+      createdBy:created_by_id(id, email, first_name, last_name, avatar_url),
+      updatedBy:updated_by_id(id, email, first_name, last_name, avatar_url)
+    `)
+    .eq('id', id)
+    .single()
+
+  if (error) {
+    console.error('Error fetching product:', error)
+    throw new Error(error.message)
+  }
+
+  if (!data) {
+    throw new Error('Product not found')
+  }
+
+  // Transform to match Product type
+  return {
+    ...data,
+    // Parse dates and normalize to start of day to avoid timezone issues
+    startDate: startOfDay(parseISO(data.start_date)),
+    endDate: startOfDay(parseISO(data.end_date)),
+    cardColor: data.card_color || generateRandomColor(),
+    milestones: data.milestones?.map((m: any) => ({
+      ...m,
+      startDate: startOfDay(parseISO(m.start_date)),
+      endDate: startOfDay(parseISO(m.end_date)),
+    })) || [],
+    customUrls: data.customUrls || [],
+  } as Product
 }
 
 /**
@@ -54,15 +136,121 @@ export function useProducts(filters?: ProductFilters) {
 export function useProduct(id: string) {
   return useQuery({
     queryKey: productKeys.detail(id),
-    queryFn: async () => {
-      const result = await productRepository.getById(id)
-      if (result.success && result.data) {
-        return result.data
-      }
-      throw new Error(result.error?.message || 'Product not found')
-    },
-    enabled: !!id,
+    queryFn: () => fetchProduct(id),
+    enabled: !!id, // Only fetch if id is provided
   })
+}
+
+/**
+ * Generate a random vibrant color for product cards
+ */
+function generateRandomColor(): string {
+  const colors = [
+    '#FF6B6B', // Red
+    '#4ECDC4', // Teal
+    '#45B7D1', // Blue
+    '#FFA07A', // Light Salmon
+    '#98D8C8', // Mint
+    '#F7DC6F', // Yellow
+    '#BB8FCE', // Purple
+    '#85C1E2', // Sky Blue
+    '#F8B195', // Peach
+    '#C06C84', // Mauve
+    '#6C5B7B', // Plum
+    '#355C7D', // Navy
+    '#99B898', // Sage
+    '#E84A5F', // Pink
+    '#2A363B', // Dark Gray
+  ]
+  return colors[Math.floor(Math.random() * colors.length)]
+}
+
+/**
+ * Create a new product
+ */
+async function createProduct(product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Promise<Product> {
+  // Generate ID (Prisma uses cuid, but UUID is compatible)
+  const newId = crypto.randomUUID()
+  const now = new Date().toISOString()
+
+  // Generate random color if not provided
+  const cardColor = product.cardColor || generateRandomColor()
+
+  // 1. Insert the product
+  const { data, error } = await supabase
+    .from('products')
+    .insert({
+      id: newId,
+      name: product.name,
+      operator: product.operator,
+      country: product.country,
+      language: product.language,
+      start_date: product.startDate.toISOString(),
+      end_date: product.endDate.toISOString(),
+      productive_url: product.productiveUrl,
+      vercel_demo_url: product.vercelDemoUrl,
+      wp_content_prod_url: product.wpContentProdUrl,
+      wp_content_test_url: product.wpContentTestUrl,
+      chatbot_url: product.chatbotUrl,
+      comments: product.comments,
+      card_color: cardColor,
+      status: product.status,
+      created_by_id: product.createdById,
+      updated_by_id: product.updatedById,
+      created_at: now,
+      updated_at: now,
+    })
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error creating product:', error)
+    throw new Error(error.message)
+  }
+
+  // 2. Insert milestones if any
+  if (product.milestones && product.milestones.length > 0) {
+    const milestonesToInsert = product.milestones.map((m) => ({
+      id: crypto.randomUUID(),
+      name: m.name,
+      start_date: m.startDate.toISOString(),
+      end_date: m.endDate.toISOString(),
+      status: m.status,
+      product_id: newId,
+      created_at: now,
+      updated_at: now,
+    }))
+
+    const { error: milestonesError } = await supabase
+      .from('milestones')
+      .insert(milestonesToInsert)
+
+    if (milestonesError) {
+      console.error('Error creating milestones:', milestonesError)
+      // Don't throw - product was created successfully
+    }
+  }
+
+  // 3. Insert custom URLs if any
+  if (product.customUrls && product.customUrls.length > 0) {
+    const urlsToInsert = product.customUrls.map((url) => ({
+      id: crypto.randomUUID(),
+      label: url.label,
+      url: url.url,
+      product_id: newId,
+    }))
+
+    const { error: urlsError } = await supabase
+      .from('custom_urls')
+      .insert(urlsToInsert)
+
+    if (urlsError) {
+      console.error('Error creating custom URLs:', urlsError)
+      // Don't throw - product was created successfully
+    }
+  }
+
+  return fetchProduct(data.id)
 }
 
 /**
@@ -73,28 +261,118 @@ export function useCreateProduct() {
   const { toast } = useToast()
 
   return useMutation({
-    mutationFn: async (data: ProductFormData) => {
-      const result = await productRepository.create(data)
-      if (!result.success || !result.data) {
-        throw new Error(result.error?.message || 'Failed to create product')
-      }
-      return result.data
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: productKeys.all })
+    mutationFn: createProduct,
+    onSuccess: async (newProduct) => {
+      // Invalidate and refetch immediately
+      await queryClient.invalidateQueries({ queryKey: productKeys.all })
+      await queryClient.refetchQueries({ queryKey: productKeys.all })
+
       toast({
-        title: 'Producto creado',
-        description: 'El producto se ha creado exitosamente',
+        title: 'Éxito',
+        description: 'Producto creado exitosamente',
       })
     },
     onError: (error: Error) => {
+      console.error('Error creating product:', error)
       toast({
         title: 'Error',
-        description: error.message,
+        description: error.message || 'Error al crear el producto',
         variant: 'destructive',
       })
     },
   })
+}
+
+/**
+ * Update an existing product
+ */
+async function updateProduct({ id, ...updates }: Partial<Product> & { id: string }): Promise<Product> {
+  const updateData: any = {}
+
+  if (updates.name !== undefined) updateData.name = updates.name
+  if (updates.operator !== undefined) updateData.operator = updates.operator
+  if (updates.country !== undefined) updateData.country = updates.country
+  if (updates.language !== undefined) updateData.language = updates.language
+  if (updates.startDate !== undefined) updateData.start_date = updates.startDate.toISOString()
+  if (updates.endDate !== undefined) updateData.end_date = updates.endDate.toISOString()
+  if (updates.productiveUrl !== undefined) updateData.productive_url = updates.productiveUrl
+  if (updates.vercelDemoUrl !== undefined) updateData.vercel_demo_url = updates.vercelDemoUrl
+  if (updates.wpContentProdUrl !== undefined) updateData.wp_content_prod_url = updates.wpContentProdUrl
+  if (updates.wpContentTestUrl !== undefined) updateData.wp_content_test_url = updates.wpContentTestUrl
+  if (updates.chatbotUrl !== undefined) updateData.chatbot_url = updates.chatbotUrl
+  if (updates.comments !== undefined) updateData.comments = updates.comments
+  if (updates.cardColor !== undefined) updateData.card_color = updates.cardColor
+  if (updates.status !== undefined) updateData.status = updates.status
+  if (updates.updatedById !== undefined) updateData.updated_by_id = updates.updatedById
+
+  // Always update the updated_at timestamp
+  const now = new Date().toISOString()
+  updateData.updated_at = now
+
+  // 1. Update the product
+  const { error } = await supabase
+    .from('products')
+    .update(updateData)
+    .eq('id', id)
+
+  if (error) {
+    console.error('Error updating product:', error)
+    throw new Error(error.message)
+  }
+
+  // 2. Update milestones if provided
+  if (updates.milestones !== undefined) {
+    // Delete existing milestones
+    await supabase.from('milestones').delete().eq('product_id', id)
+
+    // Insert new milestones
+    if (updates.milestones.length > 0) {
+      const milestonesToInsert = updates.milestones.map((m) => ({
+        id: m.id || crypto.randomUUID(),
+        name: m.name,
+        start_date: m.startDate.toISOString(),
+        end_date: m.endDate.toISOString(),
+        status: m.status,
+        product_id: id,
+        created_at: now,
+        updated_at: now,
+      }))
+
+      const { error: milestonesError } = await supabase
+        .from('milestones')
+        .insert(milestonesToInsert)
+
+      if (milestonesError) {
+        console.error('Error updating milestones:', milestonesError)
+      }
+    }
+  }
+
+  // 3. Update custom URLs if provided
+  if (updates.customUrls !== undefined) {
+    // Delete existing custom URLs
+    await supabase.from('custom_urls').delete().eq('product_id', id)
+
+    // Insert new custom URLs
+    if (updates.customUrls.length > 0) {
+      const urlsToInsert = updates.customUrls.map((url) => ({
+        id: url.id || crypto.randomUUID(),
+        label: url.label,
+        url: url.url,
+        product_id: id,
+      }))
+
+      const { error: urlsError } = await supabase
+        .from('custom_urls')
+        .insert(urlsToInsert)
+
+      if (urlsError) {
+        console.error('Error updating custom URLs:', urlsError)
+      }
+    }
+  }
+
+  return fetchProduct(id)
 }
 
 /**
@@ -105,29 +383,43 @@ export function useUpdateProduct() {
   const { toast } = useToast()
 
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<ProductFormData> }) => {
-      const result = await productRepository.update(id, data)
-      if (!result.success || !result.data) {
-        throw new Error(result.error?.message || 'Failed to update product')
-      }
-      return result.data
-    },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: productKeys.all })
-      queryClient.invalidateQueries({ queryKey: productKeys.detail(variables.id) })
+    mutationFn: updateProduct,
+    onSuccess: async (data) => {
+      // Update specific product query
+      queryClient.setQueryData(productKeys.detail(data.id), data)
+      // Invalidate and refetch all product queries immediately
+      await queryClient.invalidateQueries({ queryKey: productKeys.all })
+      await queryClient.refetchQueries({ queryKey: productKeys.all })
+
       toast({
-        title: 'Producto actualizado',
-        description: 'Los cambios se han guardado exitosamente',
+        title: 'Éxito',
+        description: 'Producto actualizado exitosamente',
       })
     },
     onError: (error: Error) => {
+      console.error('Error updating product:', error)
       toast({
         title: 'Error',
-        description: error.message,
+        description: error.message || 'Error al actualizar el producto',
         variant: 'destructive',
       })
     },
   })
+}
+
+/**
+ * Delete a product
+ */
+async function deleteProduct(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('products')
+    .delete()
+    .eq('id', id)
+
+  if (error) {
+    console.error('Error deleting product:', error)
+    throw new Error(error.message)
+  }
 }
 
 /**
@@ -138,23 +430,20 @@ export function useDeleteProduct() {
   const { toast } = useToast()
 
   return useMutation({
-    mutationFn: async (id: string) => {
-      const result = await productRepository.delete(id)
-      if (!result.success) {
-        throw new Error(result.error?.message || 'Failed to delete product')
-      }
-    },
+    mutationFn: deleteProduct,
     onSuccess: () => {
+      // Invalidate all product queries
       queryClient.invalidateQueries({ queryKey: productKeys.all })
       toast({
-        title: 'Producto eliminado',
-        description: 'El producto se ha eliminado exitosamente',
+        title: 'Éxito',
+        description: 'Producto eliminado exitosamente',
       })
     },
     onError: (error: Error) => {
+      console.error('Error deleting product:', error)
       toast({
         title: 'Error',
-        description: error.message,
+        description: error.message || 'Error al eliminar el producto',
         variant: 'destructive',
       })
     },
