@@ -2,6 +2,9 @@
 
 'use client'
 
+// Force dynamic rendering to prevent static generation with stale data
+export const dynamic = 'force-dynamic'
+
 import { Suspense, useState, useEffect } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { ProductList } from '@/components/product-list'
