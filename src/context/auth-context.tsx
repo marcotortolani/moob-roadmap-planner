@@ -115,9 +115,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const initAuth = async () => {
       try {
         console.log('🔐 [Auth Init] Starting...')
-        const {
-          data: { session },
-        } = await supabase.auth.getSession()
+
+        // Add timeout to getSession call specifically
+        const sessionPromise = supabase.auth.getSession()
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('getSession timeout')), 5000)
+        )
+
+        const { data: { session } } = await Promise.race([
+          sessionPromise,
+          timeoutPromise
+        ]).catch((error) => {
+          console.error('🔐 [Auth Init] getSession failed:', error)
+          return { data: { session: null } }
+        })
 
         console.log('🔐 [Auth Init] Session:', !!session)
 
