@@ -44,10 +44,10 @@ export function Header() {
   const isMainPage = pathname === '/';
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b-[3px] border-black bg-white px-4 sm:px-6 shadow-[0_6px_0px_0px_#000000]">
       <Link href="/" className="flex items-center gap-2 mr-auto" aria-label="Ir al inicio">
-        <Logo className="h-6 w-6 text-primary" aria-hidden="true" />
-        <h1 className="font-headline text-lg font-semibold md:text-xl">
+        <Logo className="h-6 w-6" style={{ color: '#0052CC' }} aria-hidden="true" />
+        <h1 className="font-bold text-lg md:text-xl" style={{ fontWeight: 800 }}>
           Roadmap Planner
         </h1>
       </Link>
@@ -59,21 +59,33 @@ export function Header() {
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-2">
               {!isMainPage && (
-                  <Button asChild variant="ghost" size="sm">
+                  <Button asChild variant="ghost" size="sm" className="border-2 border-black shadow-[3px_3px_0px_0px_#000000] hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[0px_0px_0px_0px_#000000] transition-all duration-150">
                       <Link href="/" aria-current={isMainPage ? 'page' : undefined}>
                           <Home className="h-4 w-4 mr-2" aria-hidden="true" />
                           Inicio
                       </Link>
                   </Button>
               )}
-              <Button asChild variant={pathname === '/dashboard' ? 'secondary' : 'ghost'} size="sm">
+              <Button
+                asChild
+                variant={pathname === '/dashboard' ? 'secondary' : 'ghost'}
+                size="sm"
+                className="border-2 border-black shadow-[3px_3px_0px_0px_#000000] hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[0px_0px_0px_0px_#000000] transition-all duration-150"
+                style={pathname === '/dashboard' ? { backgroundColor: '#F5F5F5' } : {}}
+              >
                   <Link href="/dashboard" aria-current={pathname === '/dashboard' ? 'page' : undefined}>
                       <LayoutDashboard className="h-4 w-4 mr-2" aria-hidden="true" />
                       Dashboard
                   </Link>
               </Button>
               {canCreateInvitations && (
-                <Button asChild variant={pathname === '/invitations' ? 'secondary' : 'ghost'} size="sm">
+                <Button
+                  asChild
+                  variant={pathname === '/invitations' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  className="border-2 border-black shadow-[3px_3px_0px_0px_#000000] hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[0px_0px_0px_0px_#000000] transition-all duration-150"
+                  style={pathname === '/invitations' ? { backgroundColor: '#F5F5F5' } : {}}
+                >
                     <Link href="/invitations" aria-current={pathname === '/invitations' ? 'page' : undefined}>
                         <Mail className="h-4 w-4 mr-2" aria-hidden="true" />
                         Invitaciones
@@ -83,8 +95,13 @@ export function Header() {
               {canCreateProducts && (
                 <Sheet>
                   <SheetTrigger asChild>
-                    <Button aria-label="Crear nuevo producto">
-                      <PlusCircle className="h-5 w-5 mr-2" aria-hidden="true" />
+                    <Button
+                      aria-label="Crear nuevo producto"
+                      size="sm"
+                      className="border-2 border-black shadow-[3px_3px_0px_0px_#000000] hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[0px_0px_0px_0px_#000000] transition-all duration-150"
+                      style={{ backgroundColor: 'oklch(67.47% .1725 259.61)', color: 'white' }}
+                    >
+                      <PlusCircle className="h-4 w-4 mr-2" aria-hidden="true" />
                       Nuevo Producto
                     </Button>
                   </SheetTrigger>
@@ -96,20 +113,26 @@ export function Header() {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full" aria-label={`Menú de usuario: ${user.name}`}>
-                    <Avatar className="h-8 w-8">
+                  <Button
+                    variant="ghost"
+                    className="relative h-8 w-8 border-2 border-black shadow-[3px_3px_0px_0px_#000000] hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[0px_0px_0px_0px_#000000] transition-all duration-150"
+                    aria-label={`Menú de usuario: ${user.name}`}
+                    style={{ borderRadius: 0 }}
+                  >
+                    <Avatar className="h-8 w-8" style={{ borderRadius: 0 }}>
                       <AvatarImage src={user.avatarUrl} alt={user.name} />
-                      <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                      <AvatarFallback style={{ borderRadius: 0 }}>{user.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => router.push('/profile')}>
+                <DropdownMenuContent align="end" className="border-3 border-black shadow-[6px_6px_0px_0px_#000000]" style={{ borderRadius: 0 }}>
+                  <DropdownMenuLabel className="font-bold">Mi Cuenta</DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-black" style={{ height: '2px' }} />
+                  <DropdownMenuItem onClick={() => router.push('/profile')} className="hover:bg-gray-100">
+                    <User className="mr-2 h-4 w-4" />
                     Perfil
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleLogout}>
+                  <DropdownMenuItem onClick={handleLogout} className="hover:bg-gray-100">
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Cerrar Sesión</span>
                   </DropdownMenuItem>
@@ -121,51 +144,82 @@ export function Header() {
             <div className="lg:hidden">
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" aria-label="Abrir menú de navegación">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Abrir menú de navegación"
+                    className="border-2 border-black shadow-[3px_3px_0px_0px_#000000] hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[0px_0px_0px_0px_#000000] transition-all duration-150"
+                  >
                     <Menu className="h-6 w-6" aria-hidden="true" />
                     <span className="sr-only">Menú</span>
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="w-3/4" aria-label="Menú de navegación móvil">
+                <SheetContent side="left" className="w-3/4 border-l-[3px] border-black" aria-label="Menú de navegación móvil">
                     <div className="flex flex-col h-full">
-                         <div className="p-4 border-b">
+                         <div className="p-4 border-b-[3px] border-black">
                             <div className="flex items-center gap-3">
-                                <Avatar className="h-10 w-10">
+                                <Avatar className="h-10 w-10 border-2 border-black" style={{ borderRadius: 0 }}>
                                     <AvatarImage src={user.avatarUrl} alt={user.name} />
-                                    <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                                    <AvatarFallback style={{ borderRadius: 0 }}>{user.name.charAt(0)}</AvatarFallback>
                                 </Avatar>
                                 <div>
-                                    <p className="font-semibold">{user.name}</p>
-                                    <p className="text-xs text-muted-foreground">{user.email}</p>
+                                    <p className="font-bold">{user.name}</p>
+                                    <p className="text-xs" style={{ color: '#2A2A2A' }}>{user.email}</p>
                                 </div>
                             </div>
                         </div>
 
-                        <nav className="flex-1 py-4 px-2 space-y-1" aria-label="Navegación móvil">
+                        <nav className="flex-1 py-4 px-2 space-y-2" aria-label="Navegación móvil">
                              {!isMainPage && (
-                                <Button variant="ghost" className="w-full justify-start" onClick={() => handleNavigation('/')} aria-current={isMainPage ? 'page' : undefined}>
+                                <Button
+                                  variant="ghost"
+                                  className="w-full justify-start border-2 border-black shadow-[3px_3px_0px_0px_#000000] hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[0px_0px_0px_0px_#000000] transition-all duration-150"
+                                  onClick={() => handleNavigation('/')}
+                                  aria-current={isMainPage ? 'page' : undefined}
+                                >
                                     <Home className="mr-2 h-4 w-4" aria-hidden="true" />
                                     Inicio
                                 </Button>
                             )}
-                            <Button variant={pathname === '/dashboard' ? 'secondary' : 'ghost'} className="w-full justify-start" onClick={() => handleNavigation('/dashboard')} aria-current={pathname === '/dashboard' ? 'page' : undefined}>
+                            <Button
+                              variant={pathname === '/dashboard' ? 'secondary' : 'ghost'}
+                              className="w-full justify-start border-2 border-black shadow-[3px_3px_0px_0px_#000000] hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[0px_0px_0px_0px_#000000] transition-all duration-150"
+                              onClick={() => handleNavigation('/dashboard')}
+                              aria-current={pathname === '/dashboard' ? 'page' : undefined}
+                              style={pathname === '/dashboard' ? { backgroundColor: '#F5F5F5' } : {}}
+                            >
                                 <LayoutDashboard className="mr-2 h-4 w-4" aria-hidden="true" />
                                 Dashboard
                             </Button>
                             {canCreateInvitations && (
-                              <Button variant={pathname === '/invitations' ? 'secondary' : 'ghost'} className="w-full justify-start" onClick={() => handleNavigation('/invitations')} aria-current={pathname === '/invitations' ? 'page' : undefined}>
+                              <Button
+                                variant={pathname === '/invitations' ? 'secondary' : 'ghost'}
+                                className="w-full justify-start border-2 border-black shadow-[3px_3px_0px_0px_#000000] hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[0px_0px_0px_0px_#000000] transition-all duration-150"
+                                onClick={() => handleNavigation('/invitations')}
+                                aria-current={pathname === '/invitations' ? 'page' : undefined}
+                                style={pathname === '/invitations' ? { backgroundColor: '#F5F5F5' } : {}}
+                              >
                                   <Mail className="mr-2 h-4 w-4" aria-hidden="true" />
                                   Invitaciones
                               </Button>
                             )}
-                            <Button variant="ghost" className="w-full justify-start" onClick={() => handleNavigation('/profile')} aria-current={pathname === '/profile' ? 'page' : undefined}>
+                            <Button
+                              variant="ghost"
+                              className="w-full justify-start border-2 border-black shadow-[3px_3px_0px_0px_#000000] hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[0px_0px_0px_0px_#000000] transition-all duration-150"
+                              onClick={() => handleNavigation('/profile')}
+                              aria-current={pathname === '/profile' ? 'page' : undefined}
+                            >
                                 <User className="mr-2 h-4 w-4" aria-hidden="true" />
                                 Perfil
                             </Button>
                             {canCreateProducts && (
                               <Sheet>
                                 <SheetTrigger asChild>
-                                   <Button variant="ghost" className="w-full justify-start">
+                                   <Button
+                                     variant="ghost"
+                                     className="w-full justify-start border-2 border-black shadow-[3px_3px_0px_0px_#000000] hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[0px_0px_0px_0px_#000000] transition-all duration-150"
+                                     style={{ backgroundColor: 'oklch(67.47% .1725 259.61)', color: 'white' }}
+                                   >
                                       <PlusCircle className="mr-2 h-4 w-4" />
                                       Nuevo Producto
                                     </Button>
@@ -176,9 +230,13 @@ export function Header() {
                               </Sheet>
                             )}
                         </nav>
-                        
-                        <div className="mt-auto p-4 border-t">
-                            <Button variant="ghost" className="w-full justify-start" onClick={handleLogout}>
+
+                        <div className="mt-auto p-4 border-t-[3px] border-black">
+                            <Button
+                              variant="ghost"
+                              className="w-full justify-start border-2 border-black shadow-[3px_3px_0px_0px_#000000] hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[0px_0px_0px_0px_#000000] transition-all duration-150"
+                              onClick={handleLogout}
+                            >
                                 <LogOut className="mr-2 h-4 w-4" />
                                 Cerrar Sesión
                             </Button>

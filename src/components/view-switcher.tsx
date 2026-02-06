@@ -52,43 +52,47 @@ export function ViewSwitcher() {
   return (
     <button
       onClick={handleToggle}
-      className="relative flex items-center gap-1 rounded-lg bg-gray-300 p-1 transition-colors hover:bg-gray-300/80"
+      className="relative flex items-center gap-1 border-3 border-black p-1 shadow-[4px_4px_0px_0px_#000000] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-[0px_0px_0px_0px_#000000] transition-all duration-150 ease-out"
+      style={{ backgroundColor: '#F5F5F5' }}
       aria-label={`Cambiar a vista de ${currentView === 'list' ? 'calendario' : 'lista'}`}
     >
       {/* Indicador animado de fondo */}
       <div
         className={cn(
-          'absolute inset-y-1 rounded-md bg-background shadow-sm transition-all duration-200 ease-in-out',
+          'absolute inset-y-1 border-2 border-black shadow-[2px_2px_0px_0px_#000000] transition-all duration-150 ease-out',
           currentView === 'list'
             ? 'left-1 right-[calc(50%+2px)] sm:right-[calc(60%+2px)]'
             : 'left-[calc(50%+2px)] sm:left-[calc(40%+2px)] right-1'
         )}
+        style={{ backgroundColor: '#FFFFFF' }}
       />
 
       {/* Opción Lista */}
       <div
         className={cn(
-          'relative z-10 flex items-center gap-2 px-3 py-1.5 transition-colors duration-200',
+          'relative z-10 flex items-center gap-2 px-3 py-1.5 transition-all duration-150',
           currentView === 'list'
-            ? 'text-foreground'
-            : 'text-muted-foreground'
+            ? 'font-bold'
+            : 'font-normal'
         )}
+        style={{ color: currentView === 'list' ? '#000000' : '#2A2A2A' }}
       >
         <List className="h-4 w-4" />
-        <span className="hidden text-sm font-medium sm:inline">Lista</span>
+        <span className="hidden text-sm sm:inline">Lista</span>
       </div>
 
       {/* Opción Calendario */}
       <div
         className={cn(
-          'relative z-10 flex items-center gap-2 px-3 py-1.5 transition-colors duration-200',
+          'relative z-10 flex items-center gap-2 px-3 py-1.5 transition-all duration-150',
           currentView === 'calendar'
-            ? 'text-foreground'
-            : 'text-muted-foreground'
+            ? 'font-bold'
+            : 'font-normal'
         )}
+        style={{ color: currentView === 'calendar' ? '#000000' : '#2A2A2A' }}
       >
         <Calendar className="h-4 w-4" />
-        <span className="hidden text-sm font-medium sm:inline">Calendario</span>
+        <span className="hidden text-sm sm:inline">Calendario</span>
       </div>
     </button>
   );
