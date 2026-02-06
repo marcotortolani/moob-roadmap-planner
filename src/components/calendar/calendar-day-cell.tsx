@@ -1,4 +1,4 @@
-import { memo } from 'react'
+import { memo, useState } from 'react'
 import {
   format,
   isSameMonth,
@@ -6,10 +6,18 @@ import {
   isSameDay,
   isWithinInterval,
 } from 'date-fns'
+import { es } from 'date-fns/locale'
 import { useDroppable } from '@dnd-kit/core'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { CalendarProductCard } from './calendar-product-card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import type {
   Product,
   Milestone,
@@ -60,6 +68,7 @@ export const CalendarDayCell = memo(function CalendarDayCell({
   holidays,
   canEditProducts,
 }: CalendarDayCellProps) {
+  const [isHolidayModalOpen, setIsHolidayModalOpen] = useState(false)
   const dateStr = format(day, 'yyyy-MM-dd')
   const isBusinessDayValue = businessDayMap.get(dateStr) || false
 
@@ -141,14 +150,46 @@ export const CalendarDayCell = memo(function CalendarDayCell({
         })}
       </div>
       {holiday && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none pt-8">
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none pt-8 px-1">
           <div
-            className="text-xs p-2 bg-white dark:bg-white rounded-full px-3 text-black pointer-events-auto"
-            role="status"
+            onClick={() => setIsHolidayModalOpen(true)}
+            className="text-[10px] sm:text-xs p-1.5 sm:p-2 bg-white dark:bg-white rounded-full px-2 sm:px-3 text-black pointer-events-auto max-w-[95%] line-clamp-2 text-center leading-tight cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-100 transition-colors"
+            role="button"
+            aria-label={`Ver detalles del feriado: ${holiday.name}`}
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                setIsHolidayModalOpen(true)
+              }
+            }}
           >
             {holiday.name}
           </div>
         </div>
+      )}
+
+      {/* Holiday Detail Modal */}
+      {holiday && (
+        <Dialog open={isHolidayModalOpen} onOpenChange={setIsHolidayModalOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-semibold text-center">
+                {holiday.name}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 text-center pt-2">
+              <div className="text-lg font-medium text-foreground">
+                {format(day, "d 'de' MMMM 'de' yyyy", { locale: es })}
+              </div>
+              <div className="flex justify-center">
+                <div className="inline-block px-4 py-2 bg-orange-100 dark:bg-orange-950/20 text-orange-800 dark:text-orange-200 rounded-full text-sm font-medium">
+                  Feriado Nacional
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
     </motion.div>
   )
