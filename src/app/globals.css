@@ -208,3 +208,26 @@ body {
     @apply transition-all duration-300;
   }
 }
+
+@layer utilities {
+  /* Holiday Cell Diagonal Stripe Pattern */
+  .bg-holiday-stripes {
+    background-image: repeating-linear-gradient(
+      45deg,
+      rgb(254 215 170) 0px,
+      rgb(254 215 170) 10px,
+      rgb(255 237 213) 10px,
+      rgb(255 237 213) 20px
+    );
+  }
+
+  .dark .bg-holiday-stripes {
+    background-image: repeating-linear-gradient(
+      45deg,
+      rgb(67 20 7 / 0.2) 0px,
+      rgb(67 20 7 / 0.2) 10px,
+      rgb(67 20 7 / 0.3) 10px,
+      rgb(67 20 7 / 0.3) 20px
+    );
+  }
+}

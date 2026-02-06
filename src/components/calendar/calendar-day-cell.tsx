@@ -87,7 +87,7 @@ export const CalendarDayCell = memo(function CalendarDayCell({
         isToday(day) && 'border-2 border-destructive',
         !isSameMonth(day, currentMonth) && 'bg-muted/30 text-muted-foreground',
         holiday &&
-          'bg-orange-100 dark:bg-orange-950/20 text-black dark:text-orange-200',
+          'bg-holiday-stripes text-black dark:text-orange-200',
         !isBusinessDayValue && !holiday && 'bg-neutral-100 dark:bg-neutral-900',
         isOver && !isBusinessDayValue && 'ring-2 ring-destructive',
       )}
@@ -100,6 +100,7 @@ export const CalendarDayCell = memo(function CalendarDayCell({
           'text-xs h-6 w-6 flex items-center justify-center rounded-full',
           isToday(day) && 'bg-primary font-bold text-primary-foreground',
           !isSameMonth(day, currentMonth) && 'text-muted-foreground/60',
+          holiday && !isToday(day) && 'bg-white dark:bg-white text-black',
         )}
       >
         {format(day, 'd')}
@@ -138,12 +139,17 @@ export const CalendarDayCell = memo(function CalendarDayCell({
             />
           )
         })}
-        {holiday && (
-          <div className="text-center text-xs p-2" role="status">
+      </div>
+      {holiday && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none pt-8">
+          <div
+            className="text-xs p-2 bg-white dark:bg-white rounded-full px-3 text-black pointer-events-auto"
+            role="status"
+          >
             {holiday.name}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </motion.div>
   )
 })
