@@ -27,7 +27,7 @@ BEGIN
 
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- Función que se ejecuta DESPUÉS de actualizar un producto (UPDATED)
 CREATE OR REPLACE FUNCTION log_product_updated()
@@ -110,7 +110,7 @@ BEGIN
 
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- Crear los triggers
 DROP TRIGGER IF EXISTS product_created_trigger ON products;

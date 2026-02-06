@@ -11,15 +11,16 @@ DROP POLICY IF EXISTS "Allow trigger to insert users" ON users;
 DROP POLICY IF EXISTS "Allow user creation" ON users;
 
 -- Create new policy that allows the trigger to insert users
+-- Uses (SELECT auth.uid()) for single-evaluation per query (performance)
 CREATE POLICY "Allow user creation"
   ON users FOR INSERT TO public
   WITH CHECK (
     -- Allow if the auth_user_id being inserted matches the current auth.uid()
     -- This covers both the trigger case and direct inserts
-    auth_user_id = (auth.uid())::text
+    auth_user_id = (SELECT auth.uid())::text
     OR
     -- Fallback: allow if there's no current auth.uid()
-    auth.uid() IS NULL
+    (SELECT auth.uid()) IS NULL
   );
 
 -- ============ PART 2: Fix Trigger Function ============

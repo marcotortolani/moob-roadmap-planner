@@ -1,25 +1,14 @@
--- Add RLS policy to allow admins to delete users
--- This policy allows admin users to delete other users from the users table
+-- RLS policy: admin can delete any user except themselves
 
 DROP POLICY IF EXISTS "Admins can delete users" ON users;
 
 CREATE POLICY "Admins can delete users"
   ON users FOR DELETE TO authenticated
   USING (
-    -- Allow deletion if the requesting user is an admin
-    EXISTS (
+    (SELECT auth.uid())::text != auth_user_id
+    AND EXISTS (
       SELECT 1 FROM users u
-      WHERE auth.uid()::text = u.auth_user_id
-      AND u.role = 'ADMIN'
+      WHERE u.auth_user_id = (SELECT auth.uid())::text
+        AND u.role::text = 'ADMIN'
     )
-    -- And prevent self-deletion (though API also checks this)
-    AND auth.uid()::text != auth_user_id
   );
-
--- Verify the policy was created
-SELECT
-  policyname,
-  cmd,
-  qual
-FROM pg_policies
-WHERE tablename = 'users' AND cmd = 'DELETE';
