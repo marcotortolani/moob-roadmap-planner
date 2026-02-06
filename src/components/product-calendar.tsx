@@ -146,7 +146,7 @@ export function ProductCalendar({ products }: { products: Product[] }) {
   return (
     <TooltipProvider>
       <DndContext
-        sensors={canEditProducts ? sensors : []}
+        sensors={sensors}
         collisionDetection={closestCenter}
         onDragStart={canEditProducts ? handleDragStart : undefined}
         onDragMove={canEditProducts ? handleDragMove : undefined}
