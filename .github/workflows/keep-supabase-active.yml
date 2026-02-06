@@ -3,9 +3,9 @@ name: Keep Supabase Active
 # Run every 2 days to prevent database pause (free tier pauses after 7 days)
 on:
   schedule:
-    # Runs at 10:00 AM UTC every 2 days
+    # Runs at 10:00 AM UTC every day
     # Cron format: minute hour day-of-month month day-of-week
-    - cron: '0 10 */2 * *'
+    - cron: '0 10 */1 * *' 
 
   # Allow manual trigger from GitHub Actions tab
   workflow_dispatch:
@@ -42,4 +42,4 @@ jobs:
         if: always()
         run: |
           echo "Execution time: $(date -u)"
-          echo "Next run: in 2 days"
+          echo "Next run: in 1 day"

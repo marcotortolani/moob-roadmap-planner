@@ -4,7 +4,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 /**
  * Keep-Alive Endpoint for Supabase Free Tier
  *
- * This endpoint is called by a GitHub Actions cron job every 5 days
+ * This endpoint is called by a GitHub Actions cron job every day
  * to prevent Supabase from pausing the database due to inactivity.
  *
  * Free tier projects are paused after 7 days of inactivity.
