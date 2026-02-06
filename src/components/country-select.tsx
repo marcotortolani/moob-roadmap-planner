@@ -66,9 +66,10 @@ export function CountrySelect({ value, onChange }: { value: string, onChange: (v
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+          "neo-button flex h-10 w-full items-center justify-between border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
           isOpen && "ring-2 ring-ring ring-offset-2"
         )}
+        style={{ borderRadius: 0 }}
       >
         {selectedCountry ? (
           <div className="flex items-center gap-2">
@@ -82,7 +83,7 @@ export function CountrySelect({ value, onChange }: { value: string, onChange: (v
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-md">
+        <div className="neo-card absolute z-50 mt-1 w-full border-2 border-black bg-popover shadow-md" style={{ borderRadius: 0 }}>
           <div className="flex items-center border-b px-3 py-2">
             <input
               ref={inputRef}
@@ -90,7 +91,8 @@ export function CountrySelect({ value, onChange }: { value: string, onChange: (v
               placeholder="Buscar país..."
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
-              className="flex h-9 w-full rounded-md bg-transparent text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+              className="neo-input flex h-9 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+              style={{ borderRadius: 0 }}
             />
             {searchValue && (
               <button

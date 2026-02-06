@@ -36,6 +36,8 @@ export function ProductUrlsSection({
             <FormLabel>URL Productiva</FormLabel>
             <FormControl>
               <Input
+                className="neo-input"
+                style={{ borderRadius: 0 }}
                 placeholder="https://..."
                 {...field}
                 type="url"
@@ -54,6 +56,8 @@ export function ProductUrlsSection({
             <FormLabel>URL Demo Vercel</FormLabel>
             <FormControl>
               <Input
+                className="neo-input"
+                style={{ borderRadius: 0 }}
                 placeholder="https://..."
                 {...field}
                 type="url"
@@ -72,6 +76,8 @@ export function ProductUrlsSection({
             <FormLabel>URL Content Prod (WordPress)</FormLabel>
             <FormControl>
               <Input
+                className="neo-input"
+                style={{ borderRadius: 0 }}
                 placeholder="https://..."
                 {...field}
                 type="url"
@@ -90,6 +96,8 @@ export function ProductUrlsSection({
             <FormLabel>URL Content Test (WordPress)</FormLabel>
             <FormControl>
               <Input
+                className="neo-input"
+                style={{ borderRadius: 0 }}
                 placeholder="https://..."
                 {...field}
                 type="url"
@@ -108,6 +116,8 @@ export function ProductUrlsSection({
             <FormLabel>URL Chatbot</FormLabel>
             <FormControl>
               <Input
+                className="neo-input"
+                style={{ borderRadius: 0 }}
                 placeholder="https://..."
                 {...field}
                 type="url"
@@ -118,7 +128,7 @@ export function ProductUrlsSection({
           </FormItem>
         )}
       />
-      <Separator className="my-4" />
+      <Separator className="bg-black my-4" style={{ height: '2px' }} />
       <h4 className="text-md font-medium">URLs Personalizadas</h4>
       {customUrlFields.map((item, index) => (
         <div
@@ -134,6 +144,8 @@ export function ProductUrlsSection({
                   <FormLabel>Etiqueta</FormLabel>
                   <FormControl>
                     <Input
+                      className="neo-input"
+                      style={{ borderRadius: 0 }}
                       placeholder="Ej: Diseño Figma"
                       {...field}
                       aria-label={`Etiqueta de URL personalizada ${index + 1}`}
@@ -151,6 +163,8 @@ export function ProductUrlsSection({
                   <FormLabel>URL</FormLabel>
                   <FormControl>
                     <Input
+                      className="neo-input"
+                      style={{ borderRadius: 0 }}
                       placeholder="https://..."
                       {...field}
                       type="url"
@@ -166,6 +180,7 @@ export function ProductUrlsSection({
             type="button"
             variant="ghost"
             size="icon"
+            className="neo-button"
             onClick={() => onRemoveCustomUrl(index)}
             aria-label={`Eliminar URL personalizada ${index + 1}`}
           >
@@ -177,6 +192,7 @@ export function ProductUrlsSection({
         type="button"
         variant="outline"
         size="sm"
+        className="neo-button"
         onClick={onAppendCustomUrl}
       >
         <PlusCircle className="mr-2 h-4 w-4" />

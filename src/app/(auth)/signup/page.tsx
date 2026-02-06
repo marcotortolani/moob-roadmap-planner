@@ -337,7 +337,7 @@ function SignupForm() {
 
   if (isValidatingToken) {
     return (
-      <Card>
+      <Card className="neo-card" style={{ borderRadius: 0 }}>
         <CardContent className="flex flex-col items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
           <p className="text-sm text-muted-foreground">Validando invitación...</p>
@@ -348,14 +348,14 @@ function SignupForm() {
 
   if (signupSuccess) {
     return (
-      <Card>
-        <CardHeader className="space-y-1">
+      <Card className="neo-card" style={{ borderRadius: 0 }}>
+        <CardHeader className="space-y-1 border-b-2 border-black">
           <div className="flex justify-center mb-4">
             <div className="rounded-full bg-green-100 p-3">
               <CheckCircle2 className="h-6 w-6 text-green-600" />
             </div>
           </div>
-          <CardTitle className="font-headline text-2xl text-center">
+          <CardTitle className="font-headline text-2xl text-center uppercase">
             ¡Bienvenido!
           </CardTitle>
           <CardDescription className="text-center">
@@ -372,9 +372,9 @@ function SignupForm() {
   }
 
   return (
-    <Card>
-      <CardHeader className="space-y-1">
-        <CardTitle className="font-headline text-2xl">Completar Registro</CardTitle>
+    <Card className="neo-card" style={{ borderRadius: 0 }}>
+      <CardHeader className="space-y-1 border-b-2 border-black">
+        <CardTitle className="font-headline text-2xl uppercase">Completar Registro</CardTitle>
         <CardDescription>
           Completa tu información para acceder al Roadmap Planner
         </CardDescription>
@@ -440,7 +440,7 @@ function SignupForm() {
                   <FormItem>
                     <FormLabel>Nombre</FormLabel>
                     <FormControl>
-                      <Input placeholder="Juan" autoComplete="given-name" {...field} />
+                      <Input placeholder="Juan" autoComplete="given-name" className="neo-input" style={{ borderRadius: 0 }} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -454,7 +454,7 @@ function SignupForm() {
                   <FormItem>
                     <FormLabel>Apellido</FormLabel>
                     <FormControl>
-                      <Input placeholder="Pérez" autoComplete="family-name" {...field} />
+                      <Input placeholder="Pérez" autoComplete="family-name" className="neo-input" style={{ borderRadius: 0 }} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -474,7 +474,8 @@ function SignupForm() {
                         type={showPassword ? 'text' : 'password'}
                         placeholder="••••••••"
                         autoComplete="new-password"
-                        className="pr-10"
+                        className="neo-input pr-10"
+                        style={{ borderRadius: 0 }}
                         {...field}
                       />
                       <Button
@@ -515,7 +516,8 @@ function SignupForm() {
                         type={showConfirmPassword ? 'text' : 'password'}
                         placeholder="••••••••"
                         autoComplete="new-password"
-                        className="pr-10"
+                        className="neo-input pr-10"
+                        style={{ borderRadius: 0 }}
                         {...field}
                       />
                       <Button
@@ -541,7 +543,7 @@ function SignupForm() {
               )}
             />
 
-            <Button type="submit" className="w-full" disabled={isPending}>
+            <Button type="submit" className="neo-button w-full uppercase font-bold" disabled={isPending}>
               {isPending ? 'Creando cuenta...' : 'Crear Cuenta'}
             </Button>
           </form>

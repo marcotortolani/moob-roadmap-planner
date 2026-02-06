@@ -59,7 +59,7 @@ function ProductsData({ view }: { view: string }) {
     <div className="flex flex-col gap-4 h-full min-h-screen">
       <ViewTransitionWrapper view={view}>
         {view === 'list' && (
-          <div className="space-y-2 p-4 border rounded-lg bg-card text-card-foreground shadow-sm">
+          <div className="space-y-2 border-3 border-black shadow-neo-md bg-white p-4">
             <FiltersBar
               searchTerm={searchTerm}
               onSearchChange={setSearchTerm}

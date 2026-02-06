@@ -185,7 +185,7 @@ export default function ProductForm({ product }: { product?: Product }) {
             onStartDateChange={handleStartDateChange}
           />
 
-          <Separator />
+          <Separator className="bg-black" style={{ height: '2px' }} />
 
           <ProductMilestonesSection
             control={form.control}
@@ -201,7 +201,7 @@ export default function ProductForm({ product }: { product?: Product }) {
             onRemoveMilestone={removeMilestone}
           />
 
-          <Separator />
+          <Separator className="bg-black" style={{ height: '2px' }} />
 
           <ProductUrlsSection
             control={form.control}
@@ -210,7 +210,7 @@ export default function ProductForm({ product }: { product?: Product }) {
             onRemoveCustomUrl={removeCustomUrl}
           />
 
-          <Separator />
+          <Separator className="bg-black" style={{ height: '2px' }} />
 
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Estado y Apariencia</h3>
@@ -228,11 +228,11 @@ export default function ProductForm({ product }: { product?: Product }) {
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger aria-label="Estado del producto">
+                        <SelectTrigger className="neo-button" style={{ borderRadius: 0 }} aria-label="Estado del producto">
                           <SelectValue placeholder="Selecciona un estado" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className="neo-card border-2 border-black" style={{ borderRadius: 0 }}>
                         {STATUS_OPTIONS.map((opt) => (
                           <SelectItem key={opt.value} value={opt.value}>
                             {opt.label}
@@ -270,7 +270,8 @@ export default function ProductForm({ product }: { product?: Product }) {
                   <FormControl>
                     <Textarea
                       placeholder="Añade comentarios o notas relevantes sobre el producto."
-                      className="resize-none"
+                      className="neo-input resize-none"
+                      style={{ borderRadius: 0 }}
                       {...field}
                       aria-label="Comentarios sobre el producto"
                     />
@@ -282,7 +283,7 @@ export default function ProductForm({ product }: { product?: Product }) {
           </div>
 
           <SheetFooter>
-            <Button type="submit" disabled={isPending}>
+            <Button className="neo-button" type="submit" disabled={isPending}>
               {isPending ? 'Guardando...' : 'Guardar Producto'}
             </Button>
           </SheetFooter>

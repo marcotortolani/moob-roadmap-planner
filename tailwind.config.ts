@@ -68,15 +68,40 @@ export default {
         neutral: {
           200: '#e5e5e5',
         },
+        // Neobrutalism Palette
+        'neo-black': '#000000',
+        'neo-white': '#FFFFFF',
+        'neo-gray-light': '#F5F5F5',
+        'neo-gray-dark': '#2A2A2A',
+        'neo-completed': '#2EBD59',
+        'neo-in-progress': '#FF2E63',
+        'neo-planned': '#4A4A4A',
+        'neo-demo-ok': '#FFD700',
+        'neo-primary': 'oklch(67.47% .1725 259.61)',
         // Design System Colors
         'slate-blue': '#778899',
         'light-gray-bg': '#F0F8FF',
         'soft-green': '#90EE90',
       },
       borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+        lg: '0.375rem', // 6px - for cards (subtle rounding)
+        md: '0.375rem', // 6px - for buttons/inputs
+        sm: '0.25rem',  // 4px - for badges
+        'neo-button': '0.375rem', // 6px
+        'neo-input': '0.375rem',  // 6px
+        'neo-badge': '0.25rem',   // 4px
+        'neo-card': '0rem',        // 0px - cards stay sharp
+      },
+      borderWidth: {
+        '3': '3px',
+        '4': '4px',
+      },
+      boxShadow: {
+        'neo-sm': '3px 3px 0px 0px #000000',
+        'neo-md': '4px 4px 0px 0px #000000',
+        'neo-lg': '6px 6px 0px 0px #000000',
+        'neo-xl': '8px 8px 0px 0px #000000',
+        'neo-none': '0px 0px 0px 0px #000000',
       },
       spacing: {
         'card-padding': '1rem',

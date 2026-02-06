@@ -152,7 +152,7 @@ export function ProductCalendar({ products }: { products: Product[] }) {
         onDragMove={canEditProducts ? handleDragMove : undefined}
         onDragEnd={canEditProducts ? handleDragEnd : undefined}
       >
-        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-2 sm:p-4 flex flex-col h-full">
+        <div className="border-3 border-black shadow-neo-lg bg-white p-2 sm:p-4 flex flex-col h-full">
           <CalendarHeader
             currentMonth={currentMonth}
             onPrevMonth={prevMonth}

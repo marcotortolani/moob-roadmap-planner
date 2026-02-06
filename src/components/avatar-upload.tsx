@@ -204,7 +204,7 @@ export function AvatarUpload({
 
   return (
     <div className="flex items-center gap-4">
-      <Avatar className="h-20 w-20">
+      <Avatar className="h-24 w-24 border-3 border-black">
         <AvatarImage src={previewUrl} alt="Avatar" />
         <AvatarFallback className="text-2xl">{userInitials}</AvatarFallback>
       </Avatar>
@@ -219,6 +219,7 @@ export function AvatarUpload({
           disabled={isUploading}
         />
         <Button
+          className="neo-button"
           type="button"
           variant="outline"
           size="sm"

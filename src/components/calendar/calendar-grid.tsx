@@ -150,10 +150,10 @@ export function CalendarGrid({
       {weekDays.map((day) => (
         <div
           key={day}
-          className="text-center font-medium text-muted-foreground text-xs sm:text-sm capitalize pb-2 border-b"
+          className="border-b-3 border-black bg-neo-gray-light p-4 text-center"
           role="columnheader"
         >
-          {day}
+          <h3 className="text-xl font-black uppercase">{day}</h3>
         </div>
       ))}
 

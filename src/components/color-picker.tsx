@@ -16,8 +16,8 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
         <button
           key={color}
           type="button"
-          className="h-8 w-8 rounded-full border-2 transition-transform hover:scale-110"
-          style={{ backgroundColor: color, borderColor: value.toLowerCase() === color.toLowerCase() ? 'hsl(var(--primary))' : 'transparent' }}
+          className="h-8 w-8 rounded-full border-2 border-black shadow-neo-sm hover:scale-110 transition-transform"
+          style={{ backgroundColor: color, borderColor: value.toLowerCase() === color.toLowerCase() ? 'hsl(var(--primary))' : '#000000' }}
           onClick={() => onChange(color)}
           aria-label={`Select color ${color}`}
         >
@@ -27,7 +27,7 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
         </button>
       ))}
       <div
-        className="relative h-8 w-8 rounded-full border-2 border-dashed border-muted-foreground/50 hover:border-primary hover:scale-110 transition-all"
+        className="relative h-8 w-8 rounded-full border-2 border-dashed border-black shadow-neo-sm hover:scale-110 transition-all"
         style={{ backgroundColor: value }}
       >
         <input

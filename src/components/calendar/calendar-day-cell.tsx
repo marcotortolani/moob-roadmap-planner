@@ -92,8 +92,8 @@ export const CalendarDayCell = memo(function CalendarDayCell({
       }}
       transition={{ duration: 0.2 }}
       className={cn(
-        'relative min-h-[100px] sm:min-h-[120px] p-1.5 border-b border-r flex flex-col',
-        isToday(day) && 'border-2 border-destructive',
+        'border-2 border-black relative min-h-[100px] sm:min-h-[120px] p-1.5 flex flex-col',
+        isToday(day) && 'border-4 border-destructive',
         !isSameMonth(day, currentMonth) && 'bg-muted/30 text-muted-foreground',
         holiday &&
           'bg-holiday-stripes text-black dark:text-orange-200',

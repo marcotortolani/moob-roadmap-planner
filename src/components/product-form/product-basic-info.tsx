@@ -28,6 +28,8 @@ export function ProductBasicInfo({ control }: ProductBasicInfoProps) {
             </FormLabel>
             <FormControl>
               <Input
+                className="neo-input"
+                style={{ borderRadius: 0 }}
                 placeholder="Ej: Total Fitness"
                 {...field}
                 aria-required="true"
@@ -49,6 +51,8 @@ export function ProductBasicInfo({ control }: ProductBasicInfoProps) {
               </FormLabel>
               <FormControl>
                 <Input
+                  className="neo-input"
+                  style={{ borderRadius: 0 }}
                   placeholder="Ej: Movistar"
                   {...field}
                   aria-required="true"
@@ -86,6 +90,8 @@ export function ProductBasicInfo({ control }: ProductBasicInfoProps) {
             </FormLabel>
             <FormControl>
               <Input
+                className="neo-input"
+                style={{ borderRadius: 0 }}
                 placeholder="Ej: Español"
                 {...field}
                 aria-required="true"

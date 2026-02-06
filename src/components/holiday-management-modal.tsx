@@ -75,7 +75,7 @@ function HolidayForm({
             <FormItem>
               <FormLabel>Nombre del Feriado</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input {...field} className="neo-input" style={{ borderRadius: 0 }} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -93,10 +93,10 @@ function HolidayForm({
           )}
         />
         <div className="flex justify-end gap-2">
-          <Button type="button" variant="ghost" onClick={onCancel}>
+          <Button type="button" variant="ghost" onClick={onCancel} className="neo-button">
             Cancelar
           </Button>
-          <Button type="submit">Guardar</Button>
+          <Button type="submit" className="neo-button">Guardar</Button>
         </div>
       </form>
     </Form>
@@ -184,8 +184,8 @@ export function HolidayManagementModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-xl h-[75vh] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="neo-card max-w-xl h-[75vh] flex flex-col" style={{ borderRadius: 0 }}>
+        <DialogHeader className="border-b-2 border-black pb-4">
           <DialogTitle>Gestionar Feriados</DialogTitle>
           <DialogDescription>
             Añade, edita o elimina los feriados del calendario.
@@ -222,12 +222,13 @@ export function HolidayManagementModal({
                     variant="outline"
                     onClick={generateFixedHolidays}
                     disabled={createHoliday.isPending}
+                    className="neo-button"
                   >
                     Generar Feriados Fijos
                   </Button>
                 )}
                 {canCreateHolidays && (
-                  <Button size="sm" onClick={handleAddNew} className="ml-auto">
+                  <Button size="sm" onClick={handleAddNew} className="ml-auto neo-button">
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Añadir Feriado
                   </Button>
@@ -238,7 +239,7 @@ export function HolidayManagementModal({
                   {filteredHolidays.map((holiday) => (
                     <div
                       key={holiday.id}
-                      className="flex items-center justify-between rounded-md border p-3"
+                      className="flex items-center justify-between border-2 border-black p-3 bg-neo-gray-light"
                     >
                       <div>
                         <p className="font-semibold">{holiday.name}</p>
@@ -253,6 +254,7 @@ export function HolidayManagementModal({
                               variant="ghost"
                               size="icon"
                               onClick={() => handleEdit(holiday)}
+                              className="neo-button"
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -262,7 +264,7 @@ export function HolidayManagementModal({
                               variant="ghost"
                               size="icon"
                               onClick={() => handleDelete(holiday.id)}
-                              className="text-destructive hover:text-destructive"
+                              className="neo-button text-destructive hover:text-destructive"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -282,7 +284,7 @@ export function HolidayManagementModal({
           )}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} className="neo-button">
             Cerrar
           </Button>
         </DialogFooter>

@@ -53,9 +53,9 @@ export function TimelineChart({ products, limit = 10 }: TimelineChartProps) {
 
   if (!timelineData || timelineData.products.length === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Timeline de Productos</CardTitle>
+      <Card className="neo-card" style={{ borderRadius: 0 }}>
+        <CardHeader className="border-b-2 border-black">
+          <CardTitle className="font-bold uppercase">Timeline de Productos</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground text-center py-8">
@@ -76,9 +76,9 @@ export function TimelineChart({ products, limit = 10 }: TimelineChartProps) {
   const todayPosition = calculatePosition(now)
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Timeline de Productos</CardTitle>
+    <Card className="neo-card" style={{ borderRadius: 0 }}>
+      <CardHeader className="border-b-2 border-black">
+        <CardTitle className="font-bold uppercase">Timeline de Productos</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">

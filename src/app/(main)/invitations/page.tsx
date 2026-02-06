@@ -133,12 +133,12 @@ export default function InvitationsPage() {
         </p>
       </div>
 
-      <Tabs defaultValue="users" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="users">
+      <Tabs defaultValue="users" className="space-y-6 border-3 border-black" style={{ borderRadius: 0 }}>
+        <TabsList className="bg-neo-gray-light border-b-2 border-black">
+          <TabsTrigger value="users" className="neo-button">
             Usuarios ({users.length})
           </TabsTrigger>
-          <TabsTrigger value="invitations">
+          <TabsTrigger value="invitations" className="neo-button">
             Invitaciones ({invitations.length})
           </TabsTrigger>
         </TabsList>

@@ -36,11 +36,11 @@ export function ActiveFiltersBadges({
     <div className="flex flex-wrap items-center gap-2">
       <span className="text-sm font-medium">Filtros activos:</span>
       {searchTerm && (
-        <Badge variant="secondary">
+        <Badge className="neo-badge bg-neo-gray-light text-black">
           Búsqueda: {searchTerm}
           <button
             onClick={() => onRemoveFilter('search')}
-            className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
+            className="ml-1 neo-button p-0.5"
             aria-label="Quitar filtro de búsqueda"
           >
             <X className="h-3 w-3" />
@@ -48,11 +48,11 @@ export function ActiveFiltersBadges({
         </Badge>
       )}
       {yearFilter !== 'all' && (
-        <Badge variant="secondary">
+        <Badge className="neo-badge bg-neo-gray-light text-black">
           Año: {yearFilter}
           <button
             onClick={() => onRemoveFilter('year')}
-            className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
+            className="ml-1 neo-button p-0.5"
             aria-label="Quitar filtro de año"
           >
             <X className="h-3 w-3" />
@@ -60,11 +60,11 @@ export function ActiveFiltersBadges({
         </Badge>
       )}
       {quarterFilter !== 'all' && yearFilter !== 'all' && (
-        <Badge variant="secondary">
+        <Badge className="neo-badge bg-neo-gray-light text-black">
           Quarter: Q{quarterFilter}
           <button
             onClick={() => onRemoveFilter('quarter')}
-            className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
+            className="ml-1 neo-button p-0.5"
             aria-label="Quitar filtro de trimestre"
           >
             <X className="h-3 w-3" />
@@ -72,11 +72,11 @@ export function ActiveFiltersBadges({
         </Badge>
       )}
       {statusFilter !== 'all' && (
-        <Badge variant="secondary">
+        <Badge className="neo-badge bg-neo-gray-light text-black">
           Estado: {STATUS_OPTIONS.find((o) => o.value === statusFilter)?.label}
           <button
             onClick={() => onRemoveFilter('status')}
-            className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
+            className="ml-1 neo-button p-0.5"
             aria-label="Quitar filtro de estado"
           >
             <X className="h-3 w-3" />
@@ -84,11 +84,11 @@ export function ActiveFiltersBadges({
         </Badge>
       )}
       {operatorFilter !== 'all' && (
-        <Badge variant="secondary">
+        <Badge className="neo-badge bg-neo-gray-light text-black">
           Operador: {operatorFilter}
           <button
             onClick={() => onRemoveFilter('operator')}
-            className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
+            className="ml-1 neo-button p-0.5"
             aria-label="Quitar filtro de operador"
           >
             <X className="h-3 w-3" />
@@ -96,11 +96,11 @@ export function ActiveFiltersBadges({
         </Badge>
       )}
       {countryFilter !== 'all' && (
-        <Badge variant="secondary">
+        <Badge className="neo-badge bg-neo-gray-light text-black">
           País: {countryFilter}
           <button
             onClick={() => onRemoveFilter('country')}
-            className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
+            className="ml-1 neo-button p-0.5"
             aria-label="Quitar filtro de país"
           >
             <X className="h-3 w-3" />
@@ -108,11 +108,11 @@ export function ActiveFiltersBadges({
         </Badge>
       )}
       {languageFilter !== 'all' && (
-        <Badge variant="secondary">
+        <Badge className="neo-badge bg-neo-gray-light text-black">
           Idioma: {languageFilter}
           <button
             onClick={() => onRemoveFilter('language')}
-            className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
+            className="ml-1 neo-button p-0.5"
             aria-label="Quitar filtro de idioma"
           >
             <X className="h-3 w-3" />

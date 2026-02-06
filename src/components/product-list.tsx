@@ -95,9 +95,9 @@ export const ProductList = memo(function ProductList({
 
   if (products.length === 0) {
     return (
-      <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm">
+      <div className="flex flex-1 items-center justify-center border-3 border-dashed border-black shadow-neo-md p-8">
         <div className="flex flex-col items-center gap-1 text-center">
-          <h3 className="text-2xl font-bold tracking-tight font-headline">
+          <h3 className="text-2xl font-bold tracking-tight font-headline uppercase">
             No tienes productos
           </h3>
           <p className="text-sm text-muted-foreground">
@@ -128,8 +128,13 @@ export const ProductList = memo(function ProductList({
                     {Object.entries(quarters).map(([quarter, quarterProducts]) => {
                       if (quarterProducts.length === 0) return null;
                       return (
-                        <AccordionItem key={`${year}-q${quarter}`} value={quarter} className="border rounded-lg">
-                          <AccordionTrigger className="px-4 py-3 text-lg font-headline hover:no-underline">
+                        <AccordionItem
+                          key={`${year}-q${quarter}`}
+                          value={quarter}
+                          className="border-3 border-black mb-2"
+                          style={{ borderRadius: 0 }}
+                        >
+                          <AccordionTrigger className="neo-button px-4 py-3 text-lg font-headline uppercase">
                             Q{quarter}
                           </AccordionTrigger>
                           <AccordionContent className="p-4 pt-0">

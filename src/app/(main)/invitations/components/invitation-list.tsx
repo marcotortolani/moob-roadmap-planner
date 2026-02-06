@@ -58,25 +58,25 @@ const STATUS_CONFIG = {
   PENDING: {
     label: 'Pendiente',
     icon: Clock,
-    variant: 'default' as const,
+    className: 'badge-status-pending',
     color: 'text-yellow-600',
   },
   ACCEPTED: {
     label: 'Aceptada',
     icon: CheckCircle2,
-    variant: 'default' as const,
+    className: 'badge-status-accepted',
     color: 'text-green-600',
   },
   EXPIRED: {
     label: 'Expirada',
     icon: XCircle,
-    variant: 'secondary' as const,
+    className: 'badge-status-expired',
     color: 'text-gray-600',
   },
   REVOKED: {
     label: 'Revocada',
     icon: Ban,
-    variant: 'destructive' as const,
+    className: 'badge-status-revoked',
     color: 'text-red-600',
   },
 }
@@ -84,19 +84,19 @@ const STATUS_CONFIG = {
 const ROLE_CONFIG = {
   ADMIN: {
     label: 'Administrador',
-    className: 'bg-red-100 text-red-800 hover:bg-red-100',
+    className: 'badge-role-admin',
   },
   USER: {
     label: 'Usuario',
-    className: 'bg-blue-100 text-blue-800 hover:bg-blue-100',
+    className: 'badge-role-user',
   },
   GUEST: {
     label: 'Invitado',
-    className: 'bg-gray-100 text-gray-800 hover:bg-gray-100',
+    className: 'badge-role-guest',
   },
   BLOCKED: {
     label: 'Bloqueado',
-    className: 'bg-orange-100 text-orange-800 hover:bg-orange-100',
+    className: 'badge-role-blocked',
   },
 }
 
@@ -204,7 +204,7 @@ export function InvitationList({ invitations, onRevoke }: InvitationListProps) {
 
   if (invitations.length === 0) {
     return (
-      <Card>
+      <Card className="neo-card" style={{ borderRadius: 0 }}>
         <CardContent className="flex flex-col items-center justify-center py-12">
           <Clock className="h-12 w-12 text-muted-foreground mb-4" />
           <p className="text-lg font-medium">No hay invitaciones</p>
@@ -218,7 +218,7 @@ export function InvitationList({ invitations, onRevoke }: InvitationListProps) {
 
   return (
     <>
-      <Card>
+      <Card className="neo-card" style={{ borderRadius: 0 }}>
         <CardHeader>
           <CardTitle>Invitaciones</CardTitle>
           <CardDescription>
@@ -252,7 +252,7 @@ export function InvitationList({ invitations, onRevoke }: InvitationListProps) {
                       {invitation.email}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="secondary" className={roleConfig.className}>
+                      <Badge variant={undefined} className={roleConfig.className}>
                         {roleConfig.label}
                       </Badge>
                     </TableCell>
@@ -261,11 +261,11 @@ export function InvitationList({ invitations, onRevoke }: InvitationListProps) {
                         <StatusIcon
                           className={`h-4 w-4 ${statusConfig.color}`}
                         />
-                        <Badge variant={statusConfig.variant}>
+                        <Badge variant={undefined} className={statusConfig.className}>
                           {statusConfig.label}
                         </Badge>
                         {expired && invitation.status === 'PENDING' && (
-                          <Badge variant="secondary">Expirada</Badge>
+                          <Badge variant={undefined} className="badge-status-expired">Expirada</Badge>
                         )}
                       </div>
                     </TableCell>
@@ -282,7 +282,7 @@ export function InvitationList({ invitations, onRevoke }: InvitationListProps) {
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
+                          <Button variant="ghost" size="icon" className="neo-button">
                             <MoreVertical className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -325,8 +325,8 @@ export function InvitationList({ invitations, onRevoke }: InvitationListProps) {
       </Card>
 
       <AlertDialog open={revokeDialogOpen} onOpenChange={setRevokeDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
+        <AlertDialogContent className="neo-card" style={{ borderRadius: 0 }}>
+          <AlertDialogHeader className="border-b-2 border-black pb-4">
             <AlertDialogTitle>¿Revocar invitación?</AlertDialogTitle>
             <AlertDialogDescription>
               ¿Estás seguro de que deseas revocar la invitación enviada a{' '}
@@ -335,11 +335,11 @@ export function InvitationList({ invitations, onRevoke }: InvitationListProps) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel className="neo-button">Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleRevoke}
               disabled={isRevoking}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-red-600 hover:bg-red-700 neo-button"
             >
               {isRevoking ? 'Revocando...' : 'Revocar'}
             </AlertDialogAction>

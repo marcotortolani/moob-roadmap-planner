@@ -141,14 +141,14 @@ function ResetPasswordForm() {
 
   if (resetSuccess) {
     return (
-      <Card>
-        <CardHeader className="space-y-1">
+      <Card className="neo-card" style={{ borderRadius: 0 }}>
+        <CardHeader className="space-y-1 border-b-2 border-black">
           <div className="flex justify-center mb-4">
             <div className="rounded-full bg-green-100 p-3">
               <CheckCircle2 className="h-6 w-6 text-green-600" />
             </div>
           </div>
-          <CardTitle className="font-headline text-2xl text-center">
+          <CardTitle className="font-headline text-2xl text-center uppercase">
             Contraseña Actualizada
           </CardTitle>
           <CardDescription className="text-center">
@@ -165,9 +165,9 @@ function ResetPasswordForm() {
   }
 
   return (
-    <Card>
-      <CardHeader className="space-y-1">
-        <CardTitle className="font-headline text-2xl">Nueva Contraseña</CardTitle>
+    <Card className="neo-card" style={{ borderRadius: 0 }}>
+      <CardHeader className="space-y-1 border-b-2 border-black">
+        <CardTitle className="font-headline text-2xl uppercase">Nueva Contraseña</CardTitle>
         <CardDescription>
           Ingresa tu nueva contraseña para tu cuenta
         </CardDescription>
@@ -187,7 +187,8 @@ function ResetPasswordForm() {
                         type={showPassword ? 'text' : 'password'}
                         placeholder="••••••••"
                         autoComplete="new-password"
-                        className="pr-10"
+                        className="neo-input pr-10"
+                        style={{ borderRadius: 0 }}
                         {...field}
                       />
                       <Button
@@ -228,7 +229,8 @@ function ResetPasswordForm() {
                         type={showConfirmPassword ? 'text' : 'password'}
                         placeholder="••••••••"
                         autoComplete="new-password"
-                        className="pr-10"
+                        className="neo-input pr-10"
+                        style={{ borderRadius: 0 }}
                         {...field}
                       />
                       <Button
@@ -255,11 +257,11 @@ function ResetPasswordForm() {
             />
 
             <div className="space-y-2">
-              <Button type="submit" className="w-full" disabled={isPending}>
+              <Button type="submit" className="neo-button w-full uppercase font-bold" disabled={isPending}>
                 {isPending ? 'Actualizando...' : 'Actualizar Contraseña'}
               </Button>
 
-              <Button asChild className="w-full" variant="ghost">
+              <Button asChild className="neo-button w-full uppercase font-bold" variant="ghost">
                 <Link href="/login">Cancelar</Link>
               </Button>
             </div>

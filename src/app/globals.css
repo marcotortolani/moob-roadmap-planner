@@ -8,41 +8,44 @@ body {
 
 @layer base {
   :root {
-    --background: 208 100% 97%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 208 100% 97%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 208 100% 97%;
-    --popover-foreground: 222.2 84% 4.9%;
+    /* Neobrutalism Variables */
+    --background: 0 0% 100%; /* Pure white */
+    --foreground: 0 0% 0%; /* Pure black */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
     --primary: 210 14% 57%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 29%;
     --accent: 120 73% 75%;
     --accent-foreground: 120 25% 15%;
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 0%; /* Black borders */
+    --input: 0 0% 0%;
+    --ring: 0 0% 0%;
+    --radius: 0rem; /* NO border radius */
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 0%;
+    --sidebar-primary: 0 0% 0%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 96%;
+    --sidebar-accent-foreground: 0 0% 0%;
+    --sidebar-border: 0 0% 0%;
+    --sidebar-ring: 0 0% 0%;
   }
-  .dark {
+
+  /* DARK MODE: Disabled for Neobrutalism - can be re-enabled later with inverted palette */
+  /* .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
     --card: 222.2 84% 4.9%;
@@ -75,7 +78,7 @@ body {
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
-  }
+  } */
 }
 
 @layer base {
@@ -178,21 +181,87 @@ body {
     @apply border-destructive focus-visible:ring-destructive;
   }
 
-  /* Status Badge Utilities */
+  /* Status Badge Utilities - Neobrutalism */
   .badge-planned {
-    @apply badge-outline bg-slate-400/20 text-slate-700 border-slate-400/30;
+    @apply neo-badge bg-[#6B7280] text-white;
   }
 
   .badge-in-progress {
-    @apply badge-outline bg-red-500/20 text-red-700 border-red-500/30;
+    @apply neo-badge bg-[#FF2E63] text-white;
   }
 
   .badge-demo-ok {
-    @apply badge-outline bg-yellow-500/20 text-yellow-700 border-yellow-500/30;
+    @apply neo-badge bg-[#FFD700] text-black;
   }
 
   .badge-live {
-    @apply badge-outline bg-green-500/20 text-green-700 border-green-500/30;
+    @apply neo-badge bg-[#2EBD59] text-white;
+  }
+
+  /* Role Badge Utilities - Neobrutalism */
+  .badge-role-admin {
+    @apply neo-badge;
+    background-color: #EF4444 !important;
+    color: white !important;
+  }
+
+  .badge-role-admin:hover {
+    background-color: #EF4444 !important;
+  }
+
+  .badge-role-user {
+    @apply neo-badge;
+    background-color: #3B82F6 !important;
+    color: white !important;
+  }
+
+  .badge-role-user:hover {
+    background-color: #3B82F6 !important;
+  }
+
+  .badge-role-guest {
+    @apply neo-badge;
+    background-color: #F97316 !important;
+    color: white !important;
+  }
+
+  .badge-role-guest:hover {
+    background-color: #F97316 !important;
+  }
+
+  .badge-role-blocked {
+    @apply neo-badge;
+    background-color: #A855F7 !important;
+    color: white !important;
+  }
+
+  .badge-role-blocked:hover {
+    background-color: #A855F7 !important;
+  }
+
+  /* Invitation Status Badge Utilities - Neobrutalism */
+  .badge-status-pending {
+    @apply neo-badge;
+    background-color: #FCC419 !important;
+    color: black !important;
+  }
+
+  .badge-status-accepted {
+    @apply neo-badge;
+    background-color: #51CF66 !important;
+    color: white !important;
+  }
+
+  .badge-status-expired {
+    @apply neo-badge;
+    background-color: #868E96 !important;
+    color: white !important;
+  }
+
+  .badge-status-revoked {
+    @apply neo-badge;
+    background-color: #FF6B6B !important;
+    color: white !important;
   }
 
   /* Animation Utilities */
@@ -210,24 +279,40 @@ body {
 }
 
 @layer utilities {
-  /* Holiday Cell Diagonal Stripe Pattern */
+  /* Neobrutalist Card Utilities */
+  .neo-card {
+    @apply border-3 border-black shadow-[4px_4px_0px_0px_#000000] bg-white;
+    border-radius: 0 !important; /* Cards stay completely sharp */
+  }
+
+  .neo-card-hover {
+    @apply neo-card hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-[0px_0px_0px_0px_#000000] transition-all duration-150;
+  }
+
+  .neo-button {
+    @apply border-2 border-black shadow-[3px_3px_0px_0px_#000000] hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[0px_0px_0px_0px_#000000] transition-all duration-150;
+    border-radius: 6px !important; /* Subtle rounding for buttons */
+  }
+
+  .neo-input {
+    @apply border-2 border-black focus:shadow-[0_0_0_2px_#000000] transition-all;
+    border-radius: 6px !important; /* Subtle rounding for inputs */
+  }
+
+  .neo-badge {
+    @apply border-2 border-black px-2 py-1 text-xs font-bold uppercase;
+    border-radius: 4px !important; /* Minimal rounding for badges */
+  }
+
+  /* Holiday Cell Diagonal Stripe Pattern - Neobrutalism */
   .bg-holiday-stripes {
+    border: 2px solid #000000;
     background-image: repeating-linear-gradient(
       45deg,
       rgb(254 215 170) 0px,
       rgb(254 215 170) 10px,
       rgb(255 237 213) 10px,
       rgb(255 237 213) 20px
-    );
-  }
-
-  .dark .bg-holiday-stripes {
-    background-image: repeating-linear-gradient(
-      45deg,
-      rgb(67 20 7 / 0.2) 0px,
-      rgb(67 20 7 / 0.2) 10px,
-      rgb(67 20 7 / 0.3) 10px,
-      rgb(67 20 7 / 0.3) 20px
     );
   }
 }

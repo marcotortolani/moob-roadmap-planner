@@ -62,7 +62,8 @@ export function FiltersBar({
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Buscar producto..."
-          className="pl-8 w-full"
+          className="neo-input pl-8 w-full"
+          style={{ borderRadius: 0 }}
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
           aria-label="Buscar productos"
@@ -77,10 +78,10 @@ export function FiltersBar({
             onYearChange(value === 'all' ? 'all' : Number(value))
           }
         >
-          <SelectTrigger className="w-28" aria-label="Filtrar por año">
+          <SelectTrigger className="neo-button w-28" style={{ borderRadius: 0 }} aria-label="Filtrar por año">
             {yearFilter === 'all' ? 'Año' : <SelectValue />}
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="neo-card border-2 border-black" style={{ borderRadius: 0 }}>
             <SelectItem value="all">Todos</SelectItem>
             {uniqueYears.map((y) => (
               <SelectItem key={y} value={y.toString()}>
@@ -97,10 +98,10 @@ export function FiltersBar({
           }
           disabled={yearFilter === 'all'}
         >
-          <SelectTrigger className="w-24" aria-label="Filtrar por trimestre">
+          <SelectTrigger className="neo-button w-24" style={{ borderRadius: 0 }} aria-label="Filtrar por trimestre">
             {quarterFilter === 'all' ? 'Quarter' : <SelectValue />}
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="neo-card border-2 border-black" style={{ borderRadius: 0 }}>
             <SelectItem value="all">Todos</SelectItem>
             <SelectItem value="1">Q1</SelectItem>
             <SelectItem value="2">Q2</SelectItem>
@@ -113,10 +114,10 @@ export function FiltersBar({
           value={statusFilter}
           onValueChange={(value) => onStatusChange(value as Status | 'all')}
         >
-          <SelectTrigger aria-label="Filtrar por estado">
+          <SelectTrigger className="neo-button" style={{ borderRadius: 0 }} aria-label="Filtrar por estado">
             {statusFilter === 'all' ? 'Estado' : <SelectValue />}
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="neo-card border-2 border-black" style={{ borderRadius: 0 }}>
             <SelectItem value="all">Todos</SelectItem>
             {STATUS_OPTIONS.map((opt) => (
               <SelectItem key={opt.value} value={opt.value}>
@@ -127,10 +128,10 @@ export function FiltersBar({
         </Select>
 
         <Select value={operatorFilter} onValueChange={onOperatorChange}>
-          <SelectTrigger aria-label="Filtrar por operador">
+          <SelectTrigger className="neo-button" style={{ borderRadius: 0 }} aria-label="Filtrar por operador">
             {operatorFilter === 'all' ? 'Operador' : <SelectValue />}
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="neo-card border-2 border-black" style={{ borderRadius: 0 }}>
             <SelectItem value="all">Todos</SelectItem>
             {uniqueOperators.map((op) => (
               <SelectItem key={op} value={op}>
@@ -141,10 +142,10 @@ export function FiltersBar({
         </Select>
 
         <Select value={countryFilter} onValueChange={onCountryChange}>
-          <SelectTrigger aria-label="Filtrar por país">
+          <SelectTrigger className="neo-button" style={{ borderRadius: 0 }} aria-label="Filtrar por país">
             {countryFilter === 'all' ? 'País' : <SelectValue />}
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="neo-card border-2 border-black" style={{ borderRadius: 0 }}>
             <SelectItem value="all">Todos</SelectItem>
             {uniqueCountries.map((c) => (
               <SelectItem key={c} value={c}>
@@ -155,10 +156,10 @@ export function FiltersBar({
         </Select>
 
         <Select value={languageFilter} onValueChange={onLanguageChange}>
-          <SelectTrigger aria-label="Filtrar por idioma">
+          <SelectTrigger className="neo-button" style={{ borderRadius: 0 }} aria-label="Filtrar por idioma">
             {languageFilter === 'all' ? 'Idioma' : <SelectValue />}
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="neo-card border-2 border-black" style={{ borderRadius: 0 }}>
             <SelectItem value="all">Todos</SelectItem>
             {uniqueLanguages.map((l) => (
               <SelectItem key={l} value={l}>
@@ -174,12 +175,13 @@ export function FiltersBar({
         onValueChange={(value) => onSortChange(value as SortOption)}
       >
         <SelectTrigger
-          className="hidden lg:flex lg:max-w-[200px]"
+          className="neo-button hidden lg:flex lg:max-w-[200px]"
+          style={{ borderRadius: 0 }}
           aria-label="Ordenar productos"
         >
           <SelectValue placeholder="Ordenar por" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="neo-card border-2 border-black" style={{ borderRadius: 0 }}>
           <SelectItem value="date-asc">Más antiguos</SelectItem>
           <SelectItem value="date-desc">Más nuevos</SelectItem>
           <SelectItem value="name-asc">Nombre (A-Z)</SelectItem>

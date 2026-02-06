@@ -77,14 +77,14 @@ const InfoLine = memo(function InfoLine({
 const getStatusBadgeClass = (status: Status) => {
   switch (status) {
     case 'IN_PROGRESS':
-      return 'bg-red-500/20 text-red-700 border-red-500/30'
+      return 'badge-in-progress'
     case 'DEMO_OK':
-      return 'bg-yellow-500/20 text-yellow-700 border-yellow-500/30'
+      return 'badge-demo-ok'
     case 'LIVE':
-      return 'bg-green-500/20 text-green-700 border-green-500/30'
+      return 'badge-live'
     case 'PLANNED':
     default:
-      return '' // default outline variant
+      return 'badge-planned'
   }
 }
 
@@ -136,8 +136,11 @@ export const ProductCard = memo(function ProductCard({
   return (
     <>
       <Card
-        className="overflow-hidden transition-all duration-200 hover:shadow-lg hover:scale-105 flex flex-col"
-        style={{ borderLeft: `12px solid ${product.cardColor}` }}
+        className="neo-card-hover flex flex-col overflow-hidden"
+        style={{
+          borderLeft: `6px solid ${product.cardColor}`,
+          borderRadius: 0
+        }}
       >
         <CardHeader className="flex flex-row items-start justify-between gap-4 pb-2">
           <button
@@ -157,7 +160,7 @@ export const ProductCard = memo(function ProductCard({
             {status && (
               <Badge
                 variant="outline"
-                className={cn(getStatusBadgeClass(product.status))}
+                className={cn('neo-badge', getStatusBadgeClass(product.status))}
               >
                 {status.label}
               </Badge>
@@ -169,13 +172,14 @@ export const ProductCard = memo(function ProductCard({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8"
+                      className="neo-button h-8 w-8"
+                      style={{ borderRadius: 0 }}
                       aria-label="Opciones del producto"
                     >
                       <MoreVertical className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
+                  <DropdownMenuContent align="end" className="neo-card border-2 border-black" style={{ borderRadius: 0 }}>
                     {canEditProducts && (
                       <SheetTrigger asChild>
                         <DropdownMenuItem>
@@ -195,7 +199,7 @@ export const ProductCard = memo(function ProductCard({
                             Eliminar
                           </DropdownMenuItem>
                         </AlertDialogTrigger>
-                        <AlertDialogContent>
+                        <AlertDialogContent className="neo-card" style={{ borderRadius: 0 }}>
                           <AlertDialogHeader>
                             <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
                             <AlertDialogDescription>
@@ -218,7 +222,7 @@ export const ProductCard = memo(function ProductCard({
                     )}
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <SheetContent className="w-full sm:max-w-3xl overflow-y-auto">
+                <SheetContent className="w-full sm:max-w-3xl overflow-y-auto border-l-3 border-black" style={{ borderRadius: 0 }}>
                   <ProductForm product={product} />
                 </SheetContent>
               </Sheet>
@@ -239,7 +243,7 @@ export const ProductCard = memo(function ProductCard({
             </div>
 
             {product.comments && (
-              <div className="flex items-start gap-2 text-sm text-muted-foreground bg-secondary/50 p-3 rounded-md mt-auto">
+              <div className="flex items-start gap-2 text-sm border-2 border-black p-3 mt-auto bg-neo-gray-light">
                 <MessageSquare className="h-4 w-4 flex-shrink-0 mt-0.5" />
                 <p className="flex-1">{product.comments}</p>
               </div>

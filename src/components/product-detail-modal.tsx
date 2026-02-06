@@ -23,7 +23,14 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Product, User } from '@/lib/types';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Product, User, Status } from '@/lib/types';
 import { STATUS_OPTIONS, MILESTONE_STATUS_OPTIONS } from '@/lib/constants';
 import { COUNTRIES } from '@/lib/countries';
 import { format } from 'date-fns';
@@ -37,7 +44,7 @@ import ProductForm from './product-form';
 import { useAuth } from '@/context/auth-context';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { usePermissionChecks } from '@/lib/rbac/hooks';
-import { useDeleteProduct } from '@/hooks/queries';
+import { useDeleteProduct, useUpdateProduct } from '@/hooks/queries';
 import { ProductHistory } from './product-history';
 
 const getMilestoneStatusInfo = (status: any) => {
@@ -86,7 +93,7 @@ function InfoItem({ icon: Icon, label, value, isLink = false, flag }: { icon: Re
             <a href={value} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline break-all">
               {value}
             </a>
-            <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={handleCopy}>
+            <Button variant="ghost" size="icon" className="neo-button h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={handleCopy}>
                 <Copy className="h-3 w-3" />
             </Button>
           </div>
@@ -161,6 +168,8 @@ export function ProductDetailModal({ product, isOpen, onClose }: { product: Prod
   const { user: authUser } = useAuth();
   const { canEditProducts, canDeleteProducts } = usePermissionChecks();
   const deleteProductMutation = useDeleteProduct();
+  const updateProductMutation = useUpdateProduct();
+  const { toast } = useToast();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const status = STATUS_OPTIONS.find((s) => s.value === product.status);
   const country = COUNTRIES.find((c) => c.code === product.country);
@@ -175,10 +184,30 @@ export function ProductDetailModal({ product, isOpen, onClose }: { product: Prod
     }
   };
 
+  const handleStatusChange = async (newStatus: Status) => {
+    try {
+      await updateProductMutation.mutateAsync({
+        ...product,
+        status: newStatus,
+      });
+      toast({
+        title: 'Estado actualizado',
+        description: `El estado del producto ha sido cambiado a ${STATUS_OPTIONS.find(s => s.value === newStatus)?.label}`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'No se pudo actualizar el estado del producto',
+        variant: 'destructive',
+      });
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        className="max-w-3xl max-h-[90vh] overflow-y-auto p-0"
+        className="neo-card max-w-4xl max-h-[90vh] overflow-y-auto p-0"
+        style={{ borderRadius: 0 }}
       >
         <motion.div
           className="p-6"
@@ -197,11 +226,42 @@ export function ProductDetailModal({ product, isOpen, onClose }: { product: Prod
                 <DialogDescription>Detalles completos del producto</DialogDescription>
             </div>
             <div className="flex items-center gap-2">
-                {status && <Badge variant="secondary" className="text-base">{status.label}</Badge>}
+                {canEditProducts ? (
+                  <Select value={product.status} onValueChange={handleStatusChange}>
+                    <SelectTrigger
+                      className="w-auto h-auto text-base border-2 border-black px-3 py-1.5 font-bold uppercase"
+                      style={{
+                        borderRadius: '4px',
+                        backgroundColor:
+                          product.status === "PLANNED" ? "#6B7280" :
+                          product.status === "IN_PROGRESS" ? "#FF2E63" :
+                          product.status === "DEMO_OK" ? "#FFD700" :
+                          product.status === "LIVE" ? "#2EBD59" : "#6B7280",
+                        color: product.status === "DEMO_OK" ? "#000000" : "#FFFFFF"
+                      }}
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="neo-card border-2 border-black" style={{ borderRadius: 0 }}>
+                      {STATUS_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  status && <Badge variant={undefined} className={cn("neo-badge text-base", {
+                    "badge-planned": product.status === "PLANNED",
+                    "badge-in-progress": product.status === "IN_PROGRESS",
+                    "badge-demo-ok": product.status === "DEMO_OK",
+                    "badge-live": product.status === "LIVE",
+                  })}>{status.label}</Badge>
+                )}
                 {canEditProducts && (
                      <Sheet>
                         <SheetTrigger asChild>
-                            <Button variant="outline" size="icon">
+                            <Button variant="outline" size="icon" className="neo-button">
                                 <Edit className="h-4 w-4" />
                             </Button>
                         </SheetTrigger>
@@ -215,7 +275,7 @@ export function ProductDetailModal({ product, isOpen, onClose }: { product: Prod
                         variant="outline"
                         size="icon"
                         onClick={() => setShowDeleteConfirm(true)}
-                        className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                        className="neo-button text-destructive hover:bg-destructive hover:text-destructive-foreground"
                     >
                         <Trash2 className="h-4 w-4" />
                     </Button>
@@ -233,28 +293,30 @@ export function ProductDetailModal({ product, isOpen, onClose }: { product: Prod
         >
           <motion.div variants={itemVariants}>
             <InfoSection title="Información General">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <InfoItem icon={Smartphone} label="Operador" value={product.operator} />
-                  <InfoItem icon={Globe} label="País" value={country?.name} flag={country?.flag} />
-                  <InfoItem icon={Globe} label="Idioma" value={product.language} />
-              </div>
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <InfoItem
-                      icon={Calendar}
-                      label="Fecha de Inicio"
-                      value={format(product.startDate, "d 'de' MMMM, yyyy", { locale: es })}
-                  />
-                  <InfoItem
-                      icon={Calendar}
-                      label="Fecha de Fin"
-                      value={format(product.endDate, "d 'de' MMMM, yyyy", { locale: es })}
-                  />
+              <div className="border-2 border-black p-4 bg-neo-gray-light space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <InfoItem icon={Smartphone} label="Operador" value={product.operator} />
+                    <InfoItem icon={Globe} label="País" value={country?.name} flag={country?.flag} />
+                    <InfoItem icon={Globe} label="Idioma" value={product.language} />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <InfoItem
+                        icon={Calendar}
+                        label="Fecha de Inicio"
+                        value={format(product.startDate, "d 'de' MMMM, yyyy", { locale: es })}
+                    />
+                    <InfoItem
+                        icon={Calendar}
+                        label="Fecha de Fin"
+                        value={format(product.endDate, "d 'de' MMMM, yyyy", { locale: es })}
+                    />
+                </div>
               </div>
             </InfoSection>
           </motion.div>
 
           <motion.div variants={itemVariants}>
-            <Separator />
+            <Separator className="bg-black" style={{ height: '2px' }} />
           </motion.div>
 
           {product.milestones && product.milestones.length > 0 && (
@@ -265,7 +327,7 @@ export function ProductDetailModal({ product, isOpen, onClose }: { product: Prod
                     {product.milestones.map((milestone) => {
                        const statusInfo = getMilestoneStatusInfo(milestone.status);
                        return (
-                          <div key={milestone.id} className="flex items-start gap-4 rounded-md border p-3">
+                          <div key={milestone.id} className="flex items-start gap-4 border-2 border-black p-3 bg-neo-gray-light">
                                <statusInfo.Icon className={`h-6 w-6 mt-1 flex-shrink-0 ${statusInfo.color}`} />
                                <div className="flex-1">
                                   <p className="font-semibold">{milestone.name}</p>
@@ -273,7 +335,11 @@ export function ProductDetailModal({ product, isOpen, onClose }: { product: Prod
                                       {format(milestone.startDate, 'dd MMM', { locale: es })} - {format(milestone.endDate, 'dd MMM yyyy', { locale: es })}
                                   </p>
                                </div>
-                               <Badge variant="outline">{statusInfo.label}</Badge>
+                               <Badge variant="outline" className={cn("neo-badge", {
+                                 "neo-badge-completed": milestone.status === "COMPLETED",
+                                 "neo-badge-in-progress": milestone.status === "IN_PROGRESS",
+                                 "neo-badge-pending": milestone.status === "PENDING",
+                               })}>{statusInfo.label}</Badge>
                           </div>
                        )
                     })}
@@ -281,29 +347,31 @@ export function ProductDetailModal({ product, isOpen, onClose }: { product: Prod
                 </InfoSection>
               </motion.div>
               <motion.div variants={itemVariants}>
-                <Separator />
+                <Separator className="bg-black" style={{ height: '2px' }} />
               </motion.div>
             </>
           )}
 
           <motion.div variants={itemVariants}>
             <InfoSection title="URLs">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <InfoItem icon={LinkIcon} label="URL Productiva" value={product.productiveUrl} isLink />
-                  <InfoItem icon={LinkIcon} label="URL Demo Vercel" value={product.vercelDemoUrl} isLink />
-                  <InfoItem icon={LinkIcon} label="URL Content Prod (WP)" value={product.wpContentProdUrl} isLink />
-                  <InfoItem icon={LinkIcon} label="URL Content Test (WP)" value={product.wpContentTestUrl} isLink />
-                  <InfoItem icon={LinkIcon} label="URL Chatbot" value={product.chatbotUrl} isLink />
-                  {product.customUrls?.map(customUrl => (
-                      <InfoItem key={customUrl.id} icon={FilePlus} label={customUrl.label} value={customUrl.url} isLink />
-                  ))}
+              <div className="border-2 border-black p-4 bg-neo-gray-light">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <InfoItem icon={LinkIcon} label="URL Productiva" value={product.productiveUrl} isLink />
+                    <InfoItem icon={LinkIcon} label="URL Demo Vercel" value={product.vercelDemoUrl} isLink />
+                    <InfoItem icon={LinkIcon} label="URL Content Prod (WP)" value={product.wpContentProdUrl} isLink />
+                    <InfoItem icon={LinkIcon} label="URL Content Test (WP)" value={product.wpContentTestUrl} isLink />
+                    <InfoItem icon={LinkIcon} label="URL Chatbot" value={product.chatbotUrl} isLink />
+                    {product.customUrls?.map(customUrl => (
+                        <InfoItem key={customUrl.id} icon={FilePlus} label={customUrl.label} value={customUrl.url} isLink />
+                    ))}
+                </div>
               </div>
             </InfoSection>
           </motion.div>
 
           {(product.createdBy || product.updatedBy) && (
             <motion.div variants={itemVariants}>
-              <Separator />
+              <Separator className="bg-black" style={{ height: '2px' }} />
             </motion.div>
           )}
 
@@ -316,11 +384,11 @@ export function ProductDetailModal({ product, isOpen, onClose }: { product: Prod
           {product.comments && (
              <>
                 <motion.div variants={itemVariants}>
-                  <Separator />
+                  <Separator className="bg-black" style={{ height: '2px' }} />
                 </motion.div>
                 <motion.div variants={itemVariants}>
                   <InfoSection title="Comentarios">
-                      <div className="flex items-start gap-3 text-sm text-muted-foreground p-3 bg-muted/50 rounded-md">
+                      <div className="flex items-start gap-3 text-sm text-muted-foreground p-4 border-2 border-black bg-neo-gray-light">
                           <MessageSquare className="h-4 w-4 flex-shrink-0 mt-1" />
                           <p className="flex-1 whitespace-pre-wrap">{product.comments}</p>
                       </div>
@@ -334,7 +402,7 @@ export function ProductDetailModal({ product, isOpen, onClose }: { product: Prod
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <AlertDialogContent>
+        <AlertDialogContent className="neo-card" style={{ borderRadius: 0 }}>
           <AlertDialogHeader>
             <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
             <AlertDialogDescription>
@@ -343,10 +411,10 @@ export function ProductDetailModal({ product, isOpen, onClose }: { product: Prod
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel className="neo-button">Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="neo-button bg-destructive text-destructive-foreground hover:bg-destructive/90"
               disabled={deleteProductMutation.isPending}
             >
               {deleteProductMutation.isPending ? 'Eliminando...' : 'Eliminar Producto'}

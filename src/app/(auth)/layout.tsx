@@ -7,12 +7,12 @@ export default function AuthLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 p-4">
+    <div className="flex min-h-screen w-full flex-col items-center justify-center bg-neo-gray-light p-4">
       {/* Logo flotante arriba */}
-      <div className="absolute top-8 left-8">
+      <div className="absolute top-8 left-8 border-3 border-black shadow-neo-md bg-white p-3">
         <div className="flex items-center gap-2">
-          <Logo className="h-8 w-8 text-primary" />
-          <span className="font-headline text-xl font-semibold">
+          <Logo className="h-8 w-8" style={{ color: 'oklch(67.47% .1725 259.61)' }} />
+          <span className="font-headline text-xl font-bold uppercase">
             Roadmap Planner
           </span>
         </div>

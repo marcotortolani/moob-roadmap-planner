@@ -74,19 +74,19 @@ interface UsersListProps {
 const ROLE_CONFIG = {
   ADMIN: {
     label: 'Administrador',
-    className: 'bg-red-100 text-red-800 hover:bg-red-100',
+    className: 'badge-role-admin',
   },
   USER: {
     label: 'Usuario',
-    className: 'bg-blue-100 text-blue-800 hover:bg-blue-100',
+    className: 'badge-role-user',
   },
   GUEST: {
     label: 'Invitado',
-    className: 'bg-gray-100 text-gray-800 hover:bg-gray-100',
+    className: 'badge-role-guest',
   },
   BLOCKED: {
     label: 'Bloqueado',
-    className: 'bg-orange-100 text-orange-800 hover:bg-orange-100',
+    className: 'badge-role-blocked',
   },
 }
 
@@ -205,7 +205,7 @@ export function UsersList({ users, currentUserId, onUpdate }: UsersListProps) {
 
   if (users.length === 0) {
     return (
-      <Card>
+      <Card className="neo-card" style={{ borderRadius: 0 }}>
         <CardContent className="flex flex-col items-center justify-center py-12">
           <UserIcon className="h-12 w-12 text-muted-foreground mb-4" />
           <p className="text-lg font-medium">No hay usuarios registrados</p>
@@ -219,7 +219,7 @@ export function UsersList({ users, currentUserId, onUpdate }: UsersListProps) {
 
   return (
     <>
-      <Card>
+      <Card className="neo-card" style={{ borderRadius: 0 }}>
         <CardHeader>
           <CardTitle>Usuarios Registrados</CardTitle>
           <CardDescription>
@@ -249,7 +249,7 @@ export function UsersList({ users, currentUserId, onUpdate }: UsersListProps) {
                           <div className="font-medium flex items-center gap-2">
                             {getUserName(user)}
                             {isCurrentUser && (
-                              <Badge variant="outline" className="text-xs">
+                              <Badge variant={undefined} className="neo-badge bg-neo-gray-light text-black text-xs">
                                 Tú
                               </Badge>
                             )}
@@ -260,7 +260,7 @@ export function UsersList({ users, currentUserId, onUpdate }: UsersListProps) {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="secondary" className={roleConfig.className}>
+                        <Badge variant={undefined} className={roleConfig.className}>
                           {roleConfig.label}
                         </Badge>
                       </TableCell>
@@ -274,7 +274,7 @@ export function UsersList({ users, currentUserId, onUpdate }: UsersListProps) {
                         {!isCurrentUser && (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
+                              <Button variant="ghost" size="icon" className="neo-button">
                                 <MoreVertical className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
@@ -307,8 +307,8 @@ export function UsersList({ users, currentUserId, onUpdate }: UsersListProps) {
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
+        <AlertDialogContent className="neo-card" style={{ borderRadius: 0 }}>
+          <AlertDialogHeader className="border-b-2 border-black pb-4">
             <AlertDialogTitle>¿Eliminar usuario?</AlertDialogTitle>
             <AlertDialogDescription>
               ¿Estás seguro de que deseas eliminar a{' '}
@@ -317,11 +317,11 @@ export function UsersList({ users, currentUserId, onUpdate }: UsersListProps) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel className="neo-button">Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={isDeleting}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-red-600 hover:bg-red-700 neo-button"
             >
               {isDeleting ? 'Eliminando...' : 'Eliminar'}
             </AlertDialogAction>
@@ -331,8 +331,8 @@ export function UsersList({ users, currentUserId, onUpdate }: UsersListProps) {
 
       {/* Change Role Dialog */}
       <Dialog open={roleDialogOpen} onOpenChange={setRoleDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
+        <DialogContent className="neo-card" style={{ borderRadius: 0 }}>
+          <DialogHeader className="border-b-2 border-black pb-4">
             <DialogTitle>Cambiar rol de usuario</DialogTitle>
             <DialogDescription>
               Cambia el rol de {selectedUser?.email}
@@ -384,10 +384,11 @@ export function UsersList({ users, currentUserId, onUpdate }: UsersListProps) {
               variant="outline"
               onClick={() => setRoleDialogOpen(false)}
               disabled={isUpdatingRole}
+              className="neo-button"
             >
               Cancelar
             </Button>
-            <Button onClick={handleUpdateRole} disabled={isUpdatingRole}>
+            <Button onClick={handleUpdateRole} disabled={isUpdatingRole} className="neo-button">
               {isUpdatingRole ? 'Actualizando...' : 'Actualizar rol'}
             </Button>
           </DialogFooter>

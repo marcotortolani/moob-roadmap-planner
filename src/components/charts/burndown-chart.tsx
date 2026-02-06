@@ -103,9 +103,9 @@ export function BurndownChart({ products }: BurndownChartProps) {
 
   if (data.length === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Burndown Chart - Trimestre Actual</CardTitle>
+      <Card className="neo-card" style={{ borderRadius: 0 }}>
+        <CardHeader className="border-b-2 border-black">
+          <CardTitle className="font-bold uppercase">Burndown Chart - Trimestre Actual</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground text-center py-8">
@@ -117,9 +117,9 @@ export function BurndownChart({ products }: BurndownChartProps) {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Burndown Chart - Trimestre Actual</CardTitle>
+    <Card className="neo-card" style={{ borderRadius: 0 }}>
+      <CardHeader className="border-b-2 border-black">
+        <CardTitle className="font-bold uppercase">Burndown Chart - Trimestre Actual</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>

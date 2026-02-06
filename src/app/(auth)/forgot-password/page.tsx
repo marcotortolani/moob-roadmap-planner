@@ -79,14 +79,14 @@ export default function ForgotPasswordPage() {
 
   if (emailSent) {
     return (
-      <Card>
-        <CardHeader className="space-y-1">
+      <Card className="neo-card" style={{ borderRadius: 0 }}>
+        <CardHeader className="space-y-1 border-b-2 border-black">
           <div className="flex justify-center mb-4">
             <div className="rounded-full bg-primary/10 p-3">
               <Mail className="h-6 w-6 text-primary" />
             </div>
           </div>
-          <CardTitle className="font-headline text-2xl text-center">
+          <CardTitle className="font-headline text-2xl text-center uppercase">
             Email Enviado
           </CardTitle>
           <CardDescription className="text-center">
@@ -101,7 +101,7 @@ export default function ForgotPasswordPage() {
             </AlertDescription>
           </Alert>
 
-          <Button asChild className="w-full" variant="outline">
+          <Button asChild className="neo-button w-full uppercase font-bold" variant="outline">
             <Link href="/login">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Volver al inicio de sesión
@@ -113,9 +113,9 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <Card>
-      <CardHeader className="space-y-1">
-        <CardTitle className="font-headline text-2xl">Recuperar Contraseña</CardTitle>
+    <Card className="neo-card" style={{ borderRadius: 0 }}>
+      <CardHeader className="space-y-1 border-b-2 border-black">
+        <CardTitle className="font-headline text-2xl uppercase">Recuperar Contraseña</CardTitle>
         <CardDescription>
           Ingresa tu email y te enviaremos un enlace para restablecer tu contraseña
         </CardDescription>
@@ -134,6 +134,8 @@ export default function ForgotPasswordPage() {
                       type="email"
                       placeholder="tu@email.com"
                       autoComplete="email"
+                      className="neo-input"
+                      style={{ borderRadius: 0 }}
                       {...field}
                     />
                   </FormControl>
@@ -143,11 +145,11 @@ export default function ForgotPasswordPage() {
             />
 
             <div className="space-y-2">
-              <Button type="submit" className="w-full" disabled={isPending}>
+              <Button type="submit" className="neo-button w-full uppercase font-bold" disabled={isPending}>
                 {isPending ? 'Enviando...' : 'Enviar enlace de recuperación'}
               </Button>
 
-              <Button asChild className="w-full" variant="ghost">
+              <Button asChild className="neo-button w-full uppercase font-bold" variant="ghost">
                 <Link href="/login">
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Volver al inicio de sesión
