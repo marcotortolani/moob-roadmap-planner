@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase/client'
 import { parseISO, startOfDay } from 'date-fns'
 import type { Product } from '@/lib/types'
 import { useToast } from '@/hooks/use-toast'
+import { useAuth } from '@/context/auth-context'
 
 /**
  * Query Keys for Products
@@ -81,13 +82,20 @@ async function fetchProducts(filters?: ProductFilters): Promise<Product[]> {
 }
 
 /**
- * Hook to fetch all products with optional filters
+ * Hook to fetch all products with optional filters.
+ *
+ * Waits for auth to initialize before firing to prevent a race condition
+ * where the Supabase browser client hasn't restored its session yet,
+ * causing RLS to return 0 rows and React Query to cache an empty result.
  */
 export function useProducts(filters?: ProductFilters) {
+  const { loading: authLoading } = useAuth()
+
   return useQuery({
     queryKey: productKeys.list(filters),
     queryFn: () => fetchProducts(filters),
     staleTime: 30 * 1000, // 30 seconds
+    enabled: !authLoading,
   })
 }
 

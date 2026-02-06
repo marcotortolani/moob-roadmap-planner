@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase/client'
 import { parseISO, startOfDay } from 'date-fns'
 import type { Holiday } from '@/lib/types'
 import { useToast } from '@/hooks/use-toast'
+import { useAuth } from '@/context/auth-context'
 
 /**
  * Query Keys for Holidays
@@ -47,13 +48,17 @@ async function fetchHolidays(year?: number): Promise<Holiday[]> {
 }
 
 /**
- * Hook to fetch all holidays
+ * Hook to fetch all holidays.
+ * Waits for auth to initialize (same reason as useProducts).
  */
 export function useHolidays(year?: number) {
+  const { loading: authLoading } = useAuth()
+
   return useQuery({
     queryKey: holidayKeys.list(year),
     queryFn: () => fetchHolidays(year),
     staleTime: 5 * 60 * 1000, // 5 minutes (holidays don't change often)
+    enabled: !authLoading,
   })
 }
 

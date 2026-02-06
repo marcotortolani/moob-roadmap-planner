@@ -16,7 +16,9 @@ export type FilterType =
 
 export function useProductFiltering() {
   // Fetch products using React Query
-  const { data: products = [], isLoading: loading } = useProducts()
+  // Use isPending (not isLoading) so the skeleton shows both while auth
+  // initializes (query disabled) and during the actual first fetch.
+  const { data: products = [], isPending: loading } = useProducts()
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState('')
