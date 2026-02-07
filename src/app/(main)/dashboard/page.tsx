@@ -191,10 +191,10 @@ export default function DashboardPage() {
             setYearFilter(value === 'all' ? 'all' : Number(value))
           }
         >
-          <SelectTrigger className="neo-button" style={{ borderRadius: 0 }}>
+          <SelectTrigger>
             {yearFilter === 'all' ? 'Año' : <SelectValue />}
           </SelectTrigger>
-          <SelectContent className="neo-card border-2 border-black" style={{ borderRadius: 0 }}>
+          <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
             {uniqueYears.map((y) => (
               <SelectItem key={y} value={y.toString()}>
@@ -210,10 +210,10 @@ export default function DashboardPage() {
           }
           disabled={yearFilter === 'all'}
         >
-          <SelectTrigger className="neo-button" style={{ borderRadius: 0 }}>
+          <SelectTrigger>
             {quarterFilter === 'all' ? 'Quarter' : <SelectValue />}
           </SelectTrigger>
-          <SelectContent className="neo-card border-2 border-black" style={{ borderRadius: 0 }}>
+          <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
             <SelectItem value="1">Q1</SelectItem>
             <SelectItem value="2">Q2</SelectItem>
@@ -223,10 +223,10 @@ export default function DashboardPage() {
         </Select>
       </div>
       <Select value={languageFilter} onValueChange={setLanguageFilter}>
-        <SelectTrigger className="neo-button" style={{ borderRadius: 0 }}>
+        <SelectTrigger>
           {languageFilter === 'all' ? 'Idioma' : <SelectValue />}
         </SelectTrigger>
-        <SelectContent className="neo-card border-2 border-black" style={{ borderRadius: 0 }}>
+        <SelectContent>
           <SelectItem value="all">Todos</SelectItem>
           {uniqueLanguages.map((l) => (
             <SelectItem key={l} value={l}>
@@ -241,7 +241,7 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-4">
       {/* Filters Section */}
-      <div className="space-y-2 p-4 border-3 border-black bg-white shadow-neo-md" style={{ borderRadius: 0 }}>
+      <div className="space-y-2 p-4 border-3 border-black bg-white shadow-neo-md">
         <div className="flex flex-col sm:flex-row gap-2">
           <div className="relative flex-1 lg:flex-none xl:max-w-full xl:min-w-[200px] 2xl:min-w-[300px] 2xl:max-w-[400px]">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -260,10 +260,10 @@ export default function DashboardPage() {
                 setYearFilter(value === 'all' ? 'all' : Number(value))
               }
             >
-              <SelectTrigger className="w-28 neo-button" style={{ borderRadius: 0 }}>
+              <SelectTrigger className="w-28">
                 {yearFilter === 'all' ? 'Año' : <SelectValue />}
               </SelectTrigger>
-              <SelectContent className="neo-card border-2 border-black" style={{ borderRadius: 0 }}>
+              <SelectContent >
                 <SelectItem value="all">Todos</SelectItem>
                 {uniqueYears.map((y) => (
                   <SelectItem key={y} value={y.toString()}>
@@ -279,10 +279,10 @@ export default function DashboardPage() {
               }
               disabled={yearFilter === 'all'}
             >
-              <SelectTrigger className="w-24 neo-button" style={{ borderRadius: 0 }}>
+              <SelectTrigger className="w-24">
                 {quarterFilter === 'all' ? 'Quarter' : <SelectValue />}
               </SelectTrigger>
-              <SelectContent className="neo-card border-2 border-black" style={{ borderRadius: 0 }}>
+              <SelectContent >
                 <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="1">Q1</SelectItem>
                 <SelectItem value="2">Q2</SelectItem>
@@ -291,10 +291,10 @@ export default function DashboardPage() {
               </SelectContent>
             </Select>
             <Select value={languageFilter} onValueChange={setLanguageFilter}>
-              <SelectTrigger className="neo-button" style={{ borderRadius: 0 }}>
+              <SelectTrigger>
                 {languageFilter === 'all' ? 'Idioma' : <SelectValue />}
               </SelectTrigger>
-              <SelectContent className="neo-card border-2 border-black" style={{ borderRadius: 0 }}>
+              <SelectContent >
                 <SelectItem value="all">Todos</SelectItem>
                 {uniqueLanguages.map((l) => (
                   <SelectItem key={l} value={l}>
@@ -329,62 +329,72 @@ export default function DashboardPage() {
               </div>
             </SheetContent>
           </Sheet>
+
+          {/* Clear filters button */}
+          {(activeFilterCount > 0 || yearFilter === 'all') && (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={clearFilters}
+              className="ml-auto bg-red-100 text-red-700 border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_#000000] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none hover:bg-destructive hover:text-white transition-all"
+              aria-label="Borrar todos los filtros"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Borrar filtros
+            </Button>
+          )}
         </div>
         {activeFilterCount > 0 && (
           <div className="flex flex-wrap items-center gap-2 pt-2">
             <span className="text-sm font-medium">Filtros activos:</span>
             {searchTerm && (
-              <Badge variant="secondary">
+              <Badge>
                 Búsqueda: {searchTerm}
                 <button
                   onClick={() => removeFilter('search')}
-                  className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
+                  className="ml-1 p-0.5"
+                  aria-label="Quitar filtro de búsqueda"
                 >
                   <X className="h-3 w-3" />
                 </button>
               </Badge>
             )}
             {yearFilter !== 'all' && (
-              <Badge variant="secondary">
+              <Badge>
                 Año: {yearFilter}
                 <button
                   onClick={() => removeFilter('year')}
-                  className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
+                  className="ml-1 p-0.5"
+                  aria-label="Quitar filtro de año"
                 >
                   <X className="h-3 w-3" />
                 </button>
               </Badge>
             )}
             {quarterFilter !== 'all' && yearFilter !== 'all' && (
-              <Badge variant="secondary">
+              <Badge>
                 Q{quarterFilter}
                 <button
                   onClick={() => removeFilter('quarter')}
-                  className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
+                  className="ml-1 p-0.5"
+                  aria-label="Quitar filtro de trimestre"
                 >
                   <X className="h-3 w-3" />
                 </button>
               </Badge>
             )}
             {languageFilter !== 'all' && (
-              <Badge variant="secondary">
+              <Badge>
                 Idioma: {languageFilter}
                 <button
                   onClick={() => removeFilter('language')}
-                  className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
+                  className="ml-1 p-0.5"
+                  aria-label="Quitar filtro de idioma"
                 >
                   <X className="h-3 w-3" />
                 </button>
               </Badge>
             )}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearFilters}
-              className="text-sm text-destructive hover:text-destructive"
-            >
-              Limpiar todo
-            </Button>
           </div>
         )}
       </div>
@@ -397,7 +407,7 @@ export default function DashboardPage() {
         animate="visible"
       >
         <motion.div variants={cardVariants}>
-          <Card className="neo-card" style={{ borderRadius: 0 }}>
+          <Card>
           <CardHeader className="pb-2 md:pb-6 border-b-2 border-black">
             <div className="flex flex-col items-start gap-2 md:flex-row md:items-end md:justify-between">
               <div className="flex items-center gap-2">
@@ -417,7 +427,7 @@ export default function DashboardPage() {
         </Card>
         </motion.div>
         <motion.div variants={cardVariants}>
-          <Card className="neo-card" style={{ borderRadius: 0 }}>
+          <Card>
             <CardHeader className="pb-2 md:pb-6 border-b-2 border-black">
               <div className="flex flex-col items-start gap-2 md:flex-row md:items-end md:justify-between">
                 <div className="flex items-center gap-2">
@@ -437,7 +447,7 @@ export default function DashboardPage() {
           </Card>
         </motion.div>
         <motion.div variants={cardVariants}>
-          <Card className="neo-card" style={{ borderRadius: 0 }}>
+          <Card>
             <CardHeader className="pb-2 md:pb-6 border-b-2 border-black">
               <div className="flex flex-col items-start gap-2 md:flex-row md:items-end md:justify-between">
                 <div className="flex items-center gap-2">
@@ -457,7 +467,7 @@ export default function DashboardPage() {
           </Card>
         </motion.div>
         <motion.div variants={cardVariants}>
-          <Card className="neo-card" style={{ borderRadius: 0 }}>
+          <Card>
             <CardHeader className="pb-2 md:pb-6 border-b-2 border-black">
               <div className="flex flex-col items-start gap-2 md:flex-row md:items-end md:justify-between">
                 <div className="flex items-center gap-2">
@@ -488,7 +498,7 @@ export default function DashboardPage() {
         animate="visible"
       >
         <motion.div variants={cardVariants}>
-          <Card className="neo-card" style={{ borderRadius: 0 }}>
+          <Card>
           <CardHeader className="pb-2 md:pb-6 border-b-2 border-black">
             <div className="flex flex-col items-start gap-2">
               <div className="flex items-center gap-2">
@@ -512,7 +522,7 @@ export default function DashboardPage() {
         </motion.div>
 
         <motion.div variants={cardVariants}>
-          <Card className="neo-card" style={{ borderRadius: 0 }}>
+          <Card>
             <CardHeader className="pb-2 md:pb-6 border-b-2 border-black">
               <div className="flex flex-col items-start gap-2">
                 <div className="flex items-center gap-2">
@@ -535,7 +545,7 @@ export default function DashboardPage() {
         </motion.div>
 
         <motion.div variants={cardVariants}>
-          <Card className="neo-card" style={{ borderRadius: 0 }}>
+          <Card>
             <CardHeader className="pb-2 md:pb-6 border-b-2 border-black">
               <div className="flex flex-col items-start gap-2">
                 <div className="flex items-center gap-2">
@@ -556,7 +566,7 @@ export default function DashboardPage() {
         </motion.div>
 
         <motion.div variants={cardVariants}>
-          <Card className="neo-card" style={{ borderRadius: 0 }}>
+          <Card>
             <CardHeader className="pb-2 md:pb-6 border-b-2 border-black">
               <div className="flex flex-col items-start gap-2">
                 <div className="flex items-center gap-2">
@@ -581,7 +591,7 @@ export default function DashboardPage() {
 
       {/* Timeline Health Cards */}
       <div className="grid gap-4 grid-cols-3">
-        <Card className="neo-card" style={{ borderRadius: 0 }}>
+        <Card>
           <CardHeader className="pb-2 border-b-2 border-black">
             <CardTitle className="text-sm font-bold uppercase">A Tiempo</CardTitle>
           </CardHeader>
@@ -592,7 +602,7 @@ export default function DashboardPage() {
             <p className="text-xs text-muted-foreground">Proyectos en curso</p>
           </CardContent>
         </Card>
-        <Card className="neo-card" style={{ borderRadius: 0 }}>
+        <Card>
           <CardHeader className="pb-2 border-b-2 border-black">
             <CardTitle className="text-sm font-bold uppercase text-red-600">
               Retrasados
@@ -605,7 +615,7 @@ export default function DashboardPage() {
             <p className="text-xs text-muted-foreground">Requieren atención</p>
           </CardContent>
         </Card>
-        <Card className="neo-card" style={{ borderRadius: 0 }}>
+        <Card>
           <CardHeader className="pb-2 border-b-2 border-black">
             <CardTitle className="text-sm font-bold uppercase">Próximos</CardTitle>
           </CardHeader>
@@ -620,7 +630,7 @@ export default function DashboardPage() {
 
       {/* Existing Charts */}
       <div className="grid gap-4 md:grid-cols-2">
-        <Card className="neo-card" style={{ borderRadius: 0 }}>
+        <Card>
           <CardHeader className="border-b-2 border-black">
             <CardTitle className="font-bold uppercase">Productos por Estado</CardTitle>
           </CardHeader>
@@ -628,7 +638,7 @@ export default function DashboardPage() {
             <ProductsByStatusChart products={filteredProducts} />
           </CardContent>
         </Card>
-        <Card className="neo-card" style={{ borderRadius: 0 }}>
+        <Card>
           <CardHeader className="border-b-2 border-black">
             <CardTitle className="font-bold uppercase">Productos por País</CardTitle>
           </CardHeader>

@@ -2,15 +2,16 @@
 'use client';
 
 import { useMemo } from 'react';
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie } from 'recharts';
 import { Product } from '@/lib/types';
 import { COUNTRIES } from '@/lib/countries';
+import { ChartContainer, ChartConfig, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/ui/chart';
 
 interface ProductsByCountryChartProps {
   products: Product[];
 }
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
+const COLORS = ['#0052CC', '#FF2E63', '#FFD700', '#2EBD59', '#9B72AA', '#FF8787'];
 
 export function ProductsByCountryChart({ products }: ProductsByCountryChartProps) {
   const data = useMemo(() => {
@@ -20,51 +21,52 @@ export function ProductsByCountryChart({ products }: ProductsByCountryChartProps
     }, {} as Record<string, number>);
 
     return Object.entries(countryCounts)
-      .map(([countryCode, count]) => {
+      .map(([countryCode, count], index) => {
         const country = COUNTRIES.find((c) => c.code === countryCode);
         return {
           name: country?.name || countryCode,
           value: count,
+          fill: COLORS[index % COLORS.length],
         };
       })
       .sort((a, b) => b.value - a.value);
   }, [products]);
+
+  const chartConfig = useMemo(
+    () =>
+      data.reduce(
+        (acc, item, index) => {
+          acc[item.name] = {
+            label: item.name,
+            color: COLORS[index % COLORS.length],
+          };
+          return acc;
+        },
+        {} as ChartConfig
+      ),
+    [data]
+  );
 
   if (data.length === 0) {
     return <div className="h-[350px] flex items-center justify-center text-muted-foreground">No hay datos para mostrar</div>
   }
 
   return (
-    <div className="h-[350px]">
-      <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
-          <Pie
-            data={data}
-            cx="50%"
-            cy="50%"
-            labelLine={false}
-            outerRadius={80}
-            fill="#8884d8"
-            dataKey="value"
-            nameKey="name"
-            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-          >
-            {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-            ))}
-          </Pie>
-          <Tooltip 
-            contentStyle={{
-                backgroundColor: 'hsl(var(--background))',
-                borderColor: 'hsl(var(--border))',
-            }}
-          />
-          <Legend formatter={(value, entry) => {
-            const { payload } = entry;
-            return `${value} (${payload?.value})`
-          }} />
-        </PieChart>
-      </ResponsiveContainer>
-    </div>
+    <ChartContainer config={chartConfig} className="h-[350px] w-full">
+      <PieChart>
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Pie
+          data={data}
+          dataKey="value"
+          nameKey="name"
+          cx="50%"
+          cy="50%"
+          outerRadius={80}
+          strokeWidth={2}
+          stroke="#000"
+        />
+        <ChartLegend content={<ChartLegendContent />} />
+      </PieChart>
+    </ChartContainer>
   );
 }

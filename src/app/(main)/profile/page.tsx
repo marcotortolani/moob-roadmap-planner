@@ -175,7 +175,7 @@ export default function ProfilePage() {
   return (
     <div className="flex justify-center items-start pt-10">
       <div className="w-full max-w-2xl space-y-6">
-      <Card className="neo-card w-full" style={{ borderRadius: 0 }}>
+      <Card className="w-full">
         <CardHeader className="border-b-2 border-black">
           <div className="flex items-center gap-4 mb-2">
             <div>
@@ -215,7 +215,7 @@ export default function ProfilePage() {
                   <FormItem>
                     <FormLabel>Nombre</FormLabel>
                     <FormControl>
-                      <Input className="neo-input" style={{ borderRadius: 0 }} placeholder="Tu nombre" {...field} />
+                      <Input placeholder="Tu nombre" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -230,7 +230,7 @@ export default function ProfilePage() {
                   <FormItem>
                     <FormLabel>Apellido</FormLabel>
                     <FormControl>
-                      <Input className="neo-input" style={{ borderRadius: 0 }} placeholder="Tu apellido" {...field} />
+                      <Input placeholder="Tu apellido" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -245,7 +245,7 @@ export default function ProfilePage() {
               />
 
               <div className="flex justify-end">
-                <Button className="neo-button" type="submit" disabled={isPending}>
+                <Button type="submit" disabled={isPending}>
                   {isPending ? 'Guardando...' : 'Guardar Cambios'}
                 </Button>
               </div>
@@ -255,7 +255,7 @@ export default function ProfilePage() {
       </Card>
 
       {/* Security Section - Password Change */}
-      <Card className="neo-card w-full" style={{ borderRadius: 0 }}>
+      <Card className="w-full">
         <CardHeader className="border-b-2 border-black">
           <CardTitle className="font-headline text-2xl">Seguridad</CardTitle>
           <CardDescription>
@@ -278,8 +278,7 @@ export default function ProfilePage() {
                           type={showNewPassword ? 'text' : 'password'}
                           placeholder="••••••••"
                           autoComplete="new-password"
-                          className="neo-input pr-10"
-                          style={{ borderRadius: 0 }}
+                          className="pr-10"
                           {...field}
                         />
                         <Button
@@ -319,8 +318,7 @@ export default function ProfilePage() {
                           type={showConfirmPassword ? 'text' : 'password'}
                           placeholder="••••••••"
                           autoComplete="new-password"
-                          className="neo-input pr-10"
-                          style={{ borderRadius: 0 }}
+                          className="pr-10"
                           {...field}
                         />
                         <Button
@@ -345,7 +343,7 @@ export default function ProfilePage() {
               />
 
               <div className="flex justify-end">
-                <Button className="neo-button" type="submit" disabled={isPasswordPending}>
+                <Button type="submit" disabled={isPasswordPending}>
                   {isPasswordPending ? 'Actualizando...' : 'Cambiar Contraseña'}
                 </Button>
               </div>

@@ -101,7 +101,7 @@ export const CalendarProductCard = memo(function CalendarProductCard({
           }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
           className={cn(
-            'border-2 border-black shadow-neo-sm p-1 mb-1 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-neo-none transition-all group relative w-full text-xs text-white truncate',
+            'border-2 border-black shadow-neo-sm p-1 mb-1 hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-none transition-all group relative w-full text-xs text-white truncate',
             isDraggable
               ? 'cursor-grab active:cursor-grabbing'
               : ' cursor-pointer',
@@ -161,7 +161,7 @@ export const CalendarProductCard = memo(function CalendarProductCard({
         </p>
 
         {isDraggable && (
-          <p className="text-xs text-yellow-400 mt-1">
+          <p className="text-xs text-yellow-600 mt-1">
             Arrastra para reprogramar
           </p>
         )}

@@ -1,7 +1,8 @@
 
 import type {Metadata} from 'next';
 import './globals.css';
-import { Toaster } from "@/components/ui/toaster"
+import { Toaster } from "@/components/ui/sonner"
+import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from '@/context/auth-context';
 import { GoogleAnalytics } from '@/components/google-analytics';
 import { ReactQueryProvider } from '@/lib/react-query/provider';
@@ -28,14 +29,16 @@ export default function RootLayout({
       </head>
       <body suppressHydrationWarning>
         <ErrorBoundary>
-          <ReactQueryProvider>
-            <AuthProvider>
-              <div className="font-body antialiased" suppressHydrationWarning>
-                {children}
-              </div>
-              <Toaster />
-            </AuthProvider>
-          </ReactQueryProvider>
+          <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+            <ReactQueryProvider>
+              <AuthProvider>
+                <div className="font-body antialiased" suppressHydrationWarning>
+                  {children}
+                </div>
+                <Toaster />
+              </AuthProvider>
+            </ReactQueryProvider>
+          </ThemeProvider>
         </ErrorBoundary>
       </body>
     </html>

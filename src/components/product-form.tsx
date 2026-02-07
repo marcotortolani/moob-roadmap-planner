@@ -228,11 +228,11 @@ export default function ProductForm({ product }: { product?: Product }) {
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger className="neo-button" style={{ borderRadius: 0 }} aria-label="Estado del producto">
+                        <SelectTrigger aria-label="Estado del producto">
                           <SelectValue placeholder="Selecciona un estado" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="neo-card border-2 border-black" style={{ borderRadius: 0 }}>
+                      <SelectContent>
                         {STATUS_OPTIONS.map((opt) => (
                           <SelectItem key={opt.value} value={opt.value}>
                             {opt.label}
@@ -270,8 +270,7 @@ export default function ProductForm({ product }: { product?: Product }) {
                   <FormControl>
                     <Textarea
                       placeholder="Añade comentarios o notas relevantes sobre el producto."
-                      className="neo-input resize-none"
-                      style={{ borderRadius: 0 }}
+                      className="resize-none"
                       {...field}
                       aria-label="Comentarios sobre el producto"
                     />
@@ -283,7 +282,7 @@ export default function ProductForm({ product }: { product?: Product }) {
           </div>
 
           <SheetFooter>
-            <Button className="neo-button" type="submit" disabled={isPending}>
+            <Button type="submit" disabled={isPending}>
               {isPending ? 'Guardando...' : 'Guardar Producto'}
             </Button>
           </SheetFooter>

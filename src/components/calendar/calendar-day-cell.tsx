@@ -95,8 +95,7 @@ export const CalendarDayCell = memo(function CalendarDayCell({
         'border-2 border-black relative min-h-[100px] sm:min-h-[120px] p-1.5 flex flex-col',
         isToday(day) && 'border-4 border-destructive',
         !isSameMonth(day, currentMonth) && 'bg-muted/30 text-muted-foreground',
-        holiday &&
-          'bg-holiday-stripes text-black dark:text-orange-200',
+        holiday && 'bg-holiday-stripes text-black dark:text-orange-200',
         !isBusinessDayValue && !holiday && 'bg-neutral-100 dark:bg-neutral-900',
         isOver && !isBusinessDayValue && 'ring-2 ring-destructive',
       )}
@@ -109,18 +108,20 @@ export const CalendarDayCell = memo(function CalendarDayCell({
           'text-xs h-6 w-6 flex items-center justify-center rounded-full',
           isToday(day) && 'bg-primary font-bold text-primary-foreground',
           !isSameMonth(day, currentMonth) && 'text-muted-foreground/60',
-          holiday && !isToday(day) && 'bg-white dark:bg-white text-black',
+          holiday && !isToday(day) && 'bg-neutral-300 dark:bg-white text-black',
         )}
       >
         {format(day, 'd')}
       </time>
-      <div className="mt-1 flex-1 overflow-y-auto space-y-1">
+      <div className="mt-1 flex-1 overflow-y-auto space-y-1 pb-2 pr-2">
         {productEvents.map((productEvent) => {
           const cardType = getProductCardType(productEvent, day)
           const milestoneEvent = getMilestoneForDay(day, productEvent.id)
           const isDraggable =
             canEditProducts &&
-            (cardType === 'first' || cardType === 'last' || cardType === 'single')
+            (cardType === 'first' ||
+              cardType === 'last' ||
+              cardType === 'single')
 
           // Check if this is being dragged
           const isBeingDragged = dragState?.productId === productEvent.id
@@ -150,10 +151,10 @@ export const CalendarDayCell = memo(function CalendarDayCell({
         })}
       </div>
       {holiday && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none pt-8 px-1">
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none pt-4 px-1">
           <div
             onClick={() => setIsHolidayModalOpen(true)}
-            className="text-[10px] sm:text-xs p-1.5 sm:p-2 bg-white dark:bg-white rounded-full px-2 sm:px-3 text-black pointer-events-auto max-w-[95%] line-clamp-2 text-center leading-tight cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-100 transition-colors"
+            className="text-[10px] sm:text-xs p-1.5 sm:p-2 bg-neutral-300 dark:bg-white rounded-full px-2 sm:px-3 text-black pointer-events-auto max-w-[95%] line-clamp-2 text-center leading-tight cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-100 transition-colors"
             role="button"
             aria-label={`Ver detalles del feriado: ${holiday.name}`}
             tabIndex={0}

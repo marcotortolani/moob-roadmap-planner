@@ -103,8 +103,8 @@ export function BurndownChart({ products }: BurndownChartProps) {
 
   if (data.length === 0) {
     return (
-      <Card className="neo-card" style={{ borderRadius: 0 }}>
-        <CardHeader className="border-b-2 border-black">
+      <Card className="">
+        <CardHeader className="">
           <CardTitle className="font-bold uppercase">Burndown Chart - Trimestre Actual</CardTitle>
         </CardHeader>
         <CardContent>
@@ -117,20 +117,25 @@ export function BurndownChart({ products }: BurndownChartProps) {
   }
 
   return (
-    <Card className="neo-card" style={{ borderRadius: 0 }}>
-      <CardHeader className="border-b-2 border-black">
+    <Card className="">
+      <CardHeader className="">
         <CardTitle className="font-bold uppercase">Burndown Chart - Trimestre Actual</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#000" />
             <XAxis
               dataKey="week"
-              tick={{ fontSize: 12 }}
+              stroke="#000"
+              tick={{ fill: '#000', fontSize: 12 }}
               interval="preserveStartEnd"
             />
-            <YAxis label={{ value: 'Hitos Restantes', angle: -90, position: 'insideLeft' }} />
+            <YAxis
+              label={{ value: 'Hitos Restantes', angle: -90, position: 'insideLeft', fill: '#000' }}
+              stroke="#000"
+              tick={{ fill: '#000' }}
+            />
             <Tooltip
               labelFormatter={(label, payload) => {
                 if (payload && payload[0]) {
@@ -151,7 +156,7 @@ export function BurndownChart({ products }: BurndownChartProps) {
             <Line
               type="monotone"
               dataKey="actual"
-              stroke="#4169E1"
+              stroke="#0052CC"
               name="Real"
               strokeWidth={2}
               connectNulls={false}

@@ -79,7 +79,7 @@ export default function ForgotPasswordPage() {
 
   if (emailSent) {
     return (
-      <Card className="neo-card" style={{ borderRadius: 0 }}>
+      <Card>
         <CardHeader className="space-y-1 border-b-2 border-black">
           <div className="flex justify-center mb-4">
             <div className="rounded-full bg-primary/10 p-3">
@@ -101,7 +101,7 @@ export default function ForgotPasswordPage() {
             </AlertDescription>
           </Alert>
 
-          <Button asChild className="neo-button w-full uppercase font-bold" variant="outline">
+          <Button asChild className="w-full uppercase font-bold" variant="outline">
             <Link href="/login">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Volver al inicio de sesión
@@ -113,7 +113,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <Card className="neo-card" style={{ borderRadius: 0 }}>
+    <Card >
       <CardHeader className="space-y-1 border-b-2 border-black">
         <CardTitle className="font-headline text-2xl uppercase">Recuperar Contraseña</CardTitle>
         <CardDescription>
@@ -134,8 +134,6 @@ export default function ForgotPasswordPage() {
                       type="email"
                       placeholder="tu@email.com"
                       autoComplete="email"
-                      className="neo-input"
-                      style={{ borderRadius: 0 }}
                       {...field}
                     />
                   </FormControl>
@@ -145,11 +143,11 @@ export default function ForgotPasswordPage() {
             />
 
             <div className="space-y-2">
-              <Button type="submit" className="neo-button w-full uppercase font-bold" disabled={isPending}>
+              <Button type="submit" className="w-full uppercase font-bold" disabled={isPending}>
                 {isPending ? 'Enviando...' : 'Enviar enlace de recuperación'}
               </Button>
 
-              <Button asChild className="neo-button w-full uppercase font-bold" variant="ghost">
+              <Button asChild className="w-full uppercase font-bold" variant="ghost">
                 <Link href="/login">
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Volver al inicio de sesión

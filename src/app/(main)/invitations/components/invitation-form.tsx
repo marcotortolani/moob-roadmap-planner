@@ -118,7 +118,7 @@ export function InvitationForm({ onSuccess }: InvitationFormProps) {
   }
 
   return (
-    <Card className="neo-card" style={{ borderRadius: 0 }}>
+    <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Mail className="h-5 w-5" />
@@ -142,8 +142,6 @@ export function InvitationForm({ onSuccess }: InvitationFormProps) {
                       type="email"
                       placeholder="usuario@ejemplo.com"
                       {...field}
-                      className="neo-input"
-                      style={{ borderRadius: 0 }}
                     />
                   </FormControl>
                   <FormDescription>
@@ -201,7 +199,7 @@ export function InvitationForm({ onSuccess }: InvitationFormProps) {
               )}
             />
 
-            <Button type="submit" className="w-full neo-button" disabled={isPending}>
+            <Button type="submit" className="w-full" disabled={isPending}>
               {isPending ? (
                 <>Enviando...</>
               ) : (
@@ -228,7 +226,7 @@ export function InvitationForm({ onSuccess }: InvitationFormProps) {
                       size="sm"
                       variant="outline"
                       onClick={copyToClipboard}
-                      className="w-full sm:w-auto shrink-0 neo-button"
+                      className="w-full sm:w-auto shrink-0"
                     >
                       <Copy className="h-4 w-4 mr-2" />
                       Copiar

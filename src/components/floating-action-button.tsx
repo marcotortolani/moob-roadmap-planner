@@ -30,11 +30,11 @@ export function FloatingActionButton() {
     <>
       <Button
         size="lg"
-        className="fixed bottom-6 right-6 h-14 w-14 border-2 border-black shadow-[4px_4px_0px_0px_#000000] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-[0px_0px_0px_0px_#000000] transition-all duration-150 z-50 md:bottom-8 md:right-8"
+        className="fixed bottom-6 right-6 h-14 w-14 z-50 md:bottom-8 md:right-8 shadow-[4px_4px_0px_0px_#000000] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none"
         style={{
           backgroundColor: 'oklch(67.47% .1725 259.61)',
           color: 'white',
-          borderRadius: '12px'
+          borderRadius: '12px',
         }}
         onClick={() => setIsOpen(true)}
         aria-label="Crear nuevo producto"
@@ -43,9 +43,11 @@ export function FloatingActionButton() {
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="neo-card max-w-4xl max-h-[90vh] overflow-y-auto" style={{ borderRadius: 0 }}>
+        <DialogContent className="max-w-4xl 2xl:max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader className="border-b-2 border-black pb-4">
-            <DialogTitle className="font-headline text-2xl uppercase">Crear Nuevo Producto</DialogTitle>
+            <DialogTitle className="font-headline text-2xl uppercase">
+              Crear Nuevo Producto
+            </DialogTitle>
             <DialogDescription>
               Completa la información del producto para agregarlo al roadmap.
             </DialogDescription>

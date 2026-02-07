@@ -219,7 +219,7 @@ export function AvatarUpload({
           disabled={isUploading}
         />
         <Button
-          className="neo-button"
+          
           type="button"
           variant="outline"
           size="sm"

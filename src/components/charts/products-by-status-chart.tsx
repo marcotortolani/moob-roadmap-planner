@@ -2,20 +2,36 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import { Product, Status } from '@/lib/types';
 import { STATUS_OPTIONS } from '@/lib/constants';
+import { ChartContainer, ChartConfig, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 
 interface ProductsByStatusChartProps {
   products: Product[];
 }
 
-const STATUS_COLORS: Record<Status, { fill: string, stroke: string }> = {
-    PLANNED: { fill: '#FFFFFF', stroke: '#4B5563' },      // white, neutral-600
-    IN_PROGRESS: { fill: '#FEE2E2', stroke: '#EF4444' }, // red-100, red-500
-    DEMO_OK: { fill: '#FEF9C3', stroke: '#FBBF24' },     // yellow-100, amber-400
-    LIVE: { fill: '#D1FAE5', stroke: '#10B981' },        // green-100, green-500
-};
+const chartConfig = {
+  count: {
+    label: 'Cantidad',
+  },
+  PLANNED: {
+    label: 'Programado',
+    color: '#6B7280',
+  },
+  IN_PROGRESS: {
+    label: 'En Proceso',
+    color: '#FF2E63',
+  },
+  DEMO_OK: {
+    label: 'Demo OK',
+    color: '#FFD700',
+  },
+  LIVE: {
+    label: 'Productivo',
+    color: '#2EBD59',
+  },
+} satisfies ChartConfig;
 
 export function ProductsByStatusChart({ products }: ProductsByStatusChartProps) {
   const data = useMemo(() => {
@@ -26,40 +42,29 @@ export function ProductsByStatusChart({ products }: ProductsByStatusChartProps) 
 
     return STATUS_OPTIONS.map((status) => ({
       name: status.label,
-      value: status.value,
+      status: status.value,
       count: statusCounts[status.value] || 0,
+      fill: `var(--color-${status.value})`,
     }));
   }, [products]);
 
   return (
-    <div className="h-[350px]">
-        <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis allowDecimals={false} />
-            <Tooltip
-                contentStyle={{
-                    backgroundColor: 'hsl(var(--background))',
-                    borderColor: 'hsl(var(--border))',
-                }}
-            />
-            <Legend />
-            <Bar dataKey="count" name="Cantidad">
-                {data.map((entry, index) => {
-                    const colors = STATUS_COLORS[entry.value as Status];
-                    return (
-                        <Cell 
-                            key={`cell-${index}`} 
-                            fill={colors.fill}
-                            stroke={colors.stroke}
-                            strokeWidth={2}
-                        />
-                    );
-                })}
-            </Bar>
-        </BarChart>
-        </ResponsiveContainer>
-    </div>
+    <ChartContainer config={chartConfig} className="h-[350px] w-full">
+      <BarChart data={data} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#000" />
+        <XAxis
+          dataKey="name"
+          stroke="#000"
+          tick={{ fill: '#000' }}
+        />
+        <YAxis
+          allowDecimals={false}
+          stroke="#000"
+          tick={{ fill: '#000' }}
+        />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Bar dataKey="count" radius={[0, 0, 0, 0]} />
+      </BarChart>
+    </ChartContainer>
   );
 }

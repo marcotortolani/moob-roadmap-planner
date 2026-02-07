@@ -94,7 +94,7 @@ export default function LoginPage() {
   }
 
   return (
-    <Card className="neo-card" style={{ borderRadius: 0 }}>
+    <Card>
       <CardHeader className="space-y-1 border-b-2 border-black">
         <CardTitle className="font-headline text-2xl uppercase">Iniciar Sesión</CardTitle>
         <CardDescription>
@@ -115,8 +115,6 @@ export default function LoginPage() {
                       type="email"
                       placeholder="tu@email.com"
                       autoComplete="email"
-                      className="neo-input"
-                      style={{ borderRadius: 0 }}
                       {...field}
                     />
                   </FormControl>
@@ -145,8 +143,7 @@ export default function LoginPage() {
                         type={showPassword ? 'text' : 'password'}
                         placeholder="••••••••"
                         autoComplete="current-password"
-                        className="neo-input pr-10"
-                        style={{ borderRadius: 0 }}
+                        className="pr-10"
                         {...field}
                       />
                       <Button
@@ -172,7 +169,7 @@ export default function LoginPage() {
               )}
             />
 
-            <Button type="submit" className="neo-button w-full uppercase font-bold" disabled={isPending}>
+            <Button type="submit" className="w-full uppercase font-bold" disabled={isPending}>
               {isPending ? 'Ingresando...' : 'Ingresar'}
             </Button>
           </form>

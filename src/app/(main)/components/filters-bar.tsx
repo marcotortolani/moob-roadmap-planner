@@ -1,4 +1,4 @@
-import { Search } from 'lucide-react'
+import { Search, X } from 'lucide-react'
 import {
   Select,
   SelectContent,
@@ -7,6 +7,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import type { Status } from '@/lib/types'
 import { STATUS_OPTIONS } from '@/lib/constants'
 import type { SortOption } from '@/hooks/use-product-filtering'
@@ -32,6 +33,8 @@ interface FiltersBarProps {
   uniqueOperators: string[]
   uniqueCountries: string[]
   uniqueLanguages: string[]
+  activeFilterCount: number
+  onClearFilters: () => void
 }
 
 export function FiltersBar({
@@ -55,6 +58,8 @@ export function FiltersBar({
   uniqueOperators,
   uniqueCountries,
   uniqueLanguages,
+  activeFilterCount,
+  onClearFilters,
 }: FiltersBarProps) {
   return (
     <div className="flex flex-col sm:flex-row gap-2">
@@ -62,8 +67,7 @@ export function FiltersBar({
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Buscar producto..."
-          className="neo-input pl-8 w-full"
-          style={{ borderRadius: 0 }}
+          className="pl-8 w-full"
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
           aria-label="Buscar productos"
@@ -78,10 +82,10 @@ export function FiltersBar({
             onYearChange(value === 'all' ? 'all' : Number(value))
           }
         >
-          <SelectTrigger className="neo-button w-28" style={{ borderRadius: 0 }} aria-label="Filtrar por año">
+          <SelectTrigger className="w-28" aria-label="Filtrar por año">
             {yearFilter === 'all' ? 'Año' : <SelectValue />}
           </SelectTrigger>
-          <SelectContent className="neo-card border-2 border-black" style={{ borderRadius: 0 }}>
+          <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
             {uniqueYears.map((y) => (
               <SelectItem key={y} value={y.toString()}>
@@ -98,10 +102,10 @@ export function FiltersBar({
           }
           disabled={yearFilter === 'all'}
         >
-          <SelectTrigger className="neo-button w-24" style={{ borderRadius: 0 }} aria-label="Filtrar por trimestre">
+          <SelectTrigger className="w-24" aria-label="Filtrar por trimestre">
             {quarterFilter === 'all' ? 'Quarter' : <SelectValue />}
           </SelectTrigger>
-          <SelectContent className="neo-card border-2 border-black" style={{ borderRadius: 0 }}>
+          <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
             <SelectItem value="1">Q1</SelectItem>
             <SelectItem value="2">Q2</SelectItem>
@@ -114,10 +118,10 @@ export function FiltersBar({
           value={statusFilter}
           onValueChange={(value) => onStatusChange(value as Status | 'all')}
         >
-          <SelectTrigger className="neo-button" style={{ borderRadius: 0 }} aria-label="Filtrar por estado">
+          <SelectTrigger aria-label="Filtrar por estado">
             {statusFilter === 'all' ? 'Estado' : <SelectValue />}
           </SelectTrigger>
-          <SelectContent className="neo-card border-2 border-black" style={{ borderRadius: 0 }}>
+          <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
             {STATUS_OPTIONS.map((opt) => (
               <SelectItem key={opt.value} value={opt.value}>
@@ -128,10 +132,10 @@ export function FiltersBar({
         </Select>
 
         <Select value={operatorFilter} onValueChange={onOperatorChange}>
-          <SelectTrigger className="neo-button" style={{ borderRadius: 0 }} aria-label="Filtrar por operador">
+          <SelectTrigger aria-label="Filtrar por operador">
             {operatorFilter === 'all' ? 'Operador' : <SelectValue />}
           </SelectTrigger>
-          <SelectContent className="neo-card border-2 border-black" style={{ borderRadius: 0 }}>
+          <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
             {uniqueOperators.map((op) => (
               <SelectItem key={op} value={op}>
@@ -142,10 +146,10 @@ export function FiltersBar({
         </Select>
 
         <Select value={countryFilter} onValueChange={onCountryChange}>
-          <SelectTrigger className="neo-button" style={{ borderRadius: 0 }} aria-label="Filtrar por país">
+          <SelectTrigger aria-label="Filtrar por país">
             {countryFilter === 'all' ? 'País' : <SelectValue />}
           </SelectTrigger>
-          <SelectContent className="neo-card border-2 border-black" style={{ borderRadius: 0 }}>
+          <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
             {uniqueCountries.map((c) => (
               <SelectItem key={c} value={c}>
@@ -156,10 +160,10 @@ export function FiltersBar({
         </Select>
 
         <Select value={languageFilter} onValueChange={onLanguageChange}>
-          <SelectTrigger className="neo-button" style={{ borderRadius: 0 }} aria-label="Filtrar por idioma">
+          <SelectTrigger aria-label="Filtrar por idioma">
             {languageFilter === 'all' ? 'Idioma' : <SelectValue />}
           </SelectTrigger>
-          <SelectContent className="neo-card border-2 border-black" style={{ borderRadius: 0 }}>
+          <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
             {uniqueLanguages.map((l) => (
               <SelectItem key={l} value={l}>
@@ -175,19 +179,32 @@ export function FiltersBar({
         onValueChange={(value) => onSortChange(value as SortOption)}
       >
         <SelectTrigger
-          className="neo-button hidden lg:flex lg:max-w-[200px]"
-          style={{ borderRadius: 0 }}
+          className="hidden lg:flex lg:max-w-[200px]"
           aria-label="Ordenar productos"
         >
           <SelectValue placeholder="Ordenar por" />
         </SelectTrigger>
-        <SelectContent className="neo-card border-2 border-black" style={{ borderRadius: 0 }}>
+        <SelectContent >
           <SelectItem value="date-asc">Más antiguos</SelectItem>
           <SelectItem value="date-desc">Más nuevos</SelectItem>
           <SelectItem value="name-asc">Nombre (A-Z)</SelectItem>
           <SelectItem value="name-desc">Nombre (Z-A)</SelectItem>
         </SelectContent>
       </Select>
+
+      {/* Clear filters button - shows when filters are active OR year is "all" (since default should be current year) */}
+      {(activeFilterCount > 0 || yearFilter === 'all') && (
+        <Button
+          variant="default"
+          size="sm"
+          onClick={onClearFilters}
+          className="ml-auto bg-red-100 text-red-700 border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_#000000] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none hover:bg-destructive hover:text-white transition-all"
+          aria-label="Borrar todos los filtros"
+        >
+          <X className="h-4 w-4 mr-2" />
+          Borrar filtros
+        </Button>
+      )}
     </div>
   )
 }

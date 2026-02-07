@@ -75,15 +75,15 @@ export function FiltersSheet({
           Filtros
           {activeFilterCount > 0 && (
             <Badge
-              variant="destructive"
-              className="absolute -top-2 -right-2 h-5 w-5 justify-center p-0"
+              variant="default"
+              className="absolute -top-2 -right-2 h-5 w-5 justify-center p-0 bg-destructive"
             >
               {activeFilterCount}
             </Badge>
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent className="border-l-3 border-black" style={{ borderRadius: 0 }}>
+      <SheetContent className="border-l-3 border-black">
         <SheetHeader>
           <SheetTitle>Filtros y Ordenamiento</SheetTitle>
         </SheetHeader>
@@ -97,10 +97,10 @@ export function FiltersSheet({
                   onYearChange(value === 'all' ? 'all' : Number(value))
                 }
               >
-                <SelectTrigger className="neo-button" style={{ borderRadius: 0 }} aria-label="Filtrar por año">
+                <SelectTrigger aria-label="Filtrar por año">
                   {yearFilter === 'all' ? 'Año' : <SelectValue />}
                 </SelectTrigger>
-                <SelectContent className="neo-card border-2 border-black" style={{ borderRadius: 0 }}>
+                <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
                   {uniqueYears.map((y) => (
                     <SelectItem key={y} value={y.toString()}>
@@ -116,10 +116,10 @@ export function FiltersSheet({
                 }
                 disabled={yearFilter === 'all'}
               >
-                <SelectTrigger className="neo-button" style={{ borderRadius: 0 }} aria-label="Filtrar por trimestre">
+                <SelectTrigger aria-label="Filtrar por trimestre">
                   {quarterFilter === 'all' ? 'Quarter' : <SelectValue />}
                 </SelectTrigger>
-                <SelectContent className="neo-card border-2 border-black" style={{ borderRadius: 0 }}>
+                <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="1">Q1</SelectItem>
                   <SelectItem value="2">Q2</SelectItem>
@@ -132,10 +132,10 @@ export function FiltersSheet({
               value={statusFilter}
               onValueChange={(value) => onStatusChange(value as Status | 'all')}
             >
-              <SelectTrigger className="neo-button" style={{ borderRadius: 0 }} aria-label="Filtrar por estado">
+              <SelectTrigger aria-label="Filtrar por estado">
                 {statusFilter === 'all' ? 'Estado' : <SelectValue />}
               </SelectTrigger>
-              <SelectContent className="neo-card border-2 border-black" style={{ borderRadius: 0 }}>
+              <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
                 {STATUS_OPTIONS.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
@@ -145,10 +145,10 @@ export function FiltersSheet({
               </SelectContent>
             </Select>
             <Select value={operatorFilter} onValueChange={onOperatorChange}>
-              <SelectTrigger className="neo-button" style={{ borderRadius: 0 }} aria-label="Filtrar por operador">
+              <SelectTrigger aria-label="Filtrar por operador">
                 {operatorFilter === 'all' ? 'Operador' : <SelectValue />}
               </SelectTrigger>
-              <SelectContent className="neo-card border-2 border-black" style={{ borderRadius: 0 }}>
+              <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
                 {uniqueOperators.map((op) => (
                   <SelectItem key={op} value={op}>
@@ -158,10 +158,10 @@ export function FiltersSheet({
               </SelectContent>
             </Select>
             <Select value={countryFilter} onValueChange={onCountryChange}>
-              <SelectTrigger className="neo-button" style={{ borderRadius: 0 }} aria-label="Filtrar por país">
+              <SelectTrigger aria-label="Filtrar por país">
                 {countryFilter === 'all' ? 'País' : <SelectValue />}
               </SelectTrigger>
-              <SelectContent className="neo-card border-2 border-black" style={{ borderRadius: 0 }}>
+              <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
                 {uniqueCountries.map((c) => (
                   <SelectItem key={c} value={c}>
@@ -171,10 +171,10 @@ export function FiltersSheet({
               </SelectContent>
             </Select>
             <Select value={languageFilter} onValueChange={onLanguageChange}>
-              <SelectTrigger className="neo-button" style={{ borderRadius: 0 }} aria-label="Filtrar por idioma">
+              <SelectTrigger aria-label="Filtrar por idioma">
                 {languageFilter === 'all' ? 'Idioma' : <SelectValue />}
               </SelectTrigger>
-              <SelectContent className="neo-card border-2 border-black" style={{ borderRadius: 0 }}>
+              <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
                 {uniqueLanguages.map((l) => (
                   <SelectItem key={l} value={l}>
@@ -189,10 +189,10 @@ export function FiltersSheet({
               value={sortOption}
               onValueChange={(value) => onSortChange(value as SortOption)}
             >
-              <SelectTrigger className="neo-button" style={{ borderRadius: 0 }} aria-label="Ordenar productos">
+              <SelectTrigger aria-label="Ordenar productos">
                 <SelectValue placeholder="Ordenar por" />
               </SelectTrigger>
-              <SelectContent className="neo-card border-2 border-black" style={{ borderRadius: 0 }}>
+              <SelectContent>
                 <SelectItem value="date-asc">Más antiguos</SelectItem>
                 <SelectItem value="date-desc">Más nuevos</SelectItem>
                 <SelectItem value="name-asc">Nombre (A-Z)</SelectItem>

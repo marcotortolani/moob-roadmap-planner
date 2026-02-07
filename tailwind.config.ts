@@ -14,6 +14,30 @@ export default {
         headline: ['"Space Grotesk"', 'sans-serif'],
         code: ['monospace'],
       },
+      borderRadius: {
+        base: '0rem', // Neobrutalism.dev - no border radius by default
+        lg: '0.375rem', // 6px - for cards (subtle rounding)
+        md: '0.375rem', // 6px - for buttons/inputs
+        sm: '0.25rem',  // 4px - for badges
+        'neo-button': '0.375rem', // 6px
+        'neo-input': '0.375rem',  // 6px
+        'neo-badge': '0.25rem',   // 4px
+        'neo-card': '0rem',        // 0px - cards stay sharp
+      },
+      translate: {
+        boxShadowX: '4px',
+        boxShadowY: '4px',
+        reverseBoxShadowX: '-4px',
+        reverseBoxShadowY: '-4px',
+      },
+      boxShadow: {
+        shadow: 'var(--shadow)',
+        'neo-sm': '3px 3px 0px 0px #000000',
+        'neo-md': '4px 4px 0px 0px #000000',
+        'neo-lg': '6px 6px 0px 0px #000000',
+        'neo-xl': '8px 8px 0px 0px #000000',
+        'neo-none': '0px 0px 0px 0px #000000',
+      },
       colors: {
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
@@ -65,10 +89,17 @@ export default {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
+        // Neobrutalism.dev colors
+        main: {
+          DEFAULT: 'hsl(var(--main))',
+          foreground: 'hsl(var(--main-foreground))',
+        },
+        'secondary-background': 'hsl(var(--secondary-background))',
+        'secondary-foreground': 'hsl(var(--secondary-foreground))',
+        // Legacy neobrutalism palette
         neutral: {
           200: '#e5e5e5',
         },
-        // Neobrutalism Palette
         'neo-black': '#000000',
         'neo-white': '#FFFFFF',
         'neo-gray-light': '#F5F5F5',
@@ -83,25 +114,12 @@ export default {
         'light-gray-bg': '#F0F8FF',
         'soft-green': '#90EE90',
       },
-      borderRadius: {
-        lg: '0.375rem', // 6px - for cards (subtle rounding)
-        md: '0.375rem', // 6px - for buttons/inputs
-        sm: '0.25rem',  // 4px - for badges
-        'neo-button': '0.375rem', // 6px
-        'neo-input': '0.375rem',  // 6px
-        'neo-badge': '0.25rem',   // 4px
-        'neo-card': '0rem',        // 0px - cards stay sharp
-      },
       borderWidth: {
         '3': '3px',
         '4': '4px',
       },
-      boxShadow: {
-        'neo-sm': '3px 3px 0px 0px #000000',
-        'neo-md': '4px 4px 0px 0px #000000',
-        'neo-lg': '6px 6px 0px 0px #000000',
-        'neo-xl': '8px 8px 0px 0px #000000',
-        'neo-none': '0px 0px 0px 0px #000000',
+      fontWeight: {
+        base: '500',
       },
       spacing: {
         'card-padding': '1rem',

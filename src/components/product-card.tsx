@@ -74,17 +74,17 @@ const InfoLine = memo(function InfoLine({
   )
 })
 
-const getStatusBadgeClass = (status: Status) => {
+const getStatusBadgeVariant = (status: Status) => {
   switch (status) {
     case 'IN_PROGRESS':
-      return 'badge-in-progress'
+      return 'inProgress' as const
     case 'DEMO_OK':
-      return 'badge-demo-ok'
+      return 'demoOk' as const
     case 'LIVE':
-      return 'badge-live'
+      return 'live' as const
     case 'PLANNED':
     default:
-      return 'badge-planned'
+      return 'planned' as const
   }
 }
 
@@ -136,13 +136,14 @@ export const ProductCard = memo(function ProductCard({
   return (
     <>
       <Card
-        className="neo-card-hover flex flex-col overflow-hidden"
-        style={{
-          borderLeft: `6px solid ${product.cardColor}`,
-          borderRadius: 0
-        }}
+        className="relative hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer hover:shadow-[0px_0px_0px_0px_#000000] pl-2 transition-all duration-150 flex flex-col overflow-hidden "
+        onClick={handleOpenModal}
       >
-        <CardHeader className="flex flex-row items-start justify-between gap-4 pb-2">
+        <div
+          className=" absolute left-0 top-0 w-4 h-full"
+          style={{ backgroundColor: product.cardColor }}
+        ></div>
+        <CardHeader className="flex flex-row items-start justify-between gap-4 pb-2 px-6 pr-2">
           <button
             className="flex-1 text-left"
             onClick={handleOpenModal}
@@ -158,10 +159,7 @@ export const ProductCard = memo(function ProductCard({
           </button>
           <div className="flex items-center gap-2">
             {status && (
-              <Badge
-                variant="outline"
-                className={cn('neo-badge', getStatusBadgeClass(product.status))}
-              >
+              <Badge variant={getStatusBadgeVariant(product.status)}>
                 {status.label}
               </Badge>
             )}
@@ -172,14 +170,16 @@ export const ProductCard = memo(function ProductCard({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="neo-button h-8 w-8"
-                      style={{ borderRadius: 0 }}
+                      className="h-8 w-8"
                       aria-label="Opciones del producto"
                     >
                       <MoreVertical className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="neo-card border-2 border-black" style={{ borderRadius: 0 }}>
+                  <DropdownMenuContent
+                    align="end"
+                    className="border-2 border-black"
+                  >
                     {canEditProducts && (
                       <SheetTrigger asChild>
                         <DropdownMenuItem>
@@ -199,7 +199,7 @@ export const ProductCard = memo(function ProductCard({
                             Eliminar
                           </DropdownMenuItem>
                         </AlertDialogTrigger>
-                        <AlertDialogContent className="neo-card" style={{ borderRadius: 0 }}>
+                        <AlertDialogContent>
                           <AlertDialogHeader>
                             <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
                             <AlertDialogDescription>
@@ -222,7 +222,7 @@ export const ProductCard = memo(function ProductCard({
                     )}
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <SheetContent className="w-full sm:max-w-3xl overflow-y-auto border-l-3 border-black" style={{ borderRadius: 0 }}>
+                <SheetContent className="w-full sm:max-w-3xl overflow-y-auto border-l-3 border-black">
                   <ProductForm product={product} />
                 </SheetContent>
               </Sheet>
@@ -238,7 +238,11 @@ export const ProductCard = memo(function ProductCard({
           <CardContent className="grid gap-4 flex-1 pt-2">
             <div className="grid grid-cols-2 gap-x-4 gap-y-2">
               <InfoLine icon={MapPin} text={product.operator} />
-              <InfoLine icon={MapPin} text={country?.name} flag={country?.flag} />
+              <InfoLine
+                icon={MapPin}
+                text={country?.name}
+                flag={country?.flag}
+              />
               <InfoLine icon={Globe} text={product.language} />
             </div>
 

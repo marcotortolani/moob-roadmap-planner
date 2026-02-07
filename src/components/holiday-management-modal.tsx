@@ -25,7 +25,11 @@ import { DatePicker } from './date-picker'
 import { ScrollArea } from './ui/scroll-area'
 import { useToast } from '@/hooks/use-toast'
 import { Holiday, HolidayFormData, HolidaySchema } from '@/lib/types'
-import { useHolidays, useCreateHoliday, useDeleteHoliday } from '@/hooks/queries'
+import {
+  useHolidays,
+  useCreateHoliday,
+  useDeleteHoliday,
+} from '@/hooks/queries'
 import { Trash2, Edit, PlusCircle } from 'lucide-react'
 import { format, getYear } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -75,7 +79,7 @@ function HolidayForm({
             <FormItem>
               <FormLabel>Nombre del Feriado</FormLabel>
               <FormControl>
-                <Input {...field} className="neo-input" style={{ borderRadius: 0 }} />
+                <Input {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -92,11 +96,17 @@ function HolidayForm({
             </FormItem>
           )}
         />
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="ghost" onClick={onCancel} className="neo-button">
+        <div className="flex justify-end gap-2 pr-1">
+          <Button
+            type="button"
+            variant="default"
+            onClick={onCancel}
+          >
             Cancelar
           </Button>
-          <Button type="submit" className="neo-button">Guardar</Button>
+          <Button type="submit">
+            Guardar
+          </Button>
         </div>
       </form>
     </Form>
@@ -117,7 +127,8 @@ export function HolidayManagementModal({
   const { data: holidays = [] } = useHolidays()
   const deleteHoliday = useDeleteHoliday()
   const createHoliday = useCreateHoliday()
-  const { canCreateHolidays, canEditHolidays, canDeleteHolidays } = usePermissionChecks()
+  const { canCreateHolidays, canEditHolidays, canDeleteHolidays } =
+    usePermissionChecks()
 
   // Generate years range: 5 years before current year to 10 years after
   const currentYear = new Date().getFullYear()
@@ -146,11 +157,15 @@ export function HolidayManagementModal({
     const existingDates = new Set(
       holidays
         .filter((h) => getYear(h.date) === yearFilter)
-        .map((h) => format(h.date, 'yyyy-MM-dd'))
+        .map((h) => format(h.date, 'yyyy-MM-dd')),
     )
 
     FIXED_HOLIDAYS.forEach((fixedHoliday) => {
-      const holidayDate = new Date(yearFilter, fixedHoliday.month, fixedHoliday.day)
+      const holidayDate = new Date(
+        yearFilter,
+        fixedHoliday.month,
+        fixedHoliday.day,
+      )
       const dateStr = format(holidayDate, 'yyyy-MM-dd')
 
       // Only create if it doesn't already exist
@@ -184,8 +199,8 @@ export function HolidayManagementModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="neo-card max-w-xl h-[75vh] flex flex-col" style={{ borderRadius: 0 }}>
-        <DialogHeader className="border-b-2 border-black pb-4">
+      <DialogContent className="max-w-xl h-[75vh] flex flex-col">
+        <DialogHeader>
           <DialogTitle>Gestionar Feriados</DialogTitle>
           <DialogDescription>
             Añade, edita o elimina los feriados del calendario.
@@ -199,7 +214,7 @@ export function HolidayManagementModal({
               onCancel={() => setIsFormOpen(false)}
             />
           ) : (
-            <div className="flex-1 flex flex-col min-h-0">
+            <div className="flex-1 flex flex-col min-h-0 p-1">
               <div className="flex justify-between items-center mb-4 gap-2">
                 <Select
                   value={yearFilter.toString()}
@@ -216,19 +231,24 @@ export function HolidayManagementModal({
                     ))}
                   </SelectContent>
                 </Select>
-                {canCreateHolidays && filteredHolidays.length < FIXED_HOLIDAYS.length && (
+                {canCreateHolidays &&
+                  filteredHolidays.length < FIXED_HOLIDAYS.length && (
+                    <Button
+                      size="sm"
+                      variant="noShadow"
+                      onClick={generateFixedHolidays}
+                      disabled={createHoliday.isPending}
+                      
+                    >
+                      Generar Feriados Fijos
+                    </Button>
+                  )}
+                {canCreateHolidays && (
                   <Button
                     size="sm"
-                    variant="outline"
-                    onClick={generateFixedHolidays}
-                    disabled={createHoliday.isPending}
-                    className="neo-button"
+                    onClick={handleAddNew}
+                    className="ml-auto"
                   >
-                    Generar Feriados Fijos
-                  </Button>
-                )}
-                {canCreateHolidays && (
-                  <Button size="sm" onClick={handleAddNew} className="ml-auto neo-button">
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Añadir Feriado
                   </Button>
@@ -251,20 +271,20 @@ export function HolidayManagementModal({
                         <div className="flex items-center gap-2">
                           {canEditHolidays && (
                             <Button
-                              variant="ghost"
+                              variant="default"
                               size="icon"
                               onClick={() => handleEdit(holiday)}
-                              className="neo-button"
+                              className="rounded-sm"
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
                           )}
                           {canDeleteHolidays && (
                             <Button
-                              variant="ghost"
+                              variant="default"
                               size="icon"
                               onClick={() => handleDelete(holiday.id)}
-                              className="neo-button text-destructive hover:text-destructive"
+                              className="text-destructive hover:bg-destructive hover:text-destructive-foreground rounded-sm"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -284,7 +304,7 @@ export function HolidayManagementModal({
           )}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} className="neo-button">
+          <Button variant="default" onClick={onClose} className="rounded-sm">
             Cerrar
           </Button>
         </DialogFooter>

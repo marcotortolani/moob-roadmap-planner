@@ -104,8 +104,7 @@ export function ProductDatesSection({
                 const count = parseInt(e.target.value) || 1
                 onBusinessDaysChange(count)
               }}
-              className="neo-input mt-2"
-              style={{ borderRadius: 0 }}
+              className="mt-2"
               aria-label="Días laborables de duración"
               aria-required="true"
             />
@@ -124,7 +123,7 @@ export function ProductDatesSection({
         variant="ghost"
         size="sm"
         onClick={onToggleDateInputMode}
-        className="neo-button w-full sm:w-auto"
+        className="w-full sm:w-auto"
       >
         {dateInputMode === 'manual'
           ? '📅 Usar días laborables'

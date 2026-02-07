@@ -7,17 +7,30 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
 } from 'recharts'
 import { getQuarter, getYear, startOfQuarter, endOfQuarter, isWithinInterval } from 'date-fns'
 import type { Product, Milestone } from '@/lib/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { ChartContainer, ChartConfig, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/ui/chart'
 
 interface MilestoneProgressChartProps {
   products: Product[]
 }
+
+const chartConfig = {
+  PENDING: {
+    label: 'Pendientes',
+    color: '#94a3b8',
+  },
+  IN_PROGRESS: {
+    label: 'En Progreso',
+    color: '#eab308',
+  },
+  COMPLETED: {
+    label: 'Completados',
+    color: '#22c55e',
+  },
+} satisfies ChartConfig
 
 export function MilestoneProgressChart({ products }: MilestoneProgressChartProps) {
   const data = useMemo(() => {
@@ -95,8 +108,8 @@ export function MilestoneProgressChart({ products }: MilestoneProgressChartProps
 
   if (!hasData) {
     return (
-      <Card className="neo-card" style={{ borderRadius: 0 }}>
-        <CardHeader className="border-b-2 border-black">
+      <Card className="">
+        <CardHeader className="">
           <CardTitle className="font-bold uppercase">Progreso de Hitos por Trimestre</CardTitle>
         </CardHeader>
         <CardContent>
@@ -109,23 +122,31 @@ export function MilestoneProgressChart({ products }: MilestoneProgressChartProps
   }
 
   return (
-    <Card className="neo-card" style={{ borderRadius: 0 }}>
-      <CardHeader className="border-b-2 border-black">
+    <Card className="">
+      <CardHeader className="">
         <CardTitle className="font-bold uppercase">Progreso de Hitos por Trimestre</CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="PENDING" stackId="a" fill="#94a3b8" name="Pendientes" />
-            <Bar dataKey="IN_PROGRESS" stackId="a" fill="#eab308" name="En Progreso" />
-            <Bar dataKey="COMPLETED" stackId="a" fill="#22c55e" name="Completados" />
+        <ChartContainer config={chartConfig} className="h-[300px] w-full">
+          <BarChart data={data} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#000" />
+            <XAxis
+              dataKey="name"
+              stroke="#000"
+              tick={{ fill: '#000' }}
+            />
+            <YAxis
+              allowDecimals={false}
+              stroke="#000"
+              tick={{ fill: '#000' }}
+            />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <ChartLegend content={<ChartLegendContent />} />
+            <Bar dataKey="PENDING" stackId="a" radius={[0, 0, 0, 0]} />
+            <Bar dataKey="IN_PROGRESS" stackId="a" radius={[0, 0, 0, 0]} />
+            <Bar dataKey="COMPLETED" stackId="a" radius={[4, 4, 0, 0]} />
           </BarChart>
-        </ResponsiveContainer>
+        </ChartContainer>
 
         {/* Summary statistics */}
         <div className="mt-6 grid grid-cols-3 gap-4 text-center">

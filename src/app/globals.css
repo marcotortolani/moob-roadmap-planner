@@ -42,6 +42,19 @@ body {
     --sidebar-accent-foreground: 0 0% 0%;
     --sidebar-border: 0 0% 0%;
     --sidebar-ring: 0 0% 0%;
+
+    /* Neobrutalism.dev Theme Variables */
+    --main: 210 14% 57%; /* Primary blue */
+    --main-foreground: 0 0% 100%; /* White text on primary */
+    --secondary-background: 0 0% 96%; /* Light gray #F5F5F5 */
+    --secondary-foreground: 0 0% 0%; /* Black text */
+    --shadow: 4px 4px 0 0 rgba(0, 0, 0, 1); /* Hard shadow neobrutalism */
+
+    /* Status colors for badges */
+    --status-planned: 215 14% 47%; /* Gray #6B7280 */
+    --status-in-progress: 349 89% 58%; /* Red #FF2E63 */
+    --status-demo-ok: 45 93% 56%; /* Yellow #FFD700 */
+    --status-live: 149 61% 47%; /* Green #2EBD59 */
   }
 
   /* DARK MODE: Disabled for Neobrutalism - can be re-enabled later with inverted palette */
@@ -201,66 +214,66 @@ body {
   /* Role Badge Utilities - Neobrutalism */
   .badge-role-admin {
     @apply neo-badge;
-    background-color: #EF4444 !important;
+    background-color: #ef4444 !important;
     color: white !important;
   }
 
   .badge-role-admin:hover {
-    background-color: #EF4444 !important;
+    background-color: #ef4444 !important;
   }
 
   .badge-role-user {
     @apply neo-badge;
-    background-color: #3B82F6 !important;
+    background-color: #3b82f6 !important;
     color: white !important;
   }
 
   .badge-role-user:hover {
-    background-color: #3B82F6 !important;
+    background-color: #3b82f6 !important;
   }
 
   .badge-role-guest {
     @apply neo-badge;
-    background-color: #F97316 !important;
+    background-color: #f97316 !important;
     color: white !important;
   }
 
   .badge-role-guest:hover {
-    background-color: #F97316 !important;
+    background-color: #f97316 !important;
   }
 
   .badge-role-blocked {
     @apply neo-badge;
-    background-color: #A855F7 !important;
+    background-color: #a855f7 !important;
     color: white !important;
   }
 
   .badge-role-blocked:hover {
-    background-color: #A855F7 !important;
+    background-color: #a855f7 !important;
   }
 
   /* Invitation Status Badge Utilities - Neobrutalism */
   .badge-status-pending {
     @apply neo-badge;
-    background-color: #FCC419 !important;
+    background-color: #fcc419 !important;
     color: black !important;
   }
 
   .badge-status-accepted {
     @apply neo-badge;
-    background-color: #51CF66 !important;
+    background-color: #51cf66 !important;
     color: white !important;
   }
 
   .badge-status-expired {
     @apply neo-badge;
-    background-color: #868E96 !important;
+    background-color: #868e96 !important;
     color: white !important;
   }
 
   .badge-status-revoked {
     @apply neo-badge;
-    background-color: #FF6B6B !important;
+    background-color: #ff6b6b !important;
     color: white !important;
   }
 
@@ -304,15 +317,15 @@ body {
     border-radius: 4px !important; /* Minimal rounding for badges */
   }
 
-  /* Holiday Cell Diagonal Stripe Pattern - Neobrutalism */
+  /* Holiday Cell Diagonal Stripe Pattern - Neobrutalism (Gray/White) */
   .bg-holiday-stripes {
     border: 2px solid #000000;
     background-image: repeating-linear-gradient(
       45deg,
-      rgb(254 215 170) 0px,
-      rgb(254 215 170) 10px,
-      rgb(255 237 213) 10px,
-      rgb(255 237 213) 20px
+      rgb(212 212 212) 0px,
+      rgb(212 212 212) 10px,
+      rgb(255 255 255) 10px,
+      rgb(255 255 255) 20px
     );
   }
 }

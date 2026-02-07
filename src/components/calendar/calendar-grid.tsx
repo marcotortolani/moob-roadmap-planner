@@ -12,12 +12,7 @@ import {
 import { es } from 'date-fns/locale'
 import { CalendarDayCell } from './calendar-day-cell'
 import { isBusinessDay, getBusinessDaysInRange } from '@/lib/business-days'
-import type {
-  Product,
-  Milestone,
-  Holiday,
-  DragCardType,
-} from '@/lib/types'
+import type { Product, Milestone, Holiday, DragCardType } from '@/lib/types'
 
 interface DragState {
   productId: string

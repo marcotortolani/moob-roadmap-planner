@@ -141,7 +141,7 @@ function ResetPasswordForm() {
 
   if (resetSuccess) {
     return (
-      <Card className="neo-card" style={{ borderRadius: 0 }}>
+      <Card>
         <CardHeader className="space-y-1 border-b-2 border-black">
           <div className="flex justify-center mb-4">
             <div className="rounded-full bg-green-100 p-3">
@@ -165,7 +165,7 @@ function ResetPasswordForm() {
   }
 
   return (
-    <Card className="neo-card" style={{ borderRadius: 0 }}>
+    <Card >
       <CardHeader className="space-y-1 border-b-2 border-black">
         <CardTitle className="font-headline text-2xl uppercase">Nueva Contraseña</CardTitle>
         <CardDescription>
@@ -187,8 +187,7 @@ function ResetPasswordForm() {
                         type={showPassword ? 'text' : 'password'}
                         placeholder="••••••••"
                         autoComplete="new-password"
-                        className="neo-input pr-10"
-                        style={{ borderRadius: 0 }}
+                        className="pr-10"
                         {...field}
                       />
                       <Button
@@ -229,8 +228,7 @@ function ResetPasswordForm() {
                         type={showConfirmPassword ? 'text' : 'password'}
                         placeholder="••••••••"
                         autoComplete="new-password"
-                        className="neo-input pr-10"
-                        style={{ borderRadius: 0 }}
+                        className="pr-10"
                         {...field}
                       />
                       <Button
@@ -257,11 +255,11 @@ function ResetPasswordForm() {
             />
 
             <div className="space-y-2">
-              <Button type="submit" className="neo-button w-full uppercase font-bold" disabled={isPending}>
+              <Button type="submit" className="w-full uppercase font-bold" disabled={isPending}>
                 {isPending ? 'Actualizando...' : 'Actualizar Contraseña'}
               </Button>
 
-              <Button asChild className="neo-button w-full uppercase font-bold" variant="ghost">
+              <Button asChild className="w-full uppercase font-bold" variant="ghost">
                 <Link href="/login">Cancelar</Link>
               </Button>
             </div>

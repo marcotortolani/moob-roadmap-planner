@@ -140,8 +140,7 @@ export function DatePicker({
         onBlur={handleInputBlur}
         onFocus={handleInputFocus}
         placeholder={DATE_FORMAT.toUpperCase()}
-        className={`neo-input pr-10 ${inputError ? 'border-destructive focus-visible:ring-destructive' : ''}`}
-        style={{ borderRadius: 0 }}
+        className={`pr-10 ${inputError ? 'border-destructive focus-visible:ring-destructive' : ''}`}
         onKeyDown={(e) => {
           if (e.key === "ArrowDown") {
             e.preventDefault();
@@ -160,14 +159,14 @@ export function DatePicker({
             type="button"
             variant="ghost"
             size="icon"
-            className="neo-button absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2 text-muted-foreground"
+            className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2 text-muted-foreground"
           >
             <CalendarIcon className="h-4 w-4" />
             <span className="sr-only">Seleccionar fecha</span>
           </Button>
         </PopoverTrigger>
         <PopoverContent
-          className="neo-card w-auto p-0"
+          className="w-auto p-0"
           align="start"
           onOpenAutoFocus={(e) => e.preventDefault()}
         >

@@ -1,20 +1,21 @@
 'use client'
 
 import { useMemo } from 'react'
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
+import { PieChart, Pie, Cell } from 'recharts'
 import type { Product } from '@/lib/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { ChartContainer, ChartConfig, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/ui/chart'
 
 const COLORS = [
-  '#778899', // Slate blue (primary)
-  '#90EE90', // Soft green (accent)
-  '#4169E1', // Royal blue
-  '#FF6B6B', // Coral
-  '#FFD93D', // Yellow
-  '#6BCB77', // Green
-  '#4D96FF', // Light blue
-  '#FF8787', // Light coral
+  '#0052CC', // Primary blue
+  '#FF2E63', // Red
+  '#FFD700', // Yellow
+  '#2EBD59', // Green
   '#9B72AA', // Purple
+  '#FF8787', // Light coral
+  '#4D96FF', // Light blue
+  '#6BCB77', // Light green
+  '#FF6B6B', // Coral
   '#FFA07A', // Light salmon
 ]
 
@@ -33,16 +34,35 @@ export function OperatorPieChart({ products }: OperatorPieChartProps) {
     )
 
     return Object.entries(operatorCounts)
-      .map(([name, value]) => ({ name, value }))
+      .map(([name, value], index) => ({
+        name,
+        value,
+        fill: COLORS[index % COLORS.length],
+      }))
       .sort((a, b) => b.value - a.value)
   }, [products])
+
+  const chartConfig = useMemo(
+    () =>
+      data.reduce(
+        (acc, item, index) => {
+          acc[item.name] = {
+            label: item.name,
+            color: COLORS[index % COLORS.length],
+          }
+          return acc
+        },
+        {} as ChartConfig
+      ),
+    [data]
+  )
 
   const totalProducts = products.length
 
   if (totalProducts === 0) {
     return (
-      <Card className="neo-card" style={{ borderRadius: 0 }}>
-        <CardHeader className="border-b-2 border-black">
+      <Card className="">
+        <CardHeader className="">
           <CardTitle className="font-bold uppercase">Productos por Operador</CardTitle>
         </CardHeader>
         <CardContent>
@@ -55,38 +75,27 @@ export function OperatorPieChart({ products }: OperatorPieChartProps) {
   }
 
   return (
-    <Card className="neo-card" style={{ borderRadius: 0 }}>
-      <CardHeader className="border-b-2 border-black">
+    <Card className="">
+      <CardHeader className="">
         <CardTitle className="font-bold uppercase">Productos por Operador</CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
+        <ChartContainer config={chartConfig} className="h-[300px] w-full">
           <PieChart>
+            <ChartTooltip content={<ChartTooltipContent />} />
             <Pie
               data={data}
+              dataKey="value"
+              nameKey="name"
               cx="50%"
               cy="50%"
-              labelLine={false}
-              label={({ name, percent }) =>
-                `${name}: ${(percent * 100).toFixed(0)}%`
-              }
               outerRadius={80}
-              fill="#8884d8"
-              dataKey="value"
-            >
-              {data.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={COLORS[index % COLORS.length]}
-                />
-              ))}
-            </Pie>
-            <Tooltip
-              formatter={(value: number) => [`${value} productos`, 'Total']}
+              strokeWidth={2}
+              stroke="#000"
             />
-            <Legend />
+            <ChartLegend content={<ChartLegendContent />} />
           </PieChart>
-        </ResponsiveContainer>
+        </ChartContainer>
 
         <div className="mt-4 space-y-2">
           {data.map((item, index) => (

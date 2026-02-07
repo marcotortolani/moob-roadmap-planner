@@ -50,8 +50,6 @@ export function ProductMilestonesSection({
                   <FormLabel>Nombre del Hito</FormLabel>
                   <FormControl>
                     <Input
-                      className="neo-input"
-                      style={{ borderRadius: 0 }}
                       {...field}
                       aria-label={`Nombre del hito ${index + 1}`}
                     />
@@ -101,11 +99,11 @@ export function ProductMilestonesSection({
                     defaultValue={field.value}
                   >
                     <FormControl>
-                      <SelectTrigger className="neo-button" style={{ borderRadius: 0 }} aria-label={`Estado del hito ${index + 1}`}>
+                      <SelectTrigger aria-label={`Estado del hito ${index + 1}`}>
                         <SelectValue placeholder="Estado" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent className="neo-card border-2 border-black" style={{ borderRadius: 0 }}>
+                    <SelectContent>
                       {MILESTONE_STATUS_OPTIONS.map((opt) => (
                         <SelectItem key={opt.value} value={opt.value}>
                           {opt.label}
@@ -122,7 +120,6 @@ export function ProductMilestonesSection({
             type="button"
             variant="ghost"
             size="icon"
-            className="neo-button"
             onClick={() => onRemoveMilestone(index)}
             aria-label={`Eliminar hito ${index + 1}`}
           >
@@ -134,7 +131,6 @@ export function ProductMilestonesSection({
         type="button"
         variant="outline"
         size="sm"
-        className="neo-button"
         onClick={onAppendMilestone}
       >
         <PlusCircle className="mr-2 h-4 w-4" />

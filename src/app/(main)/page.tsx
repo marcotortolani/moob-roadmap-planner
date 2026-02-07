@@ -81,6 +81,8 @@ function ProductsData({ view }: { view: string }) {
               uniqueOperators={uniqueOperators}
               uniqueCountries={uniqueCountries}
               uniqueLanguages={uniqueLanguages}
+              activeFilterCount={activeFilterCount}
+              onClearFilters={clearFilters}
             />
 
             {/* Mobile filter trigger */}

@@ -1,14 +1,14 @@
-import { memo, useMemo } from 'react';
-import { motion } from 'framer-motion';
-import type { Product } from '@/lib/types';
-import { ProductCard } from './product-card';
+import { memo, useMemo } from 'react'
+import { motion } from 'framer-motion'
+import type { Product } from '@/lib/types'
+import { ProductCard } from './product-card'
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from '@/components/ui/accordion';
-import { startOfQuarter, endOfQuarter, getYear } from 'date-fns';
+} from '@/components/ui/accordion'
+import { startOfQuarter, endOfQuarter, getYear } from 'date-fns'
 
 // Animation variants for product cards
 const containerVariants = {
@@ -19,7 +19,7 @@ const containerVariants = {
       staggerChildren: 0.05,
     },
   },
-};
+}
 
 const cardVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -27,17 +27,17 @@ const cardVariants = {
     opacity: 1,
     y: 0,
     transition: {
-      type: 'spring',
+      type: 'spring' as const,
       stiffness: 300,
       damping: 24,
     },
   },
-};
+}
 
 interface ProductListProps {
-  products: Product[];
-  yearFilter: number | 'all';
-  quarterFilter: number | 'all';
+  products: Product[]
+  yearFilter: number | 'all'
+  quarterFilter: number | 'all'
 }
 
 export const ProductList = memo(function ProductList({
@@ -63,7 +63,10 @@ export const ProductList = memo(function ProductList({
           const quarterStartDate = startOfQuarter(new Date(year, (q - 1) * 3))
           const quarterEndDate = endOfQuarter(new Date(year, (q - 1) * 3))
 
-          if (product.startDate <= quarterEndDate && product.endDate >= quarterStartDate) {
+          if (
+            product.startDate <= quarterEndDate &&
+            product.endDate >= quarterStartDate
+          ) {
             if (!byYear[year][q].some((p) => p.id === product.id)) {
               byYear[year][q].push(product)
             }
@@ -81,10 +84,17 @@ export const ProductList = memo(function ProductList({
 
     products.forEach((product) => {
       for (let q = 1; q <= 4; q++) {
-        const quarterStartDate = startOfQuarter(new Date(yearFilter as number, (q - 1) * 3))
-        const quarterEndDate = endOfQuarter(new Date(yearFilter as number, (q - 1) * 3))
+        const quarterStartDate = startOfQuarter(
+          new Date(yearFilter as number, (q - 1) * 3),
+        )
+        const quarterEndDate = endOfQuarter(
+          new Date(yearFilter as number, (q - 1) * 3),
+        )
 
-        if (product.startDate <= quarterEndDate && product.endDate >= quarterStartDate) {
+        if (
+          product.startDate <= quarterEndDate &&
+          product.endDate >= quarterStartDate
+        ) {
           byQuarter[q].push(product)
         }
       }
@@ -105,39 +115,51 @@ export const ProductList = memo(function ProductList({
           </p>
         </div>
       </div>
-    );
+    )
   }
 
   if (productsByYear) {
-    const sortedYears = Object.keys(productsByYear).sort((a,b) => parseInt(b) - parseInt(a));
+    const sortedYears = Object.keys(productsByYear).sort(
+      (a, b) => parseInt(b) - parseInt(a),
+    )
 
-     return (
-        <Accordion type="multiple" defaultValue={sortedYears} className="w-full space-y-6">
-          {sortedYears.map((year) => {
-            const quarters = productsByYear[year];
-            const yearHasProducts = Object.values(quarters).some(p => p.length > 0);
-            if (!yearHasProducts) return null;
+    return (
+      <Accordion
+        type="multiple"
+        defaultValue={sortedYears}
+        className="w-full space-y-6 pr-1"
+      >
+        {sortedYears.map((year) => {
+          const quarters = productsByYear[year]
+          const yearHasProducts = Object.values(quarters).some(
+            (p) => p.length > 0,
+          )
+          if (!yearHasProducts) return null
 
-            return (
-              <AccordionItem key={year} value={year} className="border-none">
-                <AccordionTrigger className="text-2xl font-bold font-headline p-0 hover:no-underline">
-                  {year}
-                </AccordionTrigger>
-                <AccordionContent className="pt-4">
-                  <Accordion type="multiple" defaultValue={['1','2','3','4']} className="w-full space-y-4">
-                    {Object.entries(quarters).map(([quarter, quarterProducts]) => {
-                      if (quarterProducts.length === 0) return null;
+          return (
+            <AccordionItem key={year} value={year} className="border-none">
+              <AccordionTrigger className="text-2xl font-bold font-headline px-4 pr-6 py-3 hover:no-underline">
+                {year}
+              </AccordionTrigger>
+              <AccordionContent className="pt-4">
+                <Accordion
+                  type="multiple"
+                  defaultValue={['1', '2', '3', '4']}
+                  className="w-full space-y-4"
+                >
+                  {Object.entries(quarters).map(
+                    ([quarter, quarterProducts]) => {
+                      if (quarterProducts.length === 0) return null
                       return (
                         <AccordionItem
                           key={`${year}-q${quarter}`}
                           value={quarter}
                           className="border-3 border-black mb-2"
-                          style={{ borderRadius: 0 }}
                         >
-                          <AccordionTrigger className="neo-button px-4 py-3 text-lg font-headline uppercase">
+                          <AccordionTrigger className="px-4 py-3 text-lg font-headline uppercase">
                             Q{quarter}
                           </AccordionTrigger>
-                          <AccordionContent className="p-4 pt-0">
+                          <AccordionContent className="p-4 pr-6 pt-4">
                             <motion.div
                               className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
                               variants={containerVariants}
@@ -145,78 +167,85 @@ export const ProductList = memo(function ProductList({
                               animate="visible"
                             >
                               {quarterProducts.map((product) => (
-                                <motion.div key={product.id} variants={cardVariants}>
+                                <motion.div
+                                  key={product.id}
+                                  variants={cardVariants}
+                                >
                                   <ProductCard product={product} />
                                 </motion.div>
                               ))}
                             </motion.div>
                           </AccordionContent>
                         </AccordionItem>
-                      );
-                    })}
-                  </Accordion>
-                </AccordionContent>
-              </AccordionItem>
-            );
-          })}
-        </Accordion>
-     );
-  }
-
-
-  if (productsByQuarter) {
-    return (
-        <Accordion type="multiple" defaultValue={['1', '2', '3', '4']} className="w-full space-y-4">
-            {Object.entries(productsByQuarter).map(([quarter, quarterProducts]) => {
-                if (quarterProducts.length === 0) return null;
-                return (
-                    <AccordionItem key={quarter} value={quarter} className="border rounded-lg">
-                        <AccordionTrigger className="px-4 py-3 text-lg font-headline hover:no-underline">
-                           Q{quarter}
-                        </AccordionTrigger>
-                        <AccordionContent className="p-4 pt-0">
-                            <motion.div
-                              className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-                              variants={containerVariants}
-                              initial="hidden"
-                              animate="visible"
-                            >
-                                {quarterProducts.map((product) => (
-                                    <motion.div key={product.id} variants={cardVariants}>
-                                      <ProductCard product={product} />
-                                    </motion.div>
-                                ))}
-                            </motion.div>
-                        </AccordionContent>
-                    </AccordionItem>
-                )
-            })}
-        </Accordion>
+                      )
+                    },
+                  )}
+                </Accordion>
+              </AccordionContent>
+            </AccordionItem>
+          )
+        })}
+      </Accordion>
     )
   }
 
-  const isDefaultView = typeof yearFilter === 'number' && typeof quarterFilter === 'number';
+  if (productsByQuarter) {
+    return (
+      <Accordion
+        type="multiple"
+        defaultValue={['1', '2', '3', '4']}
+        className="w-full space-y-4 pr-1"
+      >
+        {Object.entries(productsByQuarter).map(([quarter, quarterProducts]) => {
+          if (quarterProducts.length === 0) return null
+          return (
+            <AccordionItem key={quarter} value={quarter} className="border-3">
+              <AccordionTrigger className="px-4 py-3 text-lg font-headline hover:no-underline">
+                Q{quarter}
+              </AccordionTrigger>
+              <AccordionContent className="p-4 pr-6 pt-4">
+                <motion.div
+                  className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  {quarterProducts.map((product) => (
+                    <motion.div key={product.id} variants={cardVariants}>
+                      <ProductCard product={product} />
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </AccordionContent>
+            </AccordionItem>
+          )
+        })}
+      </Accordion>
+    )
+  }
 
+  const isDefaultView =
+    typeof yearFilter === 'number' && typeof quarterFilter === 'number'
 
   return (
-     <div className="space-y-4">
-        {isDefaultView && (
-            <h2 className="text-xl font-bold font-headline">
-              {yearFilter} / Q{quarterFilter}
-            </h2>
-        )}
-        <motion.div
-          className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          {products.map((product) => (
-            <motion.div key={product.id} variants={cardVariants}>
-              <ProductCard product={product} />
-            </motion.div>
-          ))}
-        </motion.div>
+    <div className="space-y-4">
+      {isDefaultView && (
+        <h2 className="text-xl font-bold font-headline">
+          {yearFilter} / Q{quarterFilter}
+        </h2>
+      )}
+      <motion.div
+        className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 pr-6"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {products.map((product) => (
+          <motion.div key={product.id} variants={cardVariants}>
+            <ProductCard product={product} />
+          </motion.div>
+        ))}
+      </motion.div>
     </div>
-  );
+  )
 })

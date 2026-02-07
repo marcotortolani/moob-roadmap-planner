@@ -78,8 +78,8 @@ export function ActivityHeatmap({ products, monthsToShow = 3 }: ActivityHeatmapP
   const weekDays = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
 
   return (
-    <Card className="neo-card" style={{ borderRadius: 0 }}>
-      <CardHeader className="border-b-2 border-black">
+    <Card className="">
+      <CardHeader className="">
         <CardTitle className="font-bold uppercase">Heatmap de Actividad</CardTitle>
         <p className="text-sm text-muted-foreground">
           {format(startDate, 'MMMM yyyy', { locale: es })} -{' '}

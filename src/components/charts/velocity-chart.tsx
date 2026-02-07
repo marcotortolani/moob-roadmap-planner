@@ -8,12 +8,10 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
 } from 'recharts'
 import type { Product } from '@/lib/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { ChartContainer, ChartConfig, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/ui/chart'
 
 interface VelocityChartProps {
   products: Product[]
@@ -23,6 +21,21 @@ interface VelocityChartProps {
     started: number
   }>
 }
+
+const chartConfig = {
+  started: {
+    label: 'Iniciados',
+    color: '#94a3b8',
+  },
+  completed: {
+    label: 'Completados',
+    color: '#22c55e',
+  },
+  completionRate: {
+    label: 'Tasa de Completación (%)',
+    color: '#0052CC',
+  },
+} satisfies ChartConfig
 
 export function VelocityChart({ products, weeklyData }: VelocityChartProps) {
   const chartData = useMemo(() => {
@@ -53,8 +66,8 @@ export function VelocityChart({ products, weeklyData }: VelocityChartProps) {
 
   if (chartData.length === 0) {
     return (
-      <Card className="neo-card" style={{ borderRadius: 0 }}>
-        <CardHeader className="border-b-2 border-black">
+      <Card className="">
+        <CardHeader className="">
           <CardTitle className="font-bold uppercase">Velocity Chart</CardTitle>
         </CardHeader>
         <CardContent>
@@ -67,53 +80,55 @@ export function VelocityChart({ products, weeklyData }: VelocityChartProps) {
   }
 
   return (
-    <Card className="neo-card" style={{ borderRadius: 0 }}>
-      <CardHeader className="border-b-2 border-black">
+    <Card className="">
+      <CardHeader className="">
         <CardTitle className="font-bold uppercase">Velocity Chart - Últimas 12 Semanas</CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <ComposedChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
+        <ChartContainer config={chartConfig} className="h-[300px] w-full">
+          <ComposedChart data={chartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#000" />
             <XAxis
               dataKey="week"
-              tick={{ fontSize: 12 }}
+              stroke="#000"
+              tick={{ fill: '#000', fontSize: 12 }}
               interval="preserveStartEnd"
             />
-            <YAxis yAxisId="left" label={{ value: 'Productos', angle: -90, position: 'insideLeft' }} />
+            <YAxis
+              yAxisId="left"
+              label={{ value: 'Productos', angle: -90, position: 'insideLeft', fill: '#000' }}
+              stroke="#000"
+              tick={{ fill: '#000' }}
+            />
             <YAxis
               yAxisId="right"
               orientation="right"
-              label={{ value: 'Tasa (%)', angle: 90, position: 'insideRight' }}
+              label={{ value: 'Tasa (%)', angle: 90, position: 'insideRight', fill: '#000' }}
+              stroke="#000"
+              tick={{ fill: '#000' }}
             />
-            <Tooltip />
-            <Legend />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <ChartLegend content={<ChartLegendContent />} />
             <Bar
               yAxisId="left"
               dataKey="started"
-              fill="#94a3b8"
-              name="Iniciados"
-              radius={[4, 4, 0, 0]}
+              radius={[0, 0, 0, 0]}
             />
             <Bar
               yAxisId="left"
               dataKey="completed"
-              fill="#22c55e"
-              name="Completados"
               radius={[4, 4, 0, 0]}
             />
             <Line
               yAxisId="right"
               type="monotone"
               dataKey="completionRate"
-              stroke="#4169E1"
               strokeWidth={2}
               strokeDasharray="5 5"
-              name="Tasa de Completación (%)"
               dot={{ r: 3 }}
             />
           </ComposedChart>
-        </ResponsiveContainer>
+        </ChartContainer>
 
         {/* Summary statistics */}
         <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
