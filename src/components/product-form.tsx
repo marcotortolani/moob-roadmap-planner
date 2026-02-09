@@ -142,7 +142,13 @@ export default function ProductForm({ product }: { product?: Product }) {
         },
         {
           onSuccess: () => {
-            document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+            // Wait a bit to show the toast before closing
+            setTimeout(() => {
+              document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+            }, 500)
+          },
+          onError: () => {
+            // Don't close on error so user can fix issues
           },
         }
       )
@@ -150,7 +156,13 @@ export default function ProductForm({ product }: { product?: Product }) {
       // Create new product
       createProduct.mutate(productData as any, {
         onSuccess: () => {
-          document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+          // Wait a bit to show the toast before closing
+          setTimeout(() => {
+            document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+          }, 500)
+        },
+        onError: () => {
+          // Don't close on error so user can fix issues
         },
       })
     }

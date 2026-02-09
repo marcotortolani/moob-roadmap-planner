@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button'
 import type { Status } from '@/lib/types'
 import { STATUS_OPTIONS } from '@/lib/constants'
 import type { FilterType } from '@/hooks/use-product-filtering'
+import { getLanguageName } from '@/lib/languages'
+import { COUNTRIES } from '@/lib/countries'
 
 interface ActiveFiltersBadgesProps {
   searchTerm: string
@@ -31,6 +33,12 @@ export function ActiveFiltersBadges({
   onClearAll,
 }: ActiveFiltersBadgesProps) {
   if (activeFilterCount === 0) return null
+
+  // Helper function to get country name from code
+  const getCountryName = (code: string) => {
+    const country = COUNTRIES.find((c) => c.code === code)
+    return country ? country.name : code
+  }
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -97,7 +105,7 @@ export function ActiveFiltersBadges({
       )}
       {countryFilter !== 'all' && (
         <Badge >
-          País: {countryFilter}
+          País: {getCountryName(countryFilter)}
           <button
             onClick={() => onRemoveFilter('country')}
             className="ml-1 p-0.5"
@@ -109,7 +117,7 @@ export function ActiveFiltersBadges({
       )}
       {languageFilter !== 'all' && (
         <Badge >
-          Idioma: {languageFilter}
+          Idioma: {getLanguageName(languageFilter)}
           <button
             onClick={() => onRemoveFilter('language')}
             className="ml-1 p-0.5"

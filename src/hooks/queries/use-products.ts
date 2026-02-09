@@ -295,15 +295,16 @@ export function useCreateProduct() {
       await queryClient.invalidateQueries({ queryKey: productKeys.all })
 
       toast({
-        title: 'Éxito',
-        description: 'Producto creado exitosamente',
+        title: '✓ Producto creado',
+        description: 'El producto se ha creado exitosamente',
+        variant: 'success',
       })
     },
     onError: (error: Error) => {
       console.error('Error creating product:', error)
       toast({
-        title: 'Error',
-        description: error.message || 'Error al crear el producto',
+        title: '✕ Error al crear',
+        description: error.message || 'No se pudo crear el producto. Intenta nuevamente.',
         variant: 'destructive',
       })
     },
@@ -418,15 +419,16 @@ export function useUpdateProduct() {
       await queryClient.invalidateQueries({ queryKey: productKeys.all })
 
       toast({
-        title: 'Éxito',
-        description: 'Producto actualizado exitosamente',
+        title: '✓ Producto actualizado',
+        description: 'Los cambios se han guardado exitosamente',
+        variant: 'success',
       })
     },
     onError: (error: Error) => {
       console.error('Error updating product:', error)
       toast({
-        title: 'Error',
-        description: error.message || 'Error al actualizar el producto',
+        title: '✕ Error al actualizar',
+        description: error.message || 'No se pudo actualizar el producto. Intenta nuevamente.',
         variant: 'destructive',
       })
     },
@@ -461,15 +463,16 @@ export function useDeleteProduct() {
       // Invalidate all product queries
       queryClient.invalidateQueries({ queryKey: productKeys.all })
       toast({
-        title: 'Éxito',
-        description: 'Producto eliminado exitosamente',
+        title: '✓ Producto eliminado',
+        description: 'El producto se ha eliminado exitosamente',
+        variant: 'success',
       })
     },
     onError: (error: Error) => {
       console.error('Error deleting product:', error)
       toast({
-        title: 'Error',
-        description: error.message || 'Error al eliminar el producto',
+        title: '✕ Error al eliminar',
+        description: error.message || 'No se pudo eliminar el producto. Intenta nuevamente.',
         variant: 'destructive',
       })
     },

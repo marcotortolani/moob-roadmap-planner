@@ -11,7 +11,8 @@ import { Button } from '@/components/ui/button'
 import type { Status } from '@/lib/types'
 import { STATUS_OPTIONS } from '@/lib/constants'
 import type { SortOption } from '@/hooks/use-product-filtering'
-import { getLanguageName } from '@/lib/languages'
+import { ENABLED_LANGUAGES } from '@/lib/languages'
+import { COUNTRIES } from '@/lib/countries'
 
 interface FiltersBarProps {
   searchTerm: string
@@ -33,7 +34,6 @@ interface FiltersBarProps {
   uniqueYears: number[]
   uniqueOperators: string[]
   uniqueCountries: string[]
-  uniqueLanguages: string[]
   activeFilterCount: number
   onClearFilters: () => void
 }
@@ -58,10 +58,14 @@ export function FiltersBar({
   uniqueYears,
   uniqueOperators,
   uniqueCountries,
-  uniqueLanguages,
   activeFilterCount,
   onClearFilters,
 }: FiltersBarProps) {
+  // Helper function to get country name from code
+  const getCountryName = (code: string) => {
+    const country = COUNTRIES.find((c) => c.code === code)
+    return country ? country.name : code
+  }
   return (
     <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row gap-2">
       {/*  Search Bar */}
@@ -149,13 +153,17 @@ export function FiltersBar({
 
         <Select value={countryFilter} onValueChange={onCountryChange}>
           <SelectTrigger aria-label="Filtrar por país">
-            {countryFilter === 'all' ? 'País' : <SelectValue />}
+            {countryFilter === 'all' ? (
+              'País'
+            ) : (
+              <span>{getCountryName(countryFilter)}</span>
+            )}
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
             {uniqueCountries.map((c) => (
               <SelectItem key={c} value={c}>
-                {c}
+                {getCountryName(c)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -167,9 +175,9 @@ export function FiltersBar({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
-            {uniqueLanguages.map((l) => (
-              <SelectItem key={l} value={l}>
-                {getLanguageName(l)}
+            {ENABLED_LANGUAGES.map((lang) => (
+              <SelectItem key={lang.code} value={lang.code}>
+                {lang.name}
               </SelectItem>
             ))}
           </SelectContent>

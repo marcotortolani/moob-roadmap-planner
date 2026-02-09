@@ -5,23 +5,36 @@ import { toast as sonnerToast } from "sonner"
 type ToastProps = {
   title?: string
   description?: string
-  variant?: "default" | "destructive"
+  variant?: "default" | "destructive" | "success" | "warning" | "info"
 }
 
-function toast({ title, description, variant }: ToastProps) {
+function toast({ title, description, variant = "default" }: ToastProps) {
   // Construir el mensaje combinando título y descripción
   const message = title || description || ""
   const descriptionText = title && description ? description : undefined
 
-  if (variant === "destructive") {
-    return sonnerToast.error(message, {
-      description: descriptionText,
-    })
+  switch (variant) {
+    case "destructive":
+      return sonnerToast.error(message, {
+        description: descriptionText,
+      })
+    case "success":
+      return sonnerToast.success(message, {
+        description: descriptionText,
+      })
+    case "warning":
+      return sonnerToast.warning(message, {
+        description: descriptionText,
+      })
+    case "info":
+      return sonnerToast.info(message, {
+        description: descriptionText,
+      })
+    default:
+      return sonnerToast(message, {
+        description: descriptionText,
+      })
   }
-
-  return sonnerToast(message, {
-    description: descriptionText,
-  })
 }
 
 function useToast() {

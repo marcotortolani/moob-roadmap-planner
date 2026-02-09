@@ -36,16 +36,14 @@ export function useProductFiltering() {
   const [sortOption, setSortOption] = useState<SortOption>('date-asc')
 
   // Extract unique values for filters
-  const { uniqueOperators, uniqueCountries, uniqueLanguages, uniqueYears } =
+  const { uniqueOperators, uniqueCountries, uniqueYears } =
     useMemo(() => {
       const operators = new Set<string>()
       const countries = new Set<string>()
-      const languages = new Set<string>()
 
       products.forEach((p) => {
         operators.add(p.operator.trim())
         countries.add(p.country.trim())
-        languages.add(p.language.trim())
       })
 
       const startYear = 2025
@@ -59,7 +57,6 @@ export function useProductFiltering() {
       return {
         uniqueOperators: Array.from(operators).sort(),
         uniqueCountries: Array.from(countries).sort(),
-        uniqueLanguages: Array.from(languages).sort(),
         uniqueYears: years,
       }
     }, [products])
@@ -216,7 +213,6 @@ export function useProductFiltering() {
     // Unique values
     uniqueOperators,
     uniqueCountries,
-    uniqueLanguages,
     uniqueYears,
 
     // Filter count

@@ -36,7 +36,6 @@ function ProductsData({ view }: { view: string }) {
     sortOption,
     uniqueOperators,
     uniqueCountries,
-    uniqueLanguages,
     uniqueYears,
     activeFilterCount,
     setSearchTerm,
@@ -80,7 +79,6 @@ function ProductsData({ view }: { view: string }) {
               uniqueYears={uniqueYears}
               uniqueOperators={uniqueOperators}
               uniqueCountries={uniqueCountries}
-              uniqueLanguages={uniqueLanguages}
               activeFilterCount={activeFilterCount}
               onClearFilters={clearFilters}
             />
@@ -107,7 +105,6 @@ function ProductsData({ view }: { view: string }) {
               uniqueYears={uniqueYears}
               uniqueOperators={uniqueOperators}
               uniqueCountries={uniqueCountries}
-              uniqueLanguages={uniqueLanguages}
             />
 
             <ActiveFiltersBadges
