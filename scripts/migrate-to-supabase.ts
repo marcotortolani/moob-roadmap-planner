@@ -28,7 +28,9 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   console.error('❌ Missing environment variables!')
-  console.error('Ensure NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set in .env.local')
+  console.error(
+    'Ensure NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set in .env.local',
+  )
   process.exit(1)
 }
 
@@ -56,7 +58,7 @@ interface LocalStorageProduct {
   chatbotUrl?: string
   comments?: string
   cardColor: string
-  status: 'PLANNED' | 'IN_PROGRESS' | 'DEMO_OK' | 'LIVE'
+  status: 'PLANNED' | 'IN_PROGRESS' | 'DEMO' | 'LIVE'
   milestones: Array<{
     id: string
     name: string
@@ -180,11 +182,7 @@ async function main() {
     products,
     holidays,
   }
-  const backupPath = join(
-    process.cwd(),
-    'scripts',
-    `backup-${Date.now()}.json`
-  )
+  const backupPath = join(process.cwd(), 'scripts', `backup-${Date.now()}.json`)
   writeFileSync(backupPath, JSON.stringify(backupData, null, 2))
   console.log(`   ✓ Backup created: ${backupPath}`)
 
@@ -230,7 +228,10 @@ async function main() {
       .upsert(transformed, { onConflict: 'date' })
 
     if (error) {
-      console.error(`   ❌ Error migrating holiday ${holiday.name}:`, error.message)
+      console.error(
+        `   ❌ Error migrating holiday ${holiday.name}:`,
+        error.message,
+      )
       holidaysSkipped++
     } else {
       holidaysMigrated++
@@ -258,7 +259,10 @@ async function main() {
       .upsert(transformedProduct)
 
     if (productError) {
-      console.error(`   ❌ Error migrating product ${product.name}:`, productError.message)
+      console.error(
+        `   ❌ Error migrating product ${product.name}:`,
+        productError.message,
+      )
       productsSkipped++
       continue
     }
@@ -268,7 +272,7 @@ async function main() {
     // 5.2: Insert milestones
     if (product.milestones && product.milestones.length > 0) {
       const transformedMilestones = product.milestones.map((m) =>
-        transformMilestone(m, product.id)
+        transformMilestone(m, product.id),
       )
 
       const { error: milestonesError } = await supabase
@@ -278,7 +282,7 @@ async function main() {
       if (milestonesError) {
         console.error(
           `   ⚠️  Error migrating milestones for ${product.name}:`,
-          milestonesError.message
+          milestonesError.message,
         )
       } else {
         milestonesMigrated += transformedMilestones.length
@@ -288,7 +292,7 @@ async function main() {
     // 5.3: Insert custom URLs
     if (product.customUrls && product.customUrls.length > 0) {
       const transformedUrls = product.customUrls.map((u) =>
-        transformCustomUrl(u, product.id)
+        transformCustomUrl(u, product.id),
       )
 
       const { error: urlsError } = await supabase
@@ -298,7 +302,7 @@ async function main() {
       if (urlsError) {
         console.error(
           `   ⚠️  Error migrating custom URLs for ${product.name}:`,
-          urlsError.message
+          urlsError.message,
         )
       } else {
         customUrlsMigrated += transformedUrls.length
@@ -334,8 +338,12 @@ async function main() {
 
   console.log('\n📊 Final Counts:')
   console.log(`   Products: ${productsCount} (expected: ${productsMigrated})`)
-  console.log(`   Milestones: ${milestonesCount} (expected: ${milestonesMigrated})`)
-  console.log(`   Custom URLs: ${customUrlsCount} (expected: ${customUrlsMigrated})`)
+  console.log(
+    `   Milestones: ${milestonesCount} (expected: ${milestonesMigrated})`,
+  )
+  console.log(
+    `   Custom URLs: ${customUrlsCount} (expected: ${customUrlsMigrated})`,
+  )
   console.log(`   Holidays: ${holidaysCount} (expected: ${holidaysMigrated})`)
 
   // Summary

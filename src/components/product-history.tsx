@@ -1,29 +1,29 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
-import { Clock, User as UserIcon, Plus, Edit, Trash } from 'lucide-react';
-import { Skeleton } from './ui/skeleton';
+import { useEffect, useState } from 'react'
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
+import { Clock, User as UserIcon, Plus, Edit, Trash } from 'lucide-react'
+import { Skeleton } from './ui/skeleton'
 
 interface HistoryChange {
-  id: string;
-  change_type: 'CREATED' | 'UPDATED' | 'DELETED';
-  field_name: string | null;
-  old_value: string | null;
-  new_value: string | null;
-  changed_at: string;
+  id: string
+  change_type: 'CREATED' | 'UPDATED' | 'DELETED'
+  field_name: string | null
+  old_value: string | null
+  new_value: string | null
+  changed_at: string
   changed_by: {
-    id: string;
-    first_name: string | null;
-    last_name: string | null;
-    avatar_url: string | null;
-  };
+    id: string
+    first_name: string | null
+    last_name: string | null
+    avatar_url: string | null
+  }
 }
 
 interface ProductHistoryProps {
-  productId: string;
+  productId: string
 }
 
 const FIELD_LABELS: Record<string, string> = {
@@ -41,96 +41,98 @@ const FIELD_LABELS: Record<string, string> = {
   chatbot_url: 'URL Chatbot',
   comments: 'Comentarios',
   card_color: 'Color de tarjeta',
-};
+}
 
 const STATUS_LABELS: Record<string, string> = {
   PLANNED: 'Programado',
   IN_PROGRESS: 'En Proceso',
-  DEMO_OK: 'Demo OK',
-  LIVE: 'Productivo OK',
-};
+  DEMO: 'Demo',
+  LIVE: 'Productivo',
+}
 
 function formatValue(fieldName: string, value: string | null): string {
-  if (!value) return 'N/A';
+  if (!value) return 'N/A'
 
   // If it's a status field
   if (fieldName === 'status') {
-    return STATUS_LABELS[value] || value;
+    return STATUS_LABELS[value] || value
   }
 
   // If it's a date field
   if (fieldName.includes('date')) {
     try {
-      return format(new Date(value), "d 'de' MMMM, yyyy", { locale: es });
+      return format(new Date(value), "d 'de' MMMM, yyyy", { locale: es })
     } catch {
-      return value;
+      return value
     }
   }
 
-  return value;
+  return value
 }
 
 function getChangeIcon(changeType: string) {
   switch (changeType) {
     case 'CREATED':
-      return Plus;
+      return Plus
     case 'UPDATED':
-      return Edit;
+      return Edit
     case 'DELETED':
-      return Trash;
+      return Trash
     default:
-      return Clock;
+      return Clock
   }
 }
 
 function getChangeText(change: HistoryChange): string {
-  const userName = `${change.changed_by.first_name || ''} ${change.changed_by.last_name || ''}`.trim() || 'Usuario desconocido';
+  const userName =
+    `${change.changed_by.first_name || ''} ${change.changed_by.last_name || ''}`.trim() ||
+    'Usuario desconocido'
 
   switch (change.change_type) {
     case 'CREATED':
-      return `${userName} creó el producto`;
+      return `${userName} creó el producto`
     case 'UPDATED':
       if (change.field_name) {
-        const fieldLabel = FIELD_LABELS[change.field_name] || change.field_name;
-        const oldVal = formatValue(change.field_name, change.old_value);
-        const newVal = formatValue(change.field_name, change.new_value);
-        return `${userName} cambió ${fieldLabel} de "${oldVal}" a "${newVal}"`;
+        const fieldLabel = FIELD_LABELS[change.field_name] || change.field_name
+        const oldVal = formatValue(change.field_name, change.old_value)
+        const newVal = formatValue(change.field_name, change.new_value)
+        return `${userName} cambió ${fieldLabel} de "${oldVal}" a "${newVal}"`
       }
-      return `${userName} actualizó el producto`;
+      return `${userName} actualizó el producto`
     case 'DELETED':
-      return `${userName} eliminó el producto`;
+      return `${userName} eliminó el producto`
     default:
-      return `${userName} realizó un cambio`;
+      return `${userName} realizó un cambio`
   }
 }
 
 export function ProductHistory({ productId }: ProductHistoryProps) {
-  const [history, setHistory] = useState<HistoryChange[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [history, setHistory] = useState<HistoryChange[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchHistory() {
       try {
-        setLoading(true);
-        const response = await fetch(`/api/products/${productId}/history`);
-        const result = await response.json();
+        setLoading(true)
+        const response = await fetch(`/api/products/${productId}/history`)
+        const result = await response.json()
 
         if (!response.ok) {
-          throw new Error(result.error || 'Error al cargar el historial');
+          throw new Error(result.error || 'Error al cargar el historial')
         }
 
-        setHistory(result.data || []);
+        setHistory(result.data || [])
       } catch (err) {
-        console.error('Error fetching history:', err);
-        setError(err instanceof Error ? err.message : 'Error desconocido');
+        console.error('Error fetching history:', err)
+        setError(err instanceof Error ? err.message : 'Error desconocido')
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     }
 
-    fetchHistory();
-  }, [productId]);
+    fetchHistory()
+  }, [productId])
 
   if (loading) {
     return (
@@ -145,7 +147,7 @@ export function ProductHistory({ productId }: ProductHistoryProps) {
           </div>
         ))}
       </div>
-    );
+    )
   }
 
   if (error) {
@@ -153,7 +155,7 @@ export function ProductHistory({ productId }: ProductHistoryProps) {
       <div className="text-sm text-muted-foreground text-center py-8">
         Error al cargar el historial: {error}
       </div>
-    );
+    )
   }
 
   if (history.length === 0) {
@@ -161,15 +163,19 @@ export function ProductHistory({ productId }: ProductHistoryProps) {
       <div className="text-sm text-muted-foreground text-center py-8">
         No hay cambios registrados para este producto.
       </div>
-    );
+    )
   }
 
   return (
     <div className="space-y-4">
       {history.map((change, index) => {
-        const ChangeIcon = getChangeIcon(change.change_type);
-        const userName = `${change.changed_by.first_name || ''} ${change.changed_by.last_name || ''}`.trim() || 'Usuario';
-        const userInitials = `${change.changed_by.first_name?.charAt(0) || ''}${change.changed_by.last_name?.charAt(0) || ''}`.toUpperCase() || 'U';
+        const ChangeIcon = getChangeIcon(change.change_type)
+        const userName =
+          `${change.changed_by.first_name || ''} ${change.changed_by.last_name || ''}`.trim() ||
+          'Usuario'
+        const userInitials =
+          `${change.changed_by.first_name?.charAt(0) || ''}${change.changed_by.last_name?.charAt(0) || ''}`.toUpperCase() ||
+          'U'
 
         return (
           <div key={change.id} className="flex gap-3 relative">
@@ -181,7 +187,10 @@ export function ProductHistory({ productId }: ProductHistoryProps) {
             {/* Avatar */}
             <div className="flex-shrink-0 relative z-10">
               <Avatar className="h-10 w-10 border-2 border-background">
-                <AvatarImage src={change.changed_by.avatar_url || undefined} alt={userName} />
+                <AvatarImage
+                  src={change.changed_by.avatar_url || undefined}
+                  alt={userName}
+                />
                 <AvatarFallback>{userInitials}</AvatarFallback>
               </Avatar>
             </div>
@@ -195,14 +204,18 @@ export function ProductHistory({ productId }: ProductHistoryProps) {
                     {getChangeText(change)}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {format(new Date(change.changed_at), "d 'de' MMMM, yyyy 'a las' HH:mm", { locale: es })}
+                    {format(
+                      new Date(change.changed_at),
+                      "d 'de' MMMM, yyyy 'a las' HH:mm",
+                      { locale: es },
+                    )}
                   </p>
                 </div>
               </div>
             </div>
           </div>
-        );
+        )
       })}
     </div>
-  );
+  )
 }

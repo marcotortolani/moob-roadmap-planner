@@ -24,7 +24,8 @@ export function cn(...inputs: ClassValue[]) {
 // Card Patterns
 export const cardStyles = {
   base: 'rounded-lg p-card-padding shadow-sm bg-card text-card-foreground',
-  hover: 'rounded-lg p-card-padding shadow-sm hover:shadow-lg transition-shadow bg-card text-card-foreground',
+  hover:
+    'rounded-lg p-card-padding shadow-sm hover:shadow-lg transition-shadow bg-card text-card-foreground',
   interactive:
     'rounded-lg p-card-padding shadow-sm hover:shadow-lg hover:scale-[1.02] transition-all duration-200 bg-card text-card-foreground cursor-pointer',
   bordered:
@@ -121,7 +122,7 @@ export const statusColors = {
     text: 'text-red-700',
     border: 'border-red-500/30',
   },
-  DEMO_OK: {
+  DEMO: {
     bg: 'bg-yellow-500/20',
     text: 'text-yellow-700',
     border: 'border-yellow-500/30',
@@ -135,7 +136,8 @@ export const statusColors = {
 
 // Filter/Search Bar Pattern
 export const searchBarStyles = {
-  wrapper: 'relative flex-1 lg:flex-none xl:max-w-full xl:min-w-[200px] 2xl:min-w-[300px] 2xl:max-w-[400px]',
+  wrapper:
+    'relative flex-1 lg:flex-none xl:max-w-full xl:min-w-[200px] 2xl:min-w-[300px] 2xl:max-w-[400px]',
   icon: 'absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground',
   input: 'pl-8 w-full',
 }
@@ -159,7 +161,10 @@ export function getStatusBadgeClasses(status: keyof typeof statusColors) {
 /**
  * Helper function to combine card styles with custom classes
  */
-export function getCardClasses(variant: keyof typeof cardStyles = 'base', customClasses?: string) {
+export function getCardClasses(
+  variant: keyof typeof cardStyles = 'base',
+  customClasses?: string,
+) {
   return cn(cardStyles[variant], customClasses)
 }
 
@@ -173,6 +178,8 @@ export function getIconSize(size: keyof typeof iconStyles = 'base') {
 /**
  * Helper function to get button icon size
  */
-export function getButtonIconSize(size: keyof typeof buttonIconStyles = 'base') {
+export function getButtonIconSize(
+  size: keyof typeof buttonIconStyles = 'base',
+) {
   return buttonIconStyles[size]
 }

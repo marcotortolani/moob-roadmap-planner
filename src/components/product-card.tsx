@@ -46,7 +46,13 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Button } from './ui/button'
-import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from './ui/sheet'
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetTitle,
+  SheetDescription,
+} from './ui/sheet'
 import ProductForm from './product-form'
 import { ProductDetailModal } from './product-detail-modal'
 
@@ -77,7 +83,7 @@ const getStatusBadgeVariant = (status: Status) => {
   switch (status) {
     case 'IN_PROGRESS':
       return 'inProgress' as const
-    case 'DEMO_OK':
+    case 'DEMO':
       return 'demoOk' as const
     case 'LIVE':
       return 'live' as const

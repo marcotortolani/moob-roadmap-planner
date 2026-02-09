@@ -60,7 +60,7 @@ Located in `src/lib/types.ts`:
 - **Product**: Core entity with:
   - Basic info (name, operator, country, language)
   - Date range (startDate, endDate)
-  - Status enum: PLANNED, IN_PROGRESS, DEMO_OK, LIVE
+  - Status enum: PLANNED, IN_PROGRESS, DEMO, LIVE
   - URLs (productive, demo, WordPress content, chatbot)
   - Milestones array (with their own status)
   - Custom URLs array

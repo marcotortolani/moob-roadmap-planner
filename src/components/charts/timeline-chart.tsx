@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 const STATUS_COLORS = {
   PLANNED: '#94a3b8',
   IN_PROGRESS: '#ef4444',
-  DEMO_OK: '#eab308',
+  DEMO: '#eab308',
   LIVE: '#22c55e',
 }
 
@@ -33,11 +33,11 @@ export function TimelineChart({ products, limit = 10 }: TimelineChartProps) {
     // Calculate date range
     const earliestStart = relevantProducts.reduce(
       (min, p) => (p.startDate < min ? p.startDate : min),
-      relevantProducts[0].startDate
+      relevantProducts[0].startDate,
     )
     const latestEnd = relevantProducts.reduce(
       (max, p) => (p.endDate > max ? p.endDate : max),
-      relevantProducts[0].endDate
+      relevantProducts[0].endDate,
     )
 
     const totalDays = differenceInDays(latestEnd, earliestStart)
@@ -55,7 +55,9 @@ export function TimelineChart({ products, limit = 10 }: TimelineChartProps) {
     return (
       <Card className="">
         <CardHeader className="">
-          <CardTitle className="font-bold uppercase">Timeline de Productos</CardTitle>
+          <CardTitle className="font-bold uppercase">
+            Timeline de Productos
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground text-center py-8">
@@ -66,7 +68,12 @@ export function TimelineChart({ products, limit = 10 }: TimelineChartProps) {
     )
   }
 
-  const { products: relevantProducts, earliestStart, totalDays, now } = timelineData
+  const {
+    products: relevantProducts,
+    earliestStart,
+    totalDays,
+    now,
+  } = timelineData
 
   const calculatePosition = (date: Date) => {
     const daysFromStart = differenceInDays(date, earliestStart)
@@ -78,7 +85,9 @@ export function TimelineChart({ products, limit = 10 }: TimelineChartProps) {
   return (
     <Card className="">
       <CardHeader className="">
-        <CardTitle className="font-bold uppercase">Timeline de Productos</CardTitle>
+        <CardTitle className="font-bold uppercase">
+          Timeline de Productos
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
@@ -90,7 +99,10 @@ export function TimelineChart({ products, limit = 10 }: TimelineChartProps) {
             return (
               <div key={product.id} className="space-y-1">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium truncate max-w-[60%]" title={product.name}>
+                  <span
+                    className="font-medium truncate max-w-[60%]"
+                    title={product.name}
+                  >
                     {product.name}
                   </span>
                   <span className="text-muted-foreground text-xs">

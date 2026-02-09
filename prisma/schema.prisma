@@ -20,7 +20,7 @@ enum Role {
 enum Status {
   PLANNED
   IN_PROGRESS
-  DEMO_OK
+  DEMO
   LIVE
 }
 

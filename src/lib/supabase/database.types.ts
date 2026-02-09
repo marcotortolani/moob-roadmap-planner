@@ -102,7 +102,7 @@ export interface Database {
           chatbot_url: string | null
           comments: string | null
           card_color: string
-          status: 'PLANNED' | 'IN_PROGRESS' | 'DEMO_OK' | 'LIVE'
+          status: 'PLANNED' | 'IN_PROGRESS' | 'DEMO' | 'LIVE'
           created_by_id: string
           updated_by_id: string | null
           created_at: string
@@ -123,7 +123,7 @@ export interface Database {
           chatbot_url?: string | null
           comments?: string | null
           card_color?: string
-          status?: 'PLANNED' | 'IN_PROGRESS' | 'DEMO_OK' | 'LIVE'
+          status?: 'PLANNED' | 'IN_PROGRESS' | 'DEMO' | 'LIVE'
           created_by_id: string
           updated_by_id?: string | null
           created_at?: string
@@ -144,7 +144,7 @@ export interface Database {
           chatbot_url?: string | null
           comments?: string | null
           card_color?: string
-          status?: 'PLANNED' | 'IN_PROGRESS' | 'DEMO_OK' | 'LIVE'
+          status?: 'PLANNED' | 'IN_PROGRESS' | 'DEMO' | 'LIVE'
           created_by_id?: string
           updated_by_id?: string | null
           created_at?: string
@@ -239,7 +239,7 @@ export interface Database {
     }
     Enums: {
       role: 'ADMIN' | 'USER' | 'GUEST'
-      status: 'PLANNED' | 'IN_PROGRESS' | 'DEMO_OK' | 'LIVE'
+      status: 'PLANNED' | 'IN_PROGRESS' | 'DEMO' | 'LIVE'
       milestone_status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED'
       invitation_status: 'PENDING' | 'ACCEPTED' | 'EXPIRED' | 'REVOKED'
     }

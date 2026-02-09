@@ -3,15 +3,13 @@
 'use client'
 
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogClose,
-  DialogTrigger,
 } from '@/components/ui/dialog'
 import {
   AlertDialog,
@@ -50,16 +48,20 @@ import {
   Copy,
   Edit,
   FilePlus,
-  User as UserIcon,
-  CalendarClock,
   Trash2,
 } from 'lucide-react'
 import { Button } from './ui/button'
 import { useToast } from '@/hooks/use-toast'
-import { cn } from '@/lib/utils'
-import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from './ui/sheet'
+
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetTitle,
+  SheetDescription,
+} from './ui/sheet'
 import ProductForm from './product-form'
-import { useAuth } from '@/context/auth-context'
+
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
 import { usePermissionChecks } from '@/lib/rbac/hooks'
 import { useDeleteProduct, useUpdateProduct } from '@/hooks/queries'
@@ -246,7 +248,6 @@ export function ProductDetailModal({
   isOpen: boolean
   onClose: () => void
 }) {
-  const { user: authUser } = useAuth()
   const { canEditProducts, canDeleteProducts } = usePermissionChecks()
   const deleteProductMutation = useDeleteProduct()
   const updateProductMutation = useUpdateProduct()
@@ -286,7 +287,7 @@ export function ProductDetailModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose} modal>
-      <DialogContent className="max-w-4xl 2xl:max-w-5xl max-h-[90vh] overflow-y-auto p-0 [&>button]:hidden">
+      <DialogContent className="2xl:max-w-5xl max-h-[90vh] overflow-y-auto p-0 [&>button]:hidden">
         <motion.div
           className="p-6"
           style={{ borderLeft: `18px solid ${product.cardColor}` }}
@@ -296,12 +297,12 @@ export function ProductDetailModal({
           transition={{ duration: 0.2 }}
         >
           <DialogHeader>
-            <div className="flex items-start justify-between">
-              <div>
-                <DialogTitle className="text-2xl font-headline text-foreground">
+            <div className=" flex items-start justify-between">
+              <div className="">
+                <DialogTitle className="text-left font-medium text-xl md:text-2xl font-headline text-foreground">
                   {product.name}
                 </DialogTitle>
-                <DialogDescription>
+                <DialogDescription className="text-left font-light">
                   Detalles completos del producto
                 </DialogDescription>
               </div>
@@ -312,7 +313,7 @@ export function ProductDetailModal({
                     onValueChange={handleStatusChange}
                   >
                     <SelectTrigger
-                      className="w-auto h-auto text-sm border-2 border-black px-3 py-1.5 font-bold uppercase"
+                      className="w-auto h-auto text-xs md:text-sm border-2 border-black px-3 md:py-1.5 lg:py-2 md:mr-4 lg:mr-6 xl:mr-8 2xl:mr-10 font-bold uppercase"
                       style={{
                         borderRadius: '4px',
                         backgroundColor:
@@ -320,13 +321,13 @@ export function ProductDetailModal({
                             ? '#6B7280'
                             : product.status === 'IN_PROGRESS'
                               ? '#FF2E63'
-                              : product.status === 'DEMO_OK'
+                              : product.status === 'DEMO'
                                 ? '#FFD700'
                                 : product.status === 'LIVE'
                                   ? '#2EBD59'
                                   : '#6B7280',
                         color:
-                          product.status === 'DEMO_OK' ? '#000000' : '#FFFFFF',
+                          product.status === 'DEMO' ? '#000000' : '#FFFFFF',
                       }}
                     >
                       <SelectValue />
@@ -351,13 +352,13 @@ export function ProductDetailModal({
                           ? 'planned'
                           : product.status === 'IN_PROGRESS'
                             ? 'inProgress'
-                            : product.status === 'DEMO_OK'
+                            : product.status === 'DEMO'
                               ? 'demoOk'
                               : product.status === 'LIVE'
                                 ? 'live'
                                 : 'planned'
                       }
-                      className="text-base"
+                      className="text-xs md:text-sm md:mr-4 lg:mr-6 xl:mr-8"
                     >
                       {status.label}
                     </Badge>
@@ -375,7 +376,9 @@ export function ProductDetailModal({
                       </Button>
                     </SheetTrigger>
                     <SheetContent className="w-full sm:max-w-3xl overflow-y-auto">
-                      <SheetTitle className="sr-only">Editar producto</SheetTitle>
+                      <SheetTitle className="sr-only">
+                        Editar producto
+                      </SheetTitle>
                       <SheetDescription className="sr-only">
                         Formulario para editar los detalles del producto
                       </SheetDescription>
@@ -407,7 +410,7 @@ export function ProductDetailModal({
             <motion.div variants={itemVariants}>
               <InfoSection title="Información General">
                 <div className="border-2 border-black p-4 bg-neo-gray-light space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <InfoItem
                       icon={Smartphone}
                       label="Operador"
@@ -425,7 +428,7 @@ export function ProductDetailModal({
                       value={getLanguageName(product.language)}
                     />
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <InfoItem
                       icon={Calendar}
                       label="Fecha de Inicio"
