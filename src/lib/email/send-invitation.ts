@@ -1,6 +1,7 @@
 import { createAdminSupabaseClient } from '@/lib/supabase/server'
 import type { ActionResult } from '@/lib/errors'
 import { success, failure, ValidationError } from '@/lib/errors'
+import { sendInvitationEmail } from '@/lib/sendgrid/service'
 
 export async function sendInvitation(
   email: string,
@@ -82,32 +83,35 @@ export async function sendInvitation(
     const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/signup?token=${invitation.token}`
     console.log('📧 [sendInvitation] Generated invite link:', inviteLink)
 
-    // TODO: Implement email sending service
-    // For now, we'll just return the invitation without sending an email
-    // The admin can manually share the invite link
+    // Fetch inviter name for email personalization
+    const { data: inviter } = await supabase
+      .from('users')
+      .select('first_name, last_name')
+      .eq('id', sentById)
+      .single()
 
-    // Uncomment this when SMTP is configured in Supabase:
-    /*
-    const { error: emailError } = await supabase.auth.admin.inviteUserByEmail(
+    const inviterName = inviter
+      ? `${inviter.first_name} ${inviter.last_name}`
+      : 'El administrador'
+
+    // Send invitation email via SendGrid
+    // Using fire-and-forget pattern - email failure should not block invitation creation
+    console.log('📧 [sendInvitation] Sending email via SendGrid...')
+    const emailResult = await sendInvitationEmail({
       email,
-      {
-        redirectTo: inviteLink,
-        data: {
-          role,
-          invitation_token: invitation.token,
-        },
-      }
-    )
+      role,
+      inviteLink,
+      inviterName,
+      expiresAt,
+    })
 
-    if (emailError) {
-      console.error('Supabase Auth inviteUserByEmail error:', emailError)
-      await supabase.from('invitations').delete().eq('id', invitation.id)
-      return failure(
-        new ValidationError('email', `Email service error: ${emailError.message}`),
-        `Error al enviar el email: ${emailError.message}`
-      )
+    if (!emailResult.success) {
+      console.error('❌ Failed to send invitation email:', emailResult.error)
+      // DO NOT throw error - invitation was created successfully
+      // Admin can still manually share the invite link
+    } else {
+      console.log('✅ Invitation email sent successfully:', emailResult.emailId)
     }
-    */
 
     console.log('📧 [sendInvitation] Returning success with data:', {
       invitationId: invitation.id,

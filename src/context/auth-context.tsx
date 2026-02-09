@@ -239,6 +239,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           const userData = await fetchUserData(data.user)
           setUser(userData)
+
+          // Send welcome email via API route (fire-and-forget - don't block signup if email fails)
+          console.log('📧 Sending welcome email to:', email)
+          fetch('/api/emails/send-welcome', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email,
+              firstName: metadata.firstName,
+              role: metadata.role,
+            }),
+          })
+            .then(async response => {
+              const data = await response.json()
+              if (response.ok) {
+                console.log('✅ Welcome email sent successfully:', data)
+              } else {
+                console.error('❌ Welcome email API error:', data)
+              }
+            })
+            .catch(error => {
+              console.error('❌ Failed to send welcome email:', error)
+              // Don't throw - signup was successful
+            })
         } catch (error) {
           // User record not created by trigger
           throw new Error('Error al crear el usuario en la base de datos')

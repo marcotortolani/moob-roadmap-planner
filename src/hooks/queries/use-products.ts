@@ -412,11 +412,39 @@ export function useUpdateProduct() {
 
   return useMutation({
     mutationFn: updateProduct,
-    onSuccess: async (data) => {
+    onSuccess: async (data, variables) => {
+      // Get previous product state from cache to detect status changes
+      const oldProduct = queryClient.getQueryData<Product>(productKeys.detail(data.id))
+
       // Update specific product in cache immediately
       queryClient.setQueryData(productKeys.detail(data.id), data)
       // Invalidate triggers automatic refetch of active queries
       await queryClient.invalidateQueries({ queryKey: productKeys.all })
+
+      // Detect if status changed to LIVE
+      const statusChangedToLive =
+        variables.status === 'LIVE' &&
+        oldProduct?.status !== 'LIVE'
+
+      if (statusChangedToLive) {
+        console.log('🚀 Product status changed to LIVE, sending notifications...')
+
+        // Send product LIVE notification via API route (fire-and-forget)
+        fetch('/api/emails/send-product-live', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            productName: data.name,
+            productUrl: data.productiveUrl,
+            operator: data.operator,
+            country: data.country,
+            language: data.language,
+          }),
+        }).catch(error => {
+          console.error('❌ Failed to send product LIVE emails:', error)
+          // Don't throw - product update was successful
+        })
+      }
 
       toast({
         title: '✓ Producto actualizado',
