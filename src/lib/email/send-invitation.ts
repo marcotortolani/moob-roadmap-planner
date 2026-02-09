@@ -6,23 +6,59 @@ import { sendInvitationEmail } from '@/lib/sendgrid/service'
 export async function sendInvitation(
   email: string,
   role: 'ADMIN' | 'USER' | 'GUEST',
-  sentById: string
+  sentById: string,
+  inviterName: string
 ): Promise<ActionResult<{ invitationId: string; inviteLink: string }>> {
   try {
     console.log('📧 [sendInvitation] Starting...', { email, role, sentById })
 
     const supabase = createAdminSupabaseClient()
 
-    // Check if user already exists
-    console.log('📧 [sendInvitation] Checking for existing user...')
-    const { data: existingUser, error: userCheckError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('email', email)
-      .single()
+    // ✅ OPTIMIZATION: Parallelize both validation queries (Sprint 2.2)
+    // Check if user exists AND check for pending invitation in parallel
+    console.log('📧 [sendInvitation] Running parallel validation checks...')
+    const [userCheckResult, invitationCheckResult] = await Promise.all([
+      supabase
+        .from('users')
+        .select('id')
+        .eq('email', email)
+        .maybeSingle(),
+      supabase
+        .from('invitations')
+        .select('id')
+        .eq('email', email)
+        .eq('status', 'PENDING')
+        .maybeSingle(),
+    ])
 
-    console.log('📧 [sendInvitation] Existing user check:', { existingUser, userCheckError })
+    const { data: existingUser, error: userCheckError } = userCheckResult
+    const { data: existingInvitation, error: invCheckError } = invitationCheckResult
 
+    console.log('📧 [sendInvitation] Validation results:', {
+      existingUser,
+      userCheckError,
+      existingInvitation,
+      invCheckError,
+    })
+
+    // Handle validation errors
+    if (userCheckError) {
+      console.error('📧 [sendInvitation] User check error:', userCheckError)
+      return failure(
+        new ValidationError('email', 'Error checking user'),
+        'Error al verificar el usuario'
+      )
+    }
+
+    if (invCheckError) {
+      console.error('📧 [sendInvitation] Invitation check error:', invCheckError)
+      return failure(
+        new ValidationError('email', 'Error checking invitation'),
+        'Error al verificar la invitación'
+      )
+    }
+
+    // Validate if user exists
     if (existingUser) {
       console.log('📧 [sendInvitation] User already exists, returning failure')
       return failure(
@@ -31,17 +67,7 @@ export async function sendInvitation(
       )
     }
 
-    // Check for existing pending invitation
-    console.log('📧 [sendInvitation] Checking for existing invitation...')
-    const { data: existingInvitation, error: invCheckError } = await supabase
-      .from('invitations')
-      .select('id')
-      .eq('email', email)
-      .eq('status', 'PENDING')
-      .single()
-
-    console.log('📧 [sendInvitation] Existing invitation check:', { existingInvitation, invCheckError })
-
+    // Validate if invitation exists
     if (existingInvitation) {
       console.log('📧 [sendInvitation] Pending invitation exists, returning failure')
       return failure(
@@ -83,16 +109,8 @@ export async function sendInvitation(
     const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/signup?token=${invitation.token}`
     console.log('📧 [sendInvitation] Generated invite link:', inviteLink)
 
-    // Fetch inviter name for email personalization
-    const { data: inviter } = await supabase
-      .from('users')
-      .select('first_name, last_name')
-      .eq('id', sentById)
-      .single()
-
-    const inviterName = inviter
-      ? `${inviter.first_name} ${inviter.last_name}`
-      : 'El administrador'
+    // ✅ OPTIMIZATION: inviterName is now passed as parameter (Sprint 2.1)
+    // This eliminates the N+1 query that was fetching inviter name here
 
     // Send invitation email via SendGrid
     // Using fire-and-forget pattern - email failure should not block invitation creation

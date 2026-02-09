@@ -75,70 +75,76 @@ export async function POST(request: NextRequest) {
       adminId: currentUser.id,
     })
 
-    // STEP 1: Reassign all products created by this user to the admin
-    console.log('📦 [Delete User] Reassigning products created by user...')
-    const { data: reassignedProducts, error: reassignProductsError } = await adminSupabase
-      .from('products')
-      .update({ created_by_id: currentUser.id })
-      .eq('created_by_id', userId)
-      .select('id')
+    // ✅ OPTIMIZATION: Execute all independent operations in parallel (Sprint 2.3)
+    // These 4 operations don't depend on each other, so we can run them simultaneously
+    console.log('⚡ [Delete User] Executing parallel cleanup operations...')
+    const [
+      reassignProductsResult,
+      clearUpdatedByResult,
+      reassignHistoryResult,
+      deleteInvitationsResult,
+    ] = await Promise.all([
+      // STEP 1: Reassign products created by user
+      adminSupabase
+        .from('products')
+        .update({ created_by_id: currentUser.id, updated_at: new Date().toISOString() })
+        .eq('created_by_id', userId)
+        .select('id'),
 
-    if (reassignProductsError) {
-      console.error('❌ [Delete User] Error reassigning products:', reassignProductsError)
+      // STEP 2: Clear updatedBy references
+      adminSupabase
+        .from('products')
+        .update({ updated_by_id: null, updated_at: new Date().toISOString() })
+        .eq('updated_by_id', userId),
+
+      // STEP 3: Reassign product history
+      adminSupabase
+        .from('product_history')
+        .update({ changed_by_id: currentUser.id })
+        .eq('changed_by_id', userId)
+        .select('id'),
+
+      // STEP 4: Delete invitations sent by user
+      adminSupabase
+        .from('invitations')
+        .delete()
+        .eq('sent_by_id', userId)
+        .select('id'),
+    ])
+
+    // Verify results and handle errors
+    if (reassignProductsResult.error) {
+      console.error('❌ [Delete User] Error reassigning products:', reassignProductsResult.error)
       return NextResponse.json(
         { error: 'Error al reasignar productos del usuario' },
         { status: 500 }
       )
     }
 
-    console.log(`✅ [Delete User] Reassigned ${reassignedProducts?.length || 0} products`)
-
-    // STEP 2: Clear updatedBy references (will be set to NULL automatically by onDelete: SetNull)
-    console.log('🔄 [Delete User] Clearing updatedBy references...')
-    const { error: clearUpdatedByError } = await adminSupabase
-      .from('products')
-      .update({ updated_by_id: null })
-      .eq('updated_by_id', userId)
-
-    if (clearUpdatedByError) {
-      console.error('❌ [Delete User] Error clearing updatedBy:', clearUpdatedByError)
-      // Don't fail the deletion for this, just log it
-    }
-
-    // STEP 3: Reassign product history to admin
-    console.log('📝 [Delete User] Reassigning product history...')
-    const { data: reassignedHistory, error: reassignHistoryError } = await adminSupabase
-      .from('product_history')
-      .update({ changed_by_id: currentUser.id })
-      .eq('changed_by_id', userId)
-      .select('id')
-
-    if (reassignHistoryError) {
-      console.error('❌ [Delete User] Error reassigning history:', reassignHistoryError)
+    if (reassignHistoryResult.error) {
+      console.error('❌ [Delete User] Error reassigning history:', reassignHistoryResult.error)
       return NextResponse.json(
         { error: 'Error al reasignar historial del usuario' },
         { status: 500 }
       )
     }
 
-    console.log(`✅ [Delete User] Reassigned ${reassignedHistory?.length || 0} history entries`)
-
-    // STEP 4: Delete invitations sent by this user (will cascade automatically)
-    console.log('📧 [Delete User] Deleting invitations...')
-    const { data: deletedInvitations, error: deleteInvitationsError } = await adminSupabase
-      .from('invitations')
-      .delete()
-      .eq('sent_by_id', userId)
-      .select('id')
-
-    if (deleteInvitationsError) {
-      console.error('❌ [Delete User] Error deleting invitations:', deleteInvitationsError)
-      // Don't fail the deletion for this
-    } else {
-      console.log(`✅ [Delete User] Deleted ${deletedInvitations?.length || 0} invitations`)
+    // Log results (non-critical errors just logged)
+    if (clearUpdatedByResult.error) {
+      console.error('⚠️ [Delete User] Error clearing updatedBy:', clearUpdatedByResult.error)
     }
 
-    // STEP 5: Delete from public.users table first (using admin client to bypass RLS)
+    if (deleteInvitationsResult.error) {
+      console.error('⚠️ [Delete User] Error deleting invitations:', deleteInvitationsResult.error)
+    }
+
+    console.log('✅ [Delete User] Parallel operations completed:', {
+      reassignedProducts: reassignProductsResult.data?.length || 0,
+      reassignedHistory: reassignHistoryResult.data?.length || 0,
+      deletedInvitations: deleteInvitationsResult.data?.length || 0,
+    })
+
+    // STEP 5: Delete from public.users (MUST run after parallel operations complete)
     console.log('👤 [Delete User] Deleting from public.users...')
     const { error: publicDeleteError } = await adminSupabase
       .from('users')

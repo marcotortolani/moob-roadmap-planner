@@ -22,10 +22,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get current user
+    // Get current user with name for email personalization
     const { data: currentUser, error: userError } = await supabase
       .from('users')
-      .select('id, role')
+      .select('id, role, first_name, last_name')
       .eq('auth_user_id', session.user.id)
       .single()
 
@@ -38,6 +38,11 @@ export async function POST(request: NextRequest) {
         { status: 403 }
       )
     }
+
+    // Prepare inviter name for email
+    const inviterName = currentUser.first_name && currentUser.last_name
+      ? `${currentUser.first_name} ${currentUser.last_name}`.trim()
+      : 'El administrador'
 
     // Parse request body
     const body = await request.json()
@@ -60,9 +65,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Send invitation
+    // Send invitation with inviterName to avoid N+1 query
     console.log('📧 [Invitations API] Calling sendInvitation...')
-    const result = await sendInvitation(email, role as 'ADMIN' | 'USER' | 'GUEST', currentUser.id)
+    const result = await sendInvitation(
+      email,
+      role as 'ADMIN' | 'USER' | 'GUEST',
+      currentUser.id,
+      inviterName
+    )
 
     console.log('📧 [Invitations API] Result:', result)
 

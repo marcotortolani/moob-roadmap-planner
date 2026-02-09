@@ -33,17 +33,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
     }
 
+    // ✅ OPTIMIZATION: Add safety limit to prevent runaway queries (Sprint 2.4)
     // Get ALL active users from database (excluding BLOCKED users)
-    const { data: users, error: userError } = await supabase
+    // Limited to 1000 users for safety - if you need more, implement pagination
+    const { data: users, error: userError, count } = await supabase
       .from('users')
-      .select('email, first_name, last_name, role')
+      .select('email, first_name, last_name, role', { count: 'exact' })
       .neq('role', 'BLOCKED')
+      .limit(1000) // Safety limit: max 1000 users per broadcast
 
     if (userError || !users || users.length === 0) {
       console.error('❌ Failed to fetch users:', userError)
       return NextResponse.json(
         { error: 'Failed to fetch users' },
         { status: 500 }
+      )
+    }
+
+    // Warn if limit was reached (indicates more users exist)
+    if (count && count > 1000) {
+      console.warn(
+        `⚠️ User count (${count}) exceeds limit (1000). Only first 1000 will receive email.`
+      )
+      console.warn(
+        '💡 Consider implementing batch processing for large user bases.'
       )
     }
 
