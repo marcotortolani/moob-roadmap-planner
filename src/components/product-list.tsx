@@ -228,7 +228,7 @@ export const ProductList = memo(function ProductList({
     typeof yearFilter === 'number' && typeof quarterFilter === 'number'
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-4">
       {isDefaultView && (
         <h2 className="text-xl font-bold font-headline">
           {yearFilter} / Q{quarterFilter}
