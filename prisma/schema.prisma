@@ -61,10 +61,12 @@ model User {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relations
-  productsCreated Product[]        @relation("ProductCreator")
-  productsUpdated Product[]        @relation("ProductUpdater")
-  invitationsSent Invitation[]     @relation("InvitationSender")
-  productHistory  ProductHistory[] @relation("ProductHistoryUser")
+  productsCreated     Product[]        @relation("ProductCreator")
+  productsUpdated     Product[]        @relation("ProductUpdater")
+  invitationsSent     Invitation[]     @relation("InvitationSender")
+  productHistory      ProductHistory[] @relation("ProductHistoryUser")
+  operatorsCreated    Operator[]       @relation("OperatorCreator")
+  productNamesCreated ProductName[]    @relation("ProductNameCreator")
 
   @@index([email])
   @@index([role])
@@ -208,4 +210,35 @@ model Holiday {
 
   @@index([date])
   @@map("holidays")
+}
+
+model Operator {
+  id             String   @id @default(cuid())
+  name           String   @unique
+  normalizedName String   @unique @map("normalized_name")
+
+  createdBy   User?   @relation("OperatorCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  createdById String? @map("created_by_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([normalizedName])
+  @@map("operators")
+}
+
+model ProductName {
+  id             String  @id @default(cuid())
+  name           String  @unique
+  normalizedName String  @unique @map("normalized_name")
+  description    String? @db.Text
+
+  createdBy   User?   @relation("ProductNameCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  createdById String? @map("created_by_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([normalizedName])
+  @@map("product_names")
 }

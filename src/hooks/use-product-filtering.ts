@@ -43,9 +43,9 @@ export function useProductFiltering() {
       const languages = new Set<string>()
 
       products.forEach((p) => {
-        operators.add(p.operator)
-        countries.add(p.country)
-        languages.add(p.language)
+        operators.add(p.operator.trim())
+        countries.add(p.country.trim())
+        languages.add(p.language.trim())
       })
 
       const startYear = 2025
@@ -80,10 +80,14 @@ export function useProductFiltering() {
 
       const statusMatch = statusFilter === 'all' || p.status === statusFilter
       const operatorMatch =
-        operatorFilter === 'all' || p.operator === operatorFilter
-      const countryMatch = countryFilter === 'all' || p.country === countryFilter
+        operatorFilter === 'all' ||
+        p.operator.trim().toLowerCase() === operatorFilter.trim().toLowerCase()
+      const countryMatch =
+        countryFilter === 'all' ||
+        p.country.trim().toLowerCase() === countryFilter.trim().toLowerCase()
       const languageMatch =
-        languageFilter === 'all' || p.language === languageFilter
+        languageFilter === 'all' ||
+        p.language.trim().toLowerCase() === languageFilter.trim().toLowerCase()
 
       const dateMatch = () => {
         if (yearFilter === 'all') return true

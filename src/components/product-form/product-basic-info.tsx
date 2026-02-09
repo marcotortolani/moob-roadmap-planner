@@ -6,8 +6,10 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
 import { CountrySelect } from '@/components/country-select'
+import { LanguageSelect } from '@/components/language-select'
+import { OperatorCombobox } from '@/components/operator-combobox'
+import { ProductNameCombobox } from '@/components/product-name-combobox'
 import type { ProductFormData } from '@/lib/types'
 
 interface ProductBasicInfoProps {
@@ -26,14 +28,10 @@ export function ProductBasicInfo({ control }: ProductBasicInfoProps) {
             <FormLabel>
               Nombre de producto <span className="text-destructive">*</span>
             </FormLabel>
-            <FormControl>
-              <Input
-                placeholder="Ej: Total Fitness"
-                {...field}
-                aria-required="true"
-                aria-invalid={!!field.value && field.value.length === 0}
-              />
-            </FormControl>
+            <ProductNameCombobox
+              value={field.value}
+              onChange={field.onChange}
+            />
             <FormMessage />
           </FormItem>
         )}
@@ -47,13 +45,10 @@ export function ProductBasicInfo({ control }: ProductBasicInfoProps) {
               <FormLabel>
                 Operador <span className="text-destructive">*</span>
               </FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Ej: Movistar"
-                  {...field}
-                  aria-required="true"
-                />
-              </FormControl>
+              <OperatorCombobox
+                value={field.value}
+                onChange={field.onChange}
+              />
               <FormMessage />
             </FormItem>
           )}
@@ -84,13 +79,7 @@ export function ProductBasicInfo({ control }: ProductBasicInfoProps) {
             <FormLabel>
               Idioma <span className="text-destructive">*</span>
             </FormLabel>
-            <FormControl>
-              <Input
-                placeholder="Ej: Español"
-                {...field}
-                aria-required="true"
-              />
-            </FormControl>
+            <LanguageSelect value={field.value} onChange={field.onChange} />
             <FormMessage />
           </FormItem>
         )}

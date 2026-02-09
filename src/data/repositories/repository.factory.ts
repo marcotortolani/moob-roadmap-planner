@@ -1,9 +1,15 @@
 import type { IProductRepository } from './product.repository'
 import type { IHolidayRepository } from './holiday.repository'
+import type { IOperatorRepository } from './operator.repository'
+import type { IProductNameRepository } from './product-name.repository'
 import {
   LocalStorageProductRepository,
   LocalStorageHolidayRepository,
 } from './implementations/localStorage'
+import {
+  SupabaseOperatorRepository,
+  SupabaseProductNameRepository,
+} from './implementations/supabase'
 
 /**
  * Repository implementation type
@@ -60,11 +66,36 @@ export class RepositoryFactory {
         throw new Error(`Unknown repository type: ${this.type}`)
     }
   }
+
+  /**
+   * Create an Operator Repository instance
+   */
+  static createOperatorRepository(): IOperatorRepository {
+    // Always use Supabase for operators (new feature, no localStorage implementation)
+    return new SupabaseOperatorRepository()
+  }
+
+  /**
+   * Create a Product Name Repository instance
+   */
+  static createProductNameRepository(): IProductNameRepository {
+    // Always use Supabase for product names (new feature, no localStorage implementation)
+    return new SupabaseProductNameRepository()
+  }
 }
 
 /**
  * Singleton instances for convenience
  * These can be used throughout the app without creating new instances
  */
+export const repositoryFactory = {
+  getProductRepository: () => RepositoryFactory.createProductRepository(),
+  getHolidayRepository: () => RepositoryFactory.createHolidayRepository(),
+  getOperatorRepository: () => RepositoryFactory.createOperatorRepository(),
+  getProductNameRepository: () =>
+    RepositoryFactory.createProductNameRepository(),
+}
+
+// Legacy exports for backward compatibility
 export const productRepository = RepositoryFactory.createProductRepository()
 export const holidayRepository = RepositoryFactory.createHolidayRepository()

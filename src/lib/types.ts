@@ -2,6 +2,7 @@
 
 import { z } from 'zod';
 import { COUNTRIES } from './countries';
+import { ENABLED_LANGUAGES } from './languages';
 
 export type User = {
     id: string;
@@ -43,12 +44,17 @@ export const CustomUrlSchema = z.object({
 });
 
 const countryCodes = COUNTRIES.map(c => c.code) as [string, ...string[]];
+const languageCodes = ENABLED_LANGUAGES.map(l => l.code) as [string, ...string[]];
 
 export const ProductSchema = z.object({
-  name: z.string().min(1, 'El nombre del producto es requerido.'),
-  operator: z.string().min(1, 'El operador es requerido.'),
+  name: z.string()
+    .min(1, 'El nombre del producto es requerido.')
+    .transform(val => val.trim()),
+  operator: z.string()
+    .min(1, 'El operador es requerido.')
+    .transform(val => val.trim()),
   country: z.enum(countryCodes, { errorMap: () => ({ message: 'País inválido.'})}),
-  language: z.string().min(1, 'El idioma es requerido.'),
+  language: z.enum(languageCodes, { errorMap: () => ({ message: 'Idioma inválido.'})}),
   startDate: z.date({ required_error: 'La fecha de inicio es requerida.' }),
   endDate: z.date({ required_error: 'La fecha de finalización es requerida.' }),
   productiveUrl: z.string().url('URL inválida.').or(z.literal('')),
@@ -144,3 +150,42 @@ export interface DayCellDropData {
   isHoliday: boolean;
   isBusinessDay: boolean;
 }
+
+// New types for Operator and ProductName
+export type Operator = {
+  id: string;
+  name: string;
+  normalizedName: string;
+  createdById: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type ProductName = {
+  id: string;
+  name: string;
+  normalizedName: string;
+  description: string | null;
+  createdById: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+// Zod schemas for CRUD operations
+export const OperatorSchema = z.object({
+  id: z.string().optional(),
+  name: z.string()
+    .min(1, 'El nombre del operador es requerido.')
+    .transform(val => val.trim()),
+});
+
+export const ProductNameSchema = z.object({
+  id: z.string().optional(),
+  name: z.string()
+    .min(1, 'El nombre es requerido.')
+    .transform(val => val.trim()),
+  description: z.string().optional(),
+});
+
+export type OperatorFormData = z.infer<typeof OperatorSchema>;
+export type ProductNameFormData = z.infer<typeof ProductNameSchema>;

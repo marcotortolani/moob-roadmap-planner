@@ -13,12 +13,14 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetDescription,
   SheetTrigger,
 } from '@/components/ui/sheet'
 import { Separator } from '@/components/ui/separator'
 import type { Status } from '@/lib/types'
 import { STATUS_OPTIONS } from '@/lib/constants'
 import type { SortOption } from '@/hooks/use-product-filtering'
+import { getLanguageName } from '@/lib/languages'
 
 interface FiltersSheetProps {
   isOpen: boolean
@@ -83,9 +85,12 @@ export function FiltersSheet({
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent className="border-l-3 border-black">
+      <SheetContent className="border-l-3 border-black pl-3 pr-4">
         <SheetHeader>
           <SheetTitle>Filtros y Ordenamiento</SheetTitle>
+          <SheetDescription>
+            Filtra y ordena los productos del roadmap
+          </SheetDescription>
         </SheetHeader>
         <div className="py-4">
           <div className="grid grid-cols-1 gap-4">
@@ -178,7 +183,7 @@ export function FiltersSheet({
                 <SelectItem value="all">Todos</SelectItem>
                 {uniqueLanguages.map((l) => (
                   <SelectItem key={l} value={l}>
-                    {l}
+                    {getLanguageName(l)}
                   </SelectItem>
                 ))}
               </SelectContent>

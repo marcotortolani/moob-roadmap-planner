@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import type { Status } from '@/lib/types'
 import { STATUS_OPTIONS } from '@/lib/constants'
 import type { SortOption } from '@/hooks/use-product-filtering'
+import { getLanguageName } from '@/lib/languages'
 
 interface FiltersBarProps {
   searchTerm: string
@@ -62,7 +63,8 @@ export function FiltersBar({
   onClearFilters,
 }: FiltersBarProps) {
   return (
-    <div className="flex flex-col sm:flex-row gap-2">
+    <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row gap-2">
+      {/*  Search Bar */}
       <div className="relative flex-1 lg:flex-none xl:max-w-full xl:min-w-[200px] 2xl:min-w-[300px] 2xl:max-w-[400px]">
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
@@ -167,41 +169,39 @@ export function FiltersBar({
             <SelectItem value="all">Todos</SelectItem>
             {uniqueLanguages.map((l) => (
               <SelectItem key={l} value={l}>
-                {l}
+                {getLanguageName(l)}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
-      </div>
-
-      <Select
-        value={sortOption}
-        onValueChange={(value) => onSortChange(value as SortOption)}
-      >
-        <SelectTrigger
-          className="hidden lg:flex lg:max-w-[200px]"
-          aria-label="Ordenar productos"
+        <Select
+          value={sortOption}
+          onValueChange={(value) => onSortChange(value as SortOption)}
         >
-          <SelectValue placeholder="Ordenar por" />
-        </SelectTrigger>
-        <SelectContent >
-          <SelectItem value="date-asc">Más antiguos</SelectItem>
-          <SelectItem value="date-desc">Más nuevos</SelectItem>
-          <SelectItem value="name-asc">Nombre (A-Z)</SelectItem>
-          <SelectItem value="name-desc">Nombre (Z-A)</SelectItem>
-        </SelectContent>
-      </Select>
-
+          <SelectTrigger
+            className="hidden lg:flex min-w-[150px] lg:max-w-[200px]"
+            aria-label="Ordenar productos"
+          >
+            <SelectValue placeholder="Ordenar por" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="date-asc">Más antiguos</SelectItem>
+            <SelectItem value="date-desc">Más nuevos</SelectItem>
+            <SelectItem value="name-asc">Nombre (A-Z)</SelectItem>
+            <SelectItem value="name-desc">Nombre (Z-A)</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
       {/* Clear filters button - shows when filters are active OR year is "all" (since default should be current year) */}
       {(activeFilterCount > 0 || yearFilter === 'all') && (
         <Button
           variant="default"
           size="sm"
           onClick={onClearFilters}
-          className="ml-auto bg-red-100 text-red-700 border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_#000000] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none hover:bg-destructive hover:text-white transition-all"
+          className="ml-auto h-10  bg-red-100 text-red-700 border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_#000000] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none hover:bg-destructive hover:text-white transition-all"
           aria-label="Borrar todos los filtros"
         >
-          <X className="h-4 w-4 mr-2" />
+          <X className="h-4 w-4 mr-1" />
           Borrar filtros
         </Button>
       )}

@@ -22,3 +22,19 @@ export {
   useDeleteHoliday,
   holidayKeys,
 } from './use-holidays'
+
+// Operators
+export {
+  useOperators,
+  useCreateOperator,
+  useSearchOperators,
+  operatorKeys,
+} from './use-operators'
+
+// Product Names
+export {
+  useProductNames,
+  useCreateProductName,
+  useSearchProductNames,
+  productNameKeys,
+} from './use-product-names'
