@@ -67,7 +67,7 @@ import { usePermissionChecks } from '@/lib/rbac/hooks'
 import { useDeleteProduct, useUpdateProduct } from '@/hooks/queries'
 import { ProductHistory } from './product-history'
 
-const getMilestoneStatusInfo = (status: any) => {
+const getMilestoneStatusInfo = (status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED') => {
   const statusOption = MILESTONE_STATUS_OPTIONS.find((s) => s.value === status)
   switch (status) {
     case 'COMPLETED':

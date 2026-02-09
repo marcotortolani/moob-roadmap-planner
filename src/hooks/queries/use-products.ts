@@ -72,7 +72,7 @@ async function fetchProducts(filters?: ProductFilters): Promise<Product[]> {
     startDate: startOfDay(parseISO(product.start_date)),
     endDate: startOfDay(parseISO(product.end_date)),
     cardColor: product.card_color || generateRandomColor(),
-    milestones: product.milestones?.map((m: any) => ({
+    milestones: product.milestones?.map((m: { id: string; name: string; start_date: string; end_date: string; status: string; product_id: string }) => ({
       ...m,
       startDate: startOfDay(parseISO(m.start_date)),
       endDate: startOfDay(parseISO(m.end_date)),
@@ -131,7 +131,7 @@ async function fetchProduct(id: string): Promise<Product> {
     startDate: startOfDay(parseISO(data.start_date)),
     endDate: startOfDay(parseISO(data.end_date)),
     cardColor: data.card_color || generateRandomColor(),
-    milestones: data.milestones?.map((m: any) => ({
+    milestones: data.milestones?.map((m: { id: string; name: string; start_date: string; end_date: string; status: string; product_id: string }) => ({
       ...m,
       startDate: startOfDay(parseISO(m.start_date)),
       endDate: startOfDay(parseISO(m.end_date)),
@@ -315,7 +315,7 @@ export function useCreateProduct() {
  * Update an existing product
  */
 async function updateProduct({ id, ...updates }: Partial<Product> & { id: string }): Promise<Product> {
-  const updateData: any = {}
+  const updateData: Record<string, unknown> = {}
 
   if (updates.name !== undefined) updateData.name = updates.name
   if (updates.operator !== undefined) updateData.operator = updates.operator

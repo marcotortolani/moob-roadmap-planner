@@ -1,6 +1,7 @@
 'use server'
 
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { getErrorMessage, logError } from '@/lib/errors/error-handler'
 
 /**
  * Server action to get current authenticated user
@@ -57,8 +58,9 @@ export async function getCurrentUser() {
       },
       error: null,
     }
-  } catch (error: any) {
-    console.error('[getCurrentUser] Unexpected error:', error)
-    return { user: null, error: error.message || 'Internal server error' }
+  } catch (error: unknown) {
+    const errorMessage = getErrorMessage(error)
+    logError('getCurrentUser', error)
+    return { user: null, error: errorMessage || 'Internal server error' }
   }
 }

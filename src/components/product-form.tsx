@@ -153,8 +153,8 @@ export default function ProductForm({ product }: { product?: Product }) {
         }
       )
     } else {
-      // Create new product
-      createProduct.mutate(productData as any, {
+      // Create new product - productData is already validated by Zod schema
+      createProduct.mutate(productData, {
         onSuccess: () => {
           // Wait a bit to show the toast before closing
           setTimeout(() => {

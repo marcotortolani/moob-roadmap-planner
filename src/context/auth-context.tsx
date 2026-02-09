@@ -5,8 +5,10 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import type { User as SupabaseUser, AuthChangeEvent, Session } from '@supabase/supabase-js'
 import type { User } from '@/lib/types'
+import type { DbUser } from '@/types/database'
 import { getCurrentUser } from '@/app/actions/auth'
 import { getQueryClient } from '@/lib/react-query/client'
+import { getErrorMessage, logError } from '@/lib/errors/error-handler'
 
 interface AuthContextType {
   user: User | null
@@ -38,7 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
 
   // Transform Supabase user to app User
-  const transformUser = (supabaseUser: SupabaseUser, dbUser?: any): User => {
+  const transformUser = (supabaseUser: SupabaseUser, dbUser?: DbUser): User => {
     return {
       id: dbUser?.id || supabaseUser.id,
       name:
@@ -365,10 +367,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }, 1000)
 
       return { error: null }
-    } catch (error: any) {
+    } catch (error: unknown) {
       isUpdatingPassword.current = false
+      const errorMessage = getErrorMessage(error)
+      logError('updatePassword', error, { userId: user?.id })
 
-      if (error.name === 'AbortError') {
+      if (error instanceof Error && error.name === 'AbortError') {
         return {
           error: new Error(
             'La solicitud tardó demasiado. Por favor verifica tu conexión e intenta de nuevo.'
@@ -376,7 +380,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      return { error: error as Error }
+      return { error: error instanceof Error ? error : new Error(errorMessage) }
     }
   }
 
