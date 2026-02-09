@@ -60,6 +60,10 @@ export function CalendarGrid({
     )
   }, [])
 
+  const shortWeekDays = useMemo(() => {
+    return weekDays.map((day) => day.slice(0, 3))
+  }, [weekDays])
+
   // Memoize business day checks for performance
   const businessDayMap = useMemo(() => {
     const map = new Map<string, boolean>()
@@ -145,10 +149,20 @@ export function CalendarGrid({
       {weekDays.map((day) => (
         <div
           key={day}
-          className="border-b-3 border-black bg-neo-gray-light p-4 text-center"
+          className="hidden sm:block border-b-3 border-black bg-neo-gray-light p-4 text-center"
           role="columnheader"
         >
           <h3 className="text-xl font-black uppercase">{day}</h3>
+        </div>
+      ))}
+
+      {shortWeekDays.map((day) => (
+        <div
+          key={day}
+          className="sm:hidden border-b-3 border-black bg-neo-gray-light p-2 text-center"
+          role="columnheader"
+        >
+          <h3 className="text-lg font-black uppercase">{day}</h3>
         </div>
       ))}
 

@@ -24,11 +24,7 @@ import {
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { ProductDetailModal } from './product-detail-modal'
 import { HolidayManagementModal } from './holiday-management-modal'
-import {
-  CalendarHeader,
-  CalendarGrid,
-  CalendarDragOverlay,
-} from './calendar'
+import { CalendarHeader, CalendarGrid, CalendarDragOverlay } from './calendar'
 import { useCalendarDrag } from '@/hooks/use-calendar-drag'
 import { useHolidays } from '@/hooks/queries'
 import { useAuth } from '@/context/auth-context'
@@ -86,8 +82,14 @@ export function ProductCalendar({ products }: { products: Product[] }) {
   }, [holidays])
 
   // Month navigation handlers
-  const nextMonth = useCallback(() => setCurrentMonth(addMonths(currentMonth, 1)), [currentMonth])
-  const prevMonth = useCallback(() => setCurrentMonth(subMonths(currentMonth, 1)), [currentMonth])
+  const nextMonth = useCallback(
+    () => setCurrentMonth(addMonths(currentMonth, 1)),
+    [currentMonth],
+  )
+  const prevMonth = useCallback(
+    () => setCurrentMonth(subMonths(currentMonth, 1)),
+    [currentMonth],
+  )
   const goToToday = useCallback(() => setCurrentMonth(new Date()), [])
 
   // Callbacks for drag operations
@@ -113,14 +115,19 @@ export function ProductCalendar({ products }: { products: Product[] }) {
   )
 
   // Use custom drag hook
-  const { dragState, previewDates, handleDragStart, handleDragMove, handleDragEnd } =
-    useCalendarDrag({
-      products,
-      holidays,
-      user,
-      onSuccess: handleDragSuccess,
-      onError: handleDragError,
-    })
+  const {
+    dragState,
+    previewDates,
+    handleDragStart,
+    handleDragMove,
+    handleDragEnd,
+  } = useCalendarDrag({
+    products,
+    holidays,
+    user,
+    onSuccess: handleDragSuccess,
+    onError: handleDragError,
+  })
 
   // Handler for selecting product
   const handleSelectProduct = useCallback((product: Product) => {
@@ -152,7 +159,7 @@ export function ProductCalendar({ products }: { products: Product[] }) {
         onDragMove={canEditProducts ? handleDragMove : undefined}
         onDragEnd={canEditProducts ? handleDragEnd : undefined}
       >
-        <div className="border-3 border-black shadow-neo-lg bg-white p-2 sm:p-4 flex flex-col h-full">
+        <div className="border-3 border-black shadow-neo-lg bg-white px-0 py-2 sm:p-4 flex flex-col w-full h-full">
           <CalendarHeader
             currentMonth={currentMonth}
             onPrevMonth={prevMonth}

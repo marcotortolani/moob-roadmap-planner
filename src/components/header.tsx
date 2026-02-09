@@ -60,11 +60,11 @@ export function Header() {
     <header className="sticky top-0 z-30 flex h-20 items-center gap-4 border-b-[2px] border-black bg-white px-4 sm:px-6 shadow-[0_6px_0px_0px_#000000]">
       <Link
         href="/"
-        className="flex items-center gap-2 mr-auto"
+        className="flex items-center gap-2 mr-auto group"
         aria-label="Ir al inicio"
       >
         <Logo
-          className="h-6 w-6"
+          className="h-6 w-6 group-hover:rotate-180 group-hover:scale-125 transition-all duration-500 ease-in-out"
           style={{ color: '#0052CC' }}
           aria-hidden="true"
         />
