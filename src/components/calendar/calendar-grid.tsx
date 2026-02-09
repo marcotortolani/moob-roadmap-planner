@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useCallback } from 'react'
 import {
   format,
   startOfWeek,
@@ -115,7 +115,7 @@ export function CalendarGrid({
     return types
   }, [products, holidays])
 
-  const getProductsForDay = (day: Date): Product[] => {
+  const getProductsForDay = useCallback((day: Date): Product[] => {
     // Normalize all dates to start of day to avoid timezone issues
     const normalizedDay = startOfDay(day)
     return products.filter((p) => {
@@ -126,7 +126,7 @@ export function CalendarGrid({
         end: normalizedEnd,
       })
     })
-  }
+  }, [products])
 
   const getMilestoneForDay = (
     day: Date,

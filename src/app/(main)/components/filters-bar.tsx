@@ -66,6 +66,27 @@ export function FiltersBar({
     const country = COUNTRIES.find((c) => c.code === code)
     return country ? country.name : code
   }
+
+  // Memoized handlers to prevent re-renders
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onSearchChange(e.target.value)
+  }
+
+  const handleYearChange = (value: string) => {
+    onYearChange(value === 'all' ? 'all' : Number(value))
+  }
+
+  const handleQuarterChange = (value: string) => {
+    onQuarterChange(value === 'all' ? 'all' : Number(value))
+  }
+
+  const handleStatusChange = (value: string) => {
+    onStatusChange(value as Status | 'all')
+  }
+
+  const handleSortChange = (value: string) => {
+    onSortChange(value as SortOption)
+  }
   return (
     <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row gap-2">
       {/*  Search Bar */}
@@ -75,7 +96,7 @@ export function FiltersBar({
           placeholder="Buscar producto..."
           className="pl-8 w-full"
           value={searchTerm}
-          onChange={(e) => onSearchChange(e.target.value)}
+          onChange={handleSearchChange}
           aria-label="Buscar productos"
         />
       </div>
@@ -84,9 +105,7 @@ export function FiltersBar({
       <div className="hidden lg:flex flex-row gap-2">
         <Select
           value={yearFilter.toString()}
-          onValueChange={(value) =>
-            onYearChange(value === 'all' ? 'all' : Number(value))
-          }
+          onValueChange={handleYearChange}
         >
           <SelectTrigger className="w-28" aria-label="Filtrar por año">
             {yearFilter === 'all' ? 'Año' : <SelectValue />}
@@ -103,9 +122,7 @@ export function FiltersBar({
 
         <Select
           value={quarterFilter.toString()}
-          onValueChange={(value) =>
-            onQuarterChange(value === 'all' ? 'all' : Number(value))
-          }
+          onValueChange={handleQuarterChange}
           disabled={yearFilter === 'all'}
         >
           <SelectTrigger className="w-24" aria-label="Filtrar por trimestre">
@@ -122,7 +139,7 @@ export function FiltersBar({
 
         <Select
           value={statusFilter}
-          onValueChange={(value) => onStatusChange(value as Status | 'all')}
+          onValueChange={handleStatusChange}
         >
           <SelectTrigger aria-label="Filtrar por estado">
             {statusFilter === 'all' ? 'Estado' : <SelectValue />}
@@ -184,7 +201,7 @@ export function FiltersBar({
         </Select>
         <Select
           value={sortOption}
-          onValueChange={(value) => onSortChange(value as SortOption)}
+          onValueChange={handleSortChange}
         >
           <SelectTrigger
             className="hidden lg:flex min-w-[150px] lg:max-w-[200px]"

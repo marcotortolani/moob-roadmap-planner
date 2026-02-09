@@ -1,5 +1,5 @@
-
 import type {Metadata} from 'next';
+import { Inter, Space_Grotesk } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/sonner"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -7,6 +7,20 @@ import { AuthProvider } from '@/context/auth-context';
 import { GoogleAnalytics } from '@/components/google-analytics';
 import { ReactQueryProvider } from '@/lib/react-query/provider';
 import { ErrorBoundary } from '@/components/error-boundary';
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+  preload: true,
+})
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  variable: '--font-space-grotesk',
+  display: 'swap',
+  preload: true,
+})
 
 export const metadata: Metadata = {
   title: 'Product Roadmap Planner',
@@ -21,13 +35,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-        <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
         <GoogleAnalytics />
       </head>
-      <body suppressHydrationWarning>
+      <body className={`${inter.variable} ${spaceGrotesk.variable} antialiased`} suppressHydrationWarning>
         <ErrorBoundary>
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
             <ReactQueryProvider>

@@ -166,6 +166,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
 
     return () => {
+      clearTimeout(safetyTimeout)
       subscription.unsubscribe()
     }
   }, [router])
