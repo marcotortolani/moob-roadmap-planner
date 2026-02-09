@@ -43,6 +43,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
+import { ErrorBoundary } from '@/components/error-boundary'
 import { getYear, startOfQuarter, endOfQuarter } from 'date-fns'
 
 // Animation variants for stagger effect

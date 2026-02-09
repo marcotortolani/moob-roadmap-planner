@@ -11,6 +11,7 @@ import { ProductCalendar } from '@/components/product-calendar'
 import { FloatingActionButton } from '@/components/floating-action-button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useProductFiltering } from '@/hooks/use-product-filtering'
+import { ErrorBoundary } from '@/components/error-boundary'
 // import { DebugPanel } from '@/components/debug-panel'
 import {
   FiltersBar,
@@ -219,10 +220,11 @@ function useViewParam(): string {
 export default function HomePage() {
   const currentView = useViewParam()
 
+  // ✅ SECURITY: Wrap page in ErrorBoundary to catch React errors (Sprint 4.3)
   return (
-    <>
+    <ErrorBoundary>
       <ProductsData view={currentView} />
       {/* <DebugPanel /> */}
-    </>
+    </ErrorBoundary>
   )
 }

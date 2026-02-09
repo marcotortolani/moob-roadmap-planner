@@ -71,6 +71,49 @@ function ChartContainer({
   )
 }
 
+/**
+ * Validate CSS color value to prevent XSS injection
+ * Allows hex colors, rgb/rgba, hsl/hsla, and CSS color names
+ */
+const isValidColor = (color: string): boolean => {
+  if (!color || typeof color !== 'string') return false
+
+  // Remove whitespace
+  const trimmed = color.trim()
+
+  // Hex colors: #RGB, #RRGGBB, #RRGGBBAA
+  if (/^#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3}([0-9A-Fa-f]{2})?)?$/.test(trimmed)) {
+    return true
+  }
+
+  // RGB/RGBA: rgb(0, 0, 0), rgba(0, 0, 0, 0.5)
+  if (/^rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*(,\s*[\d.]+\s*)?\)$/.test(trimmed)) {
+    return true
+  }
+
+  // HSL/HSLA: hsl(0, 0%, 0%), hsla(0, 0%, 0%, 0.5)
+  if (/^hsla?\(\s*\d+\s*,\s*\d+%\s*,\s*\d+%\s*(,\s*[\d.]+\s*)?\)$/.test(trimmed)) {
+    return true
+  }
+
+  // CSS color names (common ones)
+  const cssColorNames = [
+    'transparent', 'currentColor', 'inherit',
+    'black', 'white', 'red', 'green', 'blue', 'yellow', 'orange', 'purple',
+    'gray', 'grey', 'pink', 'brown', 'cyan', 'magenta',
+  ]
+  if (cssColorNames.includes(trimmed.toLowerCase())) {
+    return true
+  }
+
+  // If it contains anything suspicious, reject it
+  if (/[<>{}()\[\]\\;]/.test(trimmed)) {
+    return false
+  }
+
+  return false
+}
+
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(
     ([, config]) => config.theme || config.color,
@@ -80,28 +123,34 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     return null
   }
 
-  return (
-    <style
-      dangerouslySetInnerHTML={{
-        __html: Object.entries(THEMES)
-          .map(
-            ([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
-${colorConfig
-  .map(([key, itemConfig]) => {
-    const color =
-      itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
-      itemConfig.color
-    return color ? `  --color-${key}: ${color};` : null
-  })
-  .join("\n")}
-}
-`,
-          )
-          .join("\n"),
-      }}
-    />
-  )
+  // ✅ SECURITY: Validate and sanitize colors before injecting into CSS (Sprint 4.1)
+  const styles = Object.entries(THEMES)
+    .map(([theme, prefix]) => {
+      const cssVars = colorConfig
+        .map(([key, itemConfig]) => {
+          const color =
+            itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
+            itemConfig.color
+
+          // Validate color before using it
+          if (!color || !isValidColor(color)) {
+            if (process.env.NODE_ENV === 'development' && color) {
+              console.warn(`[Chart] Invalid color for ${key}: "${color}"`)
+            }
+            return null
+          }
+
+          return `  --color-${key}: ${color};`
+        })
+        .filter(Boolean)
+        .join('\n')
+
+      return `${prefix} [data-chart=${id}] {\n${cssVars}\n}`
+    })
+    .join('\n')
+
+  // Use native style tag instead of dangerouslySetInnerHTML
+  return <style>{styles}</style>
 }
 
 const ChartTooltip = RechartsPrimitive.Tooltip

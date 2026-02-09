@@ -67,6 +67,22 @@ import { usePermissionChecks } from '@/lib/rbac/hooks'
 import { useDeleteProduct, useUpdateProduct } from '@/hooks/queries'
 import { ProductHistory } from './product-history'
 
+/**
+ * Validate URL to prevent XSS and injection attacks
+ * Only allows http:// and https:// protocols
+ */
+const isValidUrl = (url: string | null | undefined): boolean => {
+  if (!url || typeof url !== 'string') return false
+
+  try {
+    const parsed = new URL(url)
+    // Only allow http and https protocols
+    return ['http:', 'https:'].includes(parsed.protocol)
+  } catch {
+    return false
+  }
+}
+
 const getMilestoneStatusInfo = (status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED') => {
   const statusOption = MILESTONE_STATUS_OPTIONS.find((s) => s.value === status)
   switch (status) {
@@ -144,22 +160,31 @@ function InfoItem({
         <p className="font-medium text-foreground">{label}</p>
         {isLink ? (
           <div className="flex items-center gap-2">
-            <a
-              href={value}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline break-all"
-            >
-              {value}
-            </a>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={handleCopy}
-            >
-              <Copy className="h-3 w-3" />
-            </Button>
+            {/* ✅ SECURITY: Validate URL before rendering (Sprint 4.2) */}
+            {isValidUrl(value) ? (
+              <>
+                <a
+                  href={value}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline break-all"
+                >
+                  {value}
+                </a>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={handleCopy}
+                >
+                  <Copy className="h-3 w-3" />
+                </Button>
+              </>
+            ) : (
+              <p className="text-muted-foreground break-all">
+                {value || 'URL inválida'}
+              </p>
+            )}
           </div>
         ) : (
           <p className="text-muted-foreground break-words">{value}</p>
