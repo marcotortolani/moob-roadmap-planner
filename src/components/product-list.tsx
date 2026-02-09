@@ -235,13 +235,17 @@ export const ProductList = memo(function ProductList({
         </h2>
       )}
       <motion.div
-        className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 pr-6"
+        className="h-full grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 pr-1"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
         {products.map((product) => (
-          <motion.div key={product.id} variants={cardVariants}>
+          <motion.div
+            key={product.id}
+            variants={cardVariants}
+            className=" h-full"
+          >
             <ProductCard product={product} />
           </motion.div>
         ))}

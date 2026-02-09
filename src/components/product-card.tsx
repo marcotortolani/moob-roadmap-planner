@@ -45,11 +45,9 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Button } from './ui/button'
-import { Sheet, SheetContent, SheetTrigger } from './ui/sheet'
+import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from './ui/sheet'
 import ProductForm from './product-form'
-import { useToast } from '@/hooks/use-toast'
 import { ProductDetailModal } from './product-detail-modal'
-import { cn } from '@/lib/utils'
 
 // Memoized InfoLine component
 const InfoLine = memo(function InfoLine({
@@ -93,7 +91,6 @@ export const ProductCard = memo(function ProductCard({
 }: {
   product: Product
 }) {
-  const { toast } = useToast()
   const { user } = useAuth()
   const { canEditProducts, canDeleteProducts } = usePermissionChecks()
   const deleteProductMutation = useDeleteProduct()
@@ -136,7 +133,7 @@ export const ProductCard = memo(function ProductCard({
   return (
     <>
       <Card
-        className="relative hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer hover:shadow-[0px_0px_0px_0px_#000000] pl-2 transition-all duration-150 flex flex-col overflow-hidden "
+        className="relative h-full hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer hover:shadow-[0px_0px_0px_0px_#000000] pl-2 transition-all duration-150 flex flex-col overflow-hidden "
         onClick={handleOpenModal}
       >
         <div
@@ -150,7 +147,7 @@ export const ProductCard = memo(function ProductCard({
             aria-label={`Ver detalles de ${product.name}`}
             type="button"
           >
-            <CardTitle className="font-headline text-xl">
+            <CardTitle className="font-headline text-xl line-clamp-2">
               {product.name}
             </CardTitle>
             <CardDescription>
@@ -223,6 +220,10 @@ export const ProductCard = memo(function ProductCard({
                   </DropdownMenuContent>
                 </DropdownMenu>
                 <SheetContent className="w-full sm:max-w-3xl overflow-y-auto border-l-3 border-black">
+                  <SheetTitle className="sr-only">Editar producto</SheetTitle>
+                  <SheetDescription className="sr-only">
+                    Formulario para editar los detalles del producto
+                  </SheetDescription>
                   <ProductForm product={product} />
                 </SheetContent>
               </Sheet>

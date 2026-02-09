@@ -56,7 +56,7 @@ import {
 import { Button } from './ui/button'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
-import { Sheet, SheetContent, SheetTrigger } from './ui/sheet'
+import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from './ui/sheet'
 import ProductForm from './product-form'
 import { useAuth } from '@/context/auth-context'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
@@ -374,6 +374,10 @@ export function ProductDetailModal({
                       </Button>
                     </SheetTrigger>
                     <SheetContent className="w-full sm:max-w-3xl overflow-y-auto">
+                      <SheetTitle className="sr-only">Editar producto</SheetTitle>
+                      <SheetDescription className="sr-only">
+                        Formulario para editar los detalles del producto
+                      </SheetDescription>
                       <ProductForm product={product} />
                     </SheetContent>
                   </Sheet>

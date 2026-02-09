@@ -2,7 +2,13 @@
 'use client'
 
 import { useState } from 'react'
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetTitle,
+  SheetDescription,
+} from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import {
   PlusCircle,
@@ -29,7 +35,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { usePathname, useRouter } from 'next/navigation'
-import { Separator } from './ui/separator'
 
 export function Header() {
   const { user, logout } = useAuth()
@@ -158,6 +163,12 @@ export function Header() {
                     className="w-full sm:max-w-3xl overflow-y-auto"
                     aria-label="Formulario de nuevo producto"
                   >
+                    <SheetTitle className="sr-only">
+                      Crear nuevo producto
+                    </SheetTitle>
+                    <SheetDescription className="sr-only">
+                      Formulario para agregar un nuevo producto al roadmap
+                    </SheetDescription>
                     <ProductForm />
                   </SheetContent>
                 </Sheet>
@@ -226,6 +237,12 @@ export function Header() {
                   className="w-3/4 border-l-[3px] border-black"
                   aria-label="Menú de navegación móvil"
                 >
+                  <SheetTitle className="sr-only">
+                    Menú de navegación
+                  </SheetTitle>
+                  <SheetDescription className="sr-only">
+                    Navegación principal y opciones de usuario
+                  </SheetDescription>
                   <div className="flex flex-col h-full">
                     <div className="p-4 border-b-[3px] border-black">
                       <div className="flex items-center gap-3">
@@ -328,6 +345,13 @@ export function Header() {
                             </Button>
                           </SheetTrigger>
                           <SheetContent className="w-full sm:max-w-3xl overflow-y-auto">
+                            <SheetTitle className="sr-only">
+                              Crear nuevo producto
+                            </SheetTitle>
+                            <SheetDescription className="sr-only">
+                              Formulario para agregar un nuevo producto al
+                              roadmap
+                            </SheetDescription>
                             <ProductForm />
                           </SheetContent>
                         </Sheet>
@@ -336,7 +360,7 @@ export function Header() {
 
                     <div className="mt-auto p-4 border-t-[3px] border-black">
                       <Button
-                        variant="default"
+                        variant="destructive"
                         className="w-full justify-start"
                         onClick={handleLogout}
                       >
