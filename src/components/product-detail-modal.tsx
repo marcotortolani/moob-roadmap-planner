@@ -35,6 +35,7 @@ import {
 import { Product, User, Status } from '@/lib/types'
 import { STATUS_OPTIONS, MILESTONE_STATUS_OPTIONS } from '@/lib/constants'
 import { COUNTRIES } from '@/lib/countries'
+import { getLanguageName } from '@/lib/languages'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import {
@@ -421,7 +422,7 @@ export function ProductDetailModal({
                     <InfoItem
                       icon={Globe}
                       label="Idioma"
-                      value={product.language}
+                      value={getLanguageName(product.language)}
                     />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

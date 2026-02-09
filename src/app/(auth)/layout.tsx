@@ -8,25 +8,29 @@ export default function AuthLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex min-h-screen w-full flex-col items-center justify-center bg-neo-gray-light p-4">
+    <div className="w-full min-h-screen overflow-hidden flex flex-col items-center justify-between gap-8 bg-neo-gray-light p-4">
       {/* Logo flotante arriba */}
-      <div className="absolute top-8 left-8 border-3 border-black shadow-neo-md bg-white p-3">
-        <div className="flex items-center gap-2">
-          <Logo
-            className="h-8 w-8"
-            style={{ color: 'oklch(67.47% .1725 259.61)' }}
-          />
-          <span className="font-headline text-xl font-bold uppercase">
-            Roadmap Planner
-          </span>
+      <div className=" w-full md:translate-x-10">
+        <div className="w-fit translate-y-2 h-fit border-3 border-black shadow-neo-md bg-white p-3">
+          <div className="flex items-center gap-2">
+            <Logo
+              className="h-8 w-8"
+              style={{ color: 'oklch(67.47% .1725 259.61)' }}
+            />
+            <span className="font-headline text-xl font-bold uppercase">
+              Roadmap Planner
+            </span>
+          </div>
         </div>
       </div>
 
       {/* Contenido centrado */}
-      <main className="w-full max-w-md">{children}</main>
+      <main className="w-full max-w-md h-full min-h-fit flex flex-col items-center justify-center">
+        {children}
+      </main>
 
       {/* Footer */}
-      <footer className="absolute bottom-4 text-center text-sm text-muted-foreground">
+      <footer className="-translate-y-2 min-h-fit text-center text-sm text-muted-foreground">
         <div className="flex flex-col items-center justify-center gap-2">
           <p className=" font-normal">
             Designed & Developed by{' '}

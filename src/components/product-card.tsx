@@ -15,6 +15,7 @@ import { es } from 'date-fns/locale'
 import type { Product, Status } from '@/lib/types'
 import { STATUS_OPTIONS } from '@/lib/constants'
 import { COUNTRIES } from '@/lib/countries'
+import { getLanguageName } from '@/lib/languages'
 import { useAuth } from '@/context/auth-context'
 import { usePermissionChecks } from '@/lib/rbac/hooks'
 import { useDeleteProduct } from '@/hooks/queries'
@@ -115,6 +116,11 @@ export const ProductCard = memo(function ProductCard({
   const formattedEndDate = useMemo(
     () => format(product.endDate, 'd MMM, yyyy', { locale: es }),
     [product.endDate],
+  )
+
+  const languageName = useMemo(
+    () => getLanguageName(product.language),
+    [product.language],
   )
 
   // Memoize callbacks
@@ -244,7 +250,7 @@ export const ProductCard = memo(function ProductCard({
                 text={country?.name}
                 flag={country?.flag}
               />
-              <InfoLine icon={Globe} text={product.language} />
+              <InfoLine icon={Globe} text={languageName} />
             </div>
 
             {product.comments && (
