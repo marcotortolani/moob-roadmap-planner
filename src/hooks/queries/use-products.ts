@@ -38,9 +38,26 @@ async function fetchProducts(filters?: ProductFilters): Promise<Product[]> {
   let query = supabase
     .from('products')
     .select(`
-      *,
-      milestones(*),
-      customUrls:custom_urls(*)
+      id,
+      name,
+      operator,
+      country,
+      language,
+      status,
+      start_date,
+      end_date,
+      card_color,
+      productive_url,
+      vercel_demo_url,
+      wp_content_prod_url,
+      wp_content_test_url,
+      chatbot_url,
+      created_at,
+      updated_at,
+      created_by_id,
+      updated_by_id,
+      milestones(id, name, start_date, end_date, status, product_id),
+      customUrls:custom_urls(id, label, url, product_id)
     `)
     .order('start_date', { ascending: false })
 
