@@ -87,6 +87,10 @@ async function fetchProducts(filters?: ProductFilters): Promise<Product[]> {
  * Waits for auth to initialize before firing to prevent a race condition
  * where the Supabase browser client hasn't restored its session yet,
  * causing RLS to return 0 rows and React Query to cache an empty result.
+ *
+ * ✅ SPRINT 6.2: Optimized staleTime for product data (2 minutes)
+ * Products change frequently, so keep staleTime relatively short.
+ * Optimistic updates handle real-time mutations anyway.
  */
 export function useProducts(filters?: ProductFilters) {
   const { loading: authLoading } = useAuth()
@@ -94,7 +98,8 @@ export function useProducts(filters?: ProductFilters) {
   return useQuery({
     queryKey: productKeys.list(filters),
     queryFn: () => fetchProducts(filters),
-    staleTime: 30 * 1000, // 30 seconds
+    staleTime: 2 * 60 * 1000, // 2 minutes (Sprint 6.2 - was 30 seconds)
+    gcTime: 10 * 60 * 1000, // 10 minutes cache
     enabled: !authLoading,
   })
 }
@@ -282,7 +287,7 @@ async function createProduct(product: Omit<Product, 'id' | 'createdAt' | 'update
 }
 
 /**
- * Hook to create a new product
+ * Hook to create a new product with optimistic updates (Sprint 5.1)
  */
 export function useCreateProduct() {
   const queryClient = useQueryClient()
@@ -290,8 +295,34 @@ export function useCreateProduct() {
 
   return useMutation({
     mutationFn: createProduct,
+    onMutate: async (newProduct) => {
+      // ✅ OPTIMISTIC: Cancel any outgoing refetches to prevent race conditions
+      await queryClient.cancelQueries({ queryKey: productKeys.all })
+
+      // Snapshot the previous value for rollback
+      const previousProducts = queryClient.getQueryData(productKeys.all)
+
+      // Optimistically create temporary product with temp ID
+      const tempProduct: Product = {
+        ...newProduct,
+        id: `temp-${Date.now()}`,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as Product
+
+      // Optimistically update the cache
+      queryClient.setQueriesData<Product[]>(
+        { queryKey: productKeys.lists() },
+        (old) => {
+          if (!old) return [tempProduct]
+          return [tempProduct, ...old]
+        }
+      )
+
+      return { previousProducts }
+    },
     onSuccess: async (newProduct) => {
-      // Invalidate triggers automatic refetch of active queries
+      // Invalidate triggers automatic refetch to sync with server
       await queryClient.invalidateQueries({ queryKey: productKeys.all })
 
       toast({
@@ -300,13 +331,22 @@ export function useCreateProduct() {
         variant: 'success',
       })
     },
-    onError: (error: Error) => {
+    onError: (error: Error, newProduct, context) => {
+      // ❌ Rollback on error
+      if (context?.previousProducts) {
+        queryClient.setQueryData(productKeys.all, context.previousProducts)
+      }
+
       console.error('Error creating product:', error)
       toast({
         title: '✕ Error al crear',
         description: error.message || 'No se pudo crear el producto. Intenta nuevamente.',
         variant: 'destructive',
       })
+    },
+    onSettled: () => {
+      // Always refetch after error or success to ensure sync
+      queryClient.invalidateQueries({ queryKey: productKeys.all })
     },
   })
 }
@@ -404,7 +444,7 @@ async function updateProduct({ id, ...updates }: Partial<Product> & { id: string
 }
 
 /**
- * Hook to update an existing product
+ * Hook to update an existing product with optimistic updates (Sprint 5.1)
  */
 export function useUpdateProduct() {
   const queryClient = useQueryClient()
@@ -412,14 +452,43 @@ export function useUpdateProduct() {
 
   return useMutation({
     mutationFn: updateProduct,
+    onMutate: async (updatedProduct) => {
+      // ✅ OPTIMISTIC: Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: productKeys.all })
+
+      // Snapshot the previous value for rollback
+      const previousProducts = queryClient.getQueryData(productKeys.all)
+      const previousProduct = queryClient.getQueryData(productKeys.detail(updatedProduct.id))
+
+      // Optimistically update the cache
+      queryClient.setQueriesData<Product[]>(
+        { queryKey: productKeys.lists() },
+        (old) => {
+          if (!old) return old
+          return old.map((p) =>
+            p.id === updatedProduct.id
+              ? { ...p, ...updatedProduct, updatedAt: new Date() }
+              : p
+          )
+        }
+      )
+
+      // Also update detail cache if exists
+      if (previousProduct) {
+        queryClient.setQueryData(
+          productKeys.detail(updatedProduct.id),
+          { ...previousProduct, ...updatedProduct, updatedAt: new Date() }
+        )
+      }
+
+      return { previousProducts, previousProduct }
+    },
     onSuccess: async (data, variables) => {
-      // Get previous product state from cache to detect status changes
+      // Get previous product state to detect status changes
       const oldProduct = queryClient.getQueryData<Product>(productKeys.detail(data.id))
 
-      // Update specific product in cache immediately
+      // Update specific product in cache with server response
       queryClient.setQueryData(productKeys.detail(data.id), data)
-      // Invalidate triggers automatic refetch of active queries
-      await queryClient.invalidateQueries({ queryKey: productKeys.all })
 
       // Detect if status changed to LIVE
       const statusChangedToLive =
@@ -452,13 +521,28 @@ export function useUpdateProduct() {
         variant: 'success',
       })
     },
-    onError: (error: Error) => {
+    onError: (error: Error, updatedProduct, context) => {
+      // ❌ Rollback on error
+      if (context?.previousProducts) {
+        queryClient.setQueryData(productKeys.all, context.previousProducts)
+      }
+      if (context?.previousProduct) {
+        queryClient.setQueryData(
+          productKeys.detail(updatedProduct.id),
+          context.previousProduct
+        )
+      }
+
       console.error('Error updating product:', error)
       toast({
         title: '✕ Error al actualizar',
         description: error.message || 'No se pudo actualizar el producto. Intenta nuevamente.',
         variant: 'destructive',
       })
+    },
+    onSettled: () => {
+      // Always refetch to ensure sync
+      queryClient.invalidateQueries({ queryKey: productKeys.all })
     },
   })
 }
@@ -479,7 +563,7 @@ async function deleteProduct(id: string): Promise<void> {
 }
 
 /**
- * Hook to delete a product
+ * Hook to delete a product with optimistic updates (Sprint 5.1)
  */
 export function useDeleteProduct() {
   const queryClient = useQueryClient()
@@ -487,22 +571,50 @@ export function useDeleteProduct() {
 
   return useMutation({
     mutationFn: deleteProduct,
+    onMutate: async (productId) => {
+      // ✅ OPTIMISTIC: Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: productKeys.all })
+
+      // Snapshot the previous value for rollback
+      const previousProducts = queryClient.getQueryData(productKeys.all)
+
+      // Optimistically remove the product from cache
+      queryClient.setQueriesData<Product[]>(
+        { queryKey: productKeys.lists() },
+        (old) => {
+          if (!old) return old
+          return old.filter((p) => p.id !== productId)
+        }
+      )
+
+      // Also remove from detail cache
+      queryClient.removeQueries({ queryKey: productKeys.detail(productId) })
+
+      return { previousProducts }
+    },
     onSuccess: () => {
-      // Invalidate all product queries
-      queryClient.invalidateQueries({ queryKey: productKeys.all })
       toast({
         title: '✓ Producto eliminado',
         description: 'El producto se ha eliminado exitosamente',
         variant: 'success',
       })
     },
-    onError: (error: Error) => {
+    onError: (error: Error, productId, context) => {
+      // ❌ Rollback on error
+      if (context?.previousProducts) {
+        queryClient.setQueryData(productKeys.all, context.previousProducts)
+      }
+
       console.error('Error deleting product:', error)
       toast({
         title: '✕ Error al eliminar',
         description: error.message || 'No se pudo eliminar el producto. Intenta nuevamente.',
         variant: 'destructive',
       })
+    },
+    onSettled: () => {
+      // Always refetch to ensure sync
+      queryClient.invalidateQueries({ queryKey: productKeys.all })
     },
   })
 }

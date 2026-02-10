@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useCallback, useMemo, memo } from 'react'
+import { motion } from 'framer-motion'
 import {
   MapPin,
   Globe,
@@ -8,6 +9,7 @@ import {
   Trash2,
   Edit,
   MessageSquare,
+  Check,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -95,8 +97,14 @@ const getStatusBadgeVariant = (status: Status) => {
 
 export const ProductCard = memo(function ProductCard({
   product,
+  isSelected,
+  onToggleSelection,
+  selectionMode,
 }: {
   product: Product
+  isSelected?: boolean
+  onToggleSelection?: (productId: string) => void
+  selectionMode?: boolean
 }) {
   const { user } = useAuth()
   const { canEditProducts, canDeleteProducts } = usePermissionChecks()
@@ -142,132 +150,182 @@ export const ProductCard = memo(function ProductCard({
     setIsModalOpen(false)
   }, [])
 
+  const handleToggleSelection = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      if (onToggleSelection) {
+        onToggleSelection(product.id)
+      }
+    },
+    [onToggleSelection, product.id]
+  )
+
   return (
     <>
-      <Card
-        className="relative h-full hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer hover:shadow-[0px_0px_0px_0px_#000000] pl-2 transition-all duration-150 flex flex-col overflow-hidden "
-        onClick={handleOpenModal}
+      <motion.div
+        layout
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        whileHover={{ y: -4, transition: { duration: 0.2 } }}
+        whileTap={{ scale: 0.98 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        className="h-full"
       >
-        <div
-          className=" absolute left-0 top-0 w-4 h-full"
-          style={{ backgroundColor: product.cardColor }}
-        ></div>
-        <CardHeader className="flex flex-row items-start justify-between gap-4 pb-2 px-6 pr-2">
+        <Card
+          className="relative h-full cursor-pointer pl-2 flex flex-col overflow-hidden border-3 border-black shadow-neo-sm hover:shadow-neo-md transition-shadow duration-200"
+          onClick={handleOpenModal}
+        >
+          <div
+            className=" absolute left-0 top-0 w-4 h-full"
+            style={{ backgroundColor: product.cardColor }}
+          ></div>
+
+          {/* Checkbox for bulk selection - Sprint 7.1 */}
+          {selectionMode && (
+            <motion.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+              className="absolute top-3 left-3 z-10"
+              onClick={handleToggleSelection}
+            >
+              <div
+                className={`h-6 w-6 rounded border-2 border-black flex items-center justify-center cursor-pointer transition-colors ${
+                  isSelected
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-white hover:bg-gray-100'
+                }`}
+              >
+                {isSelected && <Check className="h-4 w-4" />}
+              </div>
+            </motion.div>
+          )}
+          <CardHeader className="flex flex-row items-start justify-between gap-4 pb-2 px-6 pr-2">
+            <button
+              className="flex-1 text-left"
+              onClick={handleOpenModal}
+              aria-label={`Ver detalles de ${product.name}`}
+              type="button"
+            >
+              <CardTitle className="font-headline text-xl line-clamp-2">
+                {product.name}
+              </CardTitle>
+              <CardDescription>
+                {formattedStartDate} - {formattedEndDate}
+              </CardDescription>
+            </button>
+            <div className="flex items-center gap-2">
+              {status && (
+                <Badge variant={getStatusBadgeVariant(product.status)}>
+                  {status.label}
+                </Badge>
+              )}
+              {user && (canEditProducts || canDeleteProducts) && (
+                <Sheet>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          aria-label="Opciones del producto"
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </motion.div>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="end"
+                      className="border-2 border-black"
+                    >
+                      {canEditProducts && (
+                        <SheetTrigger asChild>
+                          <DropdownMenuItem>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Editar
+                          </DropdownMenuItem>
+                        </SheetTrigger>
+                      )}
+                      {canDeleteProducts && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <DropdownMenuItem
+                              className="text-destructive focus:text-destructive"
+                              onSelect={(e) => e.preventDefault()}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Eliminar
+                            </DropdownMenuItem>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                ¿Estás seguro?
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Esta acción no se puede deshacer. Esto eliminará
+                                permanentemente el producto y todos sus datos
+                                asociados.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={handleDelete}
+                                className="bg-destructive hover:bg-destructive/90"
+                              >
+                                Eliminar
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <SheetContent className="w-full sm:max-w-3xl overflow-y-auto border-l-3 border-black">
+                    <SheetTitle className="sr-only">Editar producto</SheetTitle>
+                    <SheetDescription className="sr-only">
+                      Formulario para editar los detalles del producto
+                    </SheetDescription>
+                    <ProductForm product={product} />
+                  </SheetContent>
+                </Sheet>
+              )}
+            </div>
+          </CardHeader>
           <button
-            className="flex-1 text-left"
+            className="w-full text-left"
             onClick={handleOpenModal}
-            aria-label={`Ver detalles de ${product.name}`}
+            aria-label={`Ver más información sobre ${product.name}`}
             type="button"
           >
-            <CardTitle className="font-headline text-xl line-clamp-2">
-              {product.name}
-            </CardTitle>
-            <CardDescription>
-              {formattedStartDate} - {formattedEndDate}
-            </CardDescription>
-          </button>
-          <div className="flex items-center gap-2">
-            {status && (
-              <Badge variant={getStatusBadgeVariant(product.status)}>
-                {status.label}
-              </Badge>
-            )}
-            {user && (canEditProducts || canDeleteProducts) && (
-              <Sheet>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      aria-label="Opciones del producto"
-                    >
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    className="border-2 border-black"
-                  >
-                    {canEditProducts && (
-                      <SheetTrigger asChild>
-                        <DropdownMenuItem>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Editar
-                        </DropdownMenuItem>
-                      </SheetTrigger>
-                    )}
-                    {canDeleteProducts && (
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <DropdownMenuItem
-                            className="text-destructive focus:text-destructive"
-                            onSelect={(e) => e.preventDefault()}
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Eliminar
-                          </DropdownMenuItem>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Esta acción no se puede deshacer. Esto eliminará
-                              permanentemente el producto y todos sus datos
-                              asociados.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={handleDelete}
-                              className="bg-destructive hover:bg-destructive/90"
-                            >
-                              Eliminar
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <SheetContent className="w-full sm:max-w-3xl overflow-y-auto border-l-3 border-black">
-                  <SheetTitle className="sr-only">Editar producto</SheetTitle>
-                  <SheetDescription className="sr-only">
-                    Formulario para editar los detalles del producto
-                  </SheetDescription>
-                  <ProductForm product={product} />
-                </SheetContent>
-              </Sheet>
-            )}
-          </div>
-        </CardHeader>
-        <button
-          className="w-full text-left"
-          onClick={handleOpenModal}
-          aria-label={`Ver más información sobre ${product.name}`}
-          type="button"
-        >
-          <CardContent className="grid gap-4 flex-1 pt-2">
-            <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-              <InfoLine icon={MapPin} text={product.operator} />
-              <InfoLine
-                icon={MapPin}
-                text={country?.name}
-                flag={country?.flag}
-              />
-              <InfoLine icon={Globe} text={languageName} />
-            </div>
-
-            {product.comments && (
-              <div className="flex items-start gap-2 text-sm border-2 border-black p-3 mt-auto bg-neo-gray-light">
-                <MessageSquare className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                <p className="flex-1">{product.comments}</p>
+            <CardContent className="grid gap-4 flex-1 pt-2">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                <InfoLine icon={MapPin} text={product.operator} />
+                <InfoLine
+                  icon={MapPin}
+                  text={country?.name}
+                  flag={country?.flag}
+                />
+                <InfoLine icon={Globe} text={languageName} />
               </div>
-            )}
-          </CardContent>
-        </button>
-      </Card>
+
+              {product.comments && (
+                <div className="flex items-start gap-2 text-sm border-2 border-black p-3 mt-auto bg-neo-gray-light">
+                  <MessageSquare className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                  <p className="flex-1">{product.comments}</p>
+                </div>
+              )}
+            </CardContent>
+          </button>
+        </Card>
+      </motion.div>
       {isModalOpen && (
         <ProductDetailModal
           product={product}

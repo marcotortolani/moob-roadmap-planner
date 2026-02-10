@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, Suspense } from 'react'
+import dynamic from 'next/dynamic'
 import { motion } from 'framer-motion'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -17,15 +18,54 @@ import {
   Zap,
 } from 'lucide-react'
 import { useProducts } from '@/hooks/queries'
-import { ProductsByStatusChart } from '@/components/charts/products-by-status-chart'
-import { ProductsByCountryChart } from '@/components/charts/products-by-country-chart'
-import { TimelineChart } from '@/components/charts/timeline-chart'
-import { OperatorPieChart } from '@/components/charts/operator-pie-chart'
-import { MilestoneProgressChart } from '@/components/charts/milestone-progress-chart'
-import { BurndownChart } from '@/components/charts/burndown-chart'
-import { ActivityHeatmap } from '@/components/charts/activity-heatmap'
-import { VelocityChart } from '@/components/charts/velocity-chart'
 import { useDashboardMetrics } from '@/hooks/use-dashboard-metrics'
+import {
+  ChartSkeleton,
+  PieChartSkeleton,
+  LineChartSkeleton,
+} from '@/components/skeletons'
+
+// ✅ SPRINT 6.1: Lazy load heavy chart components
+// Recharts is ~50kB, split it out of main bundle
+const ProductsByStatusChart = dynamic(
+  () => import('@/components/charts/products-by-status-chart').then((mod) => ({ default: mod.ProductsByStatusChart })),
+  { loading: () => <ChartSkeleton height={300} />, ssr: false }
+)
+
+const ProductsByCountryChart = dynamic(
+  () => import('@/components/charts/products-by-country-chart').then((mod) => ({ default: mod.ProductsByCountryChart })),
+  { loading: () => <ChartSkeleton height={300} />, ssr: false }
+)
+
+const TimelineChart = dynamic(
+  () => import('@/components/charts/timeline-chart').then((mod) => ({ default: mod.TimelineChart })),
+  { loading: () => <LineChartSkeleton height={300} />, ssr: false }
+)
+
+const OperatorPieChart = dynamic(
+  () => import('@/components/charts/operator-pie-chart').then((mod) => ({ default: mod.OperatorPieChart })),
+  { loading: () => <PieChartSkeleton size={250} />, ssr: false }
+)
+
+const MilestoneProgressChart = dynamic(
+  () => import('@/components/charts/milestone-progress-chart').then((mod) => ({ default: mod.MilestoneProgressChart })),
+  { loading: () => <ChartSkeleton height={300} />, ssr: false }
+)
+
+const BurndownChart = dynamic(
+  () => import('@/components/charts/burndown-chart').then((mod) => ({ default: mod.BurndownChart })),
+  { loading: () => <LineChartSkeleton height={300} />, ssr: false }
+)
+
+const ActivityHeatmap = dynamic(
+  () => import('@/components/charts/activity-heatmap').then((mod) => ({ default: mod.ActivityHeatmap })),
+  { loading: () => <ChartSkeleton height={250} />, ssr: false }
+)
+
+const VelocityChart = dynamic(
+  () => import('@/components/charts/velocity-chart').then((mod) => ({ default: mod.VelocityChart })),
+  { loading: () => <LineChartSkeleton height={300} />, ssr: false }
+)
 import {
   Select,
   SelectContent,

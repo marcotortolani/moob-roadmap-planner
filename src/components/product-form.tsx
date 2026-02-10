@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useFieldArray } from 'react-hook-form'
+import { Loader2 } from 'lucide-react'
 
 import {
   ProductFormData,
@@ -294,8 +295,15 @@ export default function ProductForm({ product }: { product?: Product }) {
           </div>
 
           <SheetFooter>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? 'Guardando...' : 'Guardar Producto'}
+            <Button type="submit" disabled={isPending} className="min-w-[160px]">
+              {isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {product ? 'Actualizando...' : 'Creando...'}
+                </>
+              ) : (
+                product ? 'Actualizar Producto' : 'Crear Producto'
+              )}
             </Button>
           </SheetFooter>
         </form>

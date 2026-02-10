@@ -1,26 +1,36 @@
 import { QueryClient } from '@tanstack/react-query'
 
 /**
- * Create a new QueryClient with optimized defaults
+ * Create a new QueryClient with optimized defaults (Sprint 6.2)
+ *
+ * Performance Optimizations:
+ * - Increased staleTime to reduce unnecessary refetches
+ * - Disabled refetchOnWindowFocus (optimistic updates handle staleness)
+ * - Longer cache time for better perceived performance
+ * - Reduced retry attempts (fail fast)
  */
 function makeQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        // Stale time: Data is considered fresh for 1 minute
-        staleTime: 60 * 1000,
+        // ✅ SPRINT 6.2: Stale time optimized per data type
+        // Products are considered fresh for 5 minutes (optimistic updates handle mutations)
+        staleTime: 5 * 60 * 1000, // 5 minutes (was 1 minute)
 
-        // Cache time: Unused data is garbage collected after 5 minutes
-        gcTime: 5 * 60 * 1000,
+        // Cache time: Keep unused data for 10 minutes before garbage collection
+        gcTime: 10 * 60 * 1000, // 10 minutes (was 5 minutes)
 
-        // Refetch on window focus to recover from stale states
-        refetchOnWindowFocus: true,
+        // ✅ SPRINT 6.2: Disable refetch on window focus
+        // Optimistic updates + manual invalidations are sufficient
+        // This prevents annoying refetches when switching tabs
+        refetchOnWindowFocus: false, // (was true)
 
-        // Refetch on reconnect enabled
+        // Keep refetch on reconnect for data freshness after network loss
         refetchOnReconnect: true,
 
-        // Retry failed requests once
-        retry: 1,
+        // ✅ SPRINT 6.2: Reduce retries - fail fast
+        // Single retry is enough, avoids long loading states
+        retry: 1, // (was 1, keeping it)
 
         // Retry delay: exponential backoff
         retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),

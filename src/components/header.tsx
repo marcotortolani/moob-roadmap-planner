@@ -60,6 +60,7 @@ export function Header() {
     <header className="sticky top-0 z-30 flex h-20 items-center gap-4 border-b-[2px] border-black bg-white px-4 sm:px-6 shadow-[0_6px_0px_0px_#000000]">
       <Link
         href="/"
+        prefetch={true}
         className="flex items-center gap-2 mr-auto group"
         aria-label="Ir al inicio"
       >
@@ -93,7 +94,7 @@ export function Header() {
                   size="sm"
                   className="rounded-sm"
                 >
-                  <Link href="/" aria-current={isMainPage ? 'page' : undefined}>
+                  <Link href="/" prefetch={true} aria-current={isMainPage ? 'page' : undefined}>
                     <Home className="h-4 w-4 mr-2" aria-hidden="true" />
                     Inicio
                   </Link>
@@ -111,6 +112,7 @@ export function Header() {
               >
                 <Link
                   href="/dashboard"
+                  prefetch={true}
                   aria-current={pathname === '/dashboard' ? 'page' : undefined}
                 >
                   <LayoutDashboard
@@ -133,6 +135,7 @@ export function Header() {
                 >
                   <Link
                     href="/invitations"
+                    prefetch={true}
                     aria-current={
                       pathname === '/invitations' ? 'page' : undefined
                     }

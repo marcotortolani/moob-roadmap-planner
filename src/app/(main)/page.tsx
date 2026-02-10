@@ -9,9 +9,25 @@ import { useState, useEffect, useCallback } from 'react'
 import { ProductList } from '@/components/product-list'
 import { ProductCalendar } from '@/components/product-calendar'
 import { FloatingActionButton } from '@/components/floating-action-button'
-import { Skeleton } from '@/components/ui/skeleton'
 import { useProductFiltering } from '@/hooks/use-product-filtering'
+import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
+import { useBulkSelection } from '@/hooks/use-bulk-selection'
+import { useDeleteProduct, useUpdateProduct } from '@/hooks/queries'
+import { BulkActionsToolbar } from '@/components/bulk-actions-toolbar'
+import { SavedFiltersMenu } from '@/components/saved-filters-menu'
+import { ExportMenu } from '@/components/export-menu'
+import { ToolsSheet } from '@/components/tools-sheet'
+import { FilterPreset, useSavedFilters } from '@/hooks/use-saved-filters'
+import { exportToExcel, exportToCSV } from '@/lib/export'
+import { Button } from '@/components/ui/button'
+import { CheckSquare, X } from 'lucide-react'
 import { ErrorBoundary } from '@/components/error-boundary'
+import { Status } from '@/lib/types'
+import {
+  ProductListSkeleton,
+  ProductCalendarSkeleton,
+} from '@/components/skeletons'
+import { toast } from 'sonner'
 // import { DebugPanel } from '@/components/debug-panel'
 import {
   FiltersBar,
@@ -22,6 +38,7 @@ import {
 
 function ProductsData({ view }: { view: string }) {
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
+  const [selectionMode, setSelectionMode] = useState(false)
 
   const {
     products,
@@ -51,8 +68,144 @@ function ProductsData({ view }: { view: string }) {
     removeFilter,
   } = useProductFiltering()
 
+  // Sprint 7.1: Bulk Operations
+  const deleteProductMutation = useDeleteProduct()
+  const updateProductMutation = useUpdateProduct()
+
+  const {
+    selectedIds,
+    selectedProducts,
+    selectedCount,
+    isSelected,
+    toggleSelection,
+    clearSelection,
+  } = useBulkSelection(filteredAndSortedProducts)
+
+  // Handlers for bulk actions
+  const handleDeleteSelected = useCallback(async () => {
+    const productIds = Array.from(selectedIds)
+
+    for (const id of productIds) {
+      await deleteProductMutation.mutateAsync(id)
+    }
+
+    toast.success(`${productIds.length} productos eliminados`)
+    clearSelection()
+    setSelectionMode(false)
+  }, [selectedIds, deleteProductMutation, clearSelection])
+
+  const handleChangeStatus = useCallback(
+    async (status: Status) => {
+      for (const product of selectedProducts) {
+        await updateProductMutation.mutateAsync({
+          ...product,
+          status,
+        })
+      }
+
+      toast.success(
+        `${selectedProducts.length} productos actualizados a "${status}"`
+      )
+      clearSelection()
+      setSelectionMode(false)
+    },
+    [selectedProducts, updateProductMutation, clearSelection]
+  )
+
+  const toggleSelectionMode = useCallback(() => {
+    setSelectionMode((prev) => !prev)
+    if (selectionMode) {
+      clearSelection()
+    }
+  }, [selectionMode, clearSelection])
+
+  // Get saved filters for ToolsSheet (must be before callbacks that use it)
+  const { presets, deletePreset } = useSavedFilters()
+
+  // Sprint 7.2: Load filters from preset
+  const handleLoadFilters = useCallback(
+    (filters: FilterPreset['filters']) => {
+      if (filters.searchTerm !== undefined) setSearchTerm(filters.searchTerm)
+      if (filters.statusFilter !== undefined) setStatusFilter(filters.statusFilter)
+      if (filters.operatorFilter !== undefined) setOperatorFilter(filters.operatorFilter)
+      if (filters.countryFilter !== undefined) setCountryFilter(filters.countryFilter)
+      if (filters.languageFilter !== undefined) setLanguageFilter(filters.languageFilter)
+      if (filters.yearFilter !== undefined) setYearFilter(filters.yearFilter)
+      if (filters.quarterFilter !== undefined) setQuarterFilter(filters.quarterFilter)
+      if (filters.sortOption !== undefined) setSortOption(filters.sortOption)
+    },
+    [
+      setSearchTerm,
+      setStatusFilter,
+      setOperatorFilter,
+      setCountryFilter,
+      setLanguageFilter,
+      setYearFilter,
+      setQuarterFilter,
+      setSortOption,
+    ]
+  )
+
+  // Load filter from preset (for ToolsSheet)
+  const handleLoadFilterPreset = useCallback(
+    (preset: FilterPreset) => {
+      handleLoadFilters(preset.filters)
+    },
+    [handleLoadFilters]
+  )
+
+  // Delete filter preset (for ToolsSheet)
+  const handleDeleteFilterPreset = useCallback(
+    (presetId: string) => {
+      deletePreset(presetId)
+      toast.success('Filtro eliminado')
+    },
+    [deletePreset]
+  )
+
+  // Sprint 7.2: Current filters for saving
+  const currentFilters: FilterPreset['filters'] = {
+    searchTerm,
+    statusFilter,
+    operatorFilter,
+    countryFilter,
+    languageFilter,
+    yearFilter,
+    quarterFilter,
+    sortOption,
+  }
+
+  // Sprint 7 Responsive: Quick export handlers for ToolsSheet
+  const handleQuickExportExcel = useCallback(async () => {
+    const result = await exportToExcel(filteredAndSortedProducts, {
+      filename: 'roadmap-export',
+      includeComments: true,
+      includeUrls: true,
+    })
+
+    if (result.success) {
+      toast.success(`${result.count} productos exportados a Excel`)
+    } else {
+      toast.error(`Error al exportar: ${result.error}`)
+    }
+  }, [filteredAndSortedProducts])
+
+  const handleQuickExportCSV = useCallback(async () => {
+    const result = await exportToCSV(filteredAndSortedProducts, {
+      filename: 'roadmap-export',
+      includeComments: true,
+      includeUrls: true,
+    })
+
+    if (result.success) {
+      toast.success(`${result.count} productos exportados a CSV`)
+    } else {
+      toast.error(`Error al exportar: ${result.error}`)
+    }
+  }, [filteredAndSortedProducts])
+
   if (loading) {
-    return <ViewSkeleton />
+    return <ViewSkeleton view={view} />
   }
 
   return (
@@ -121,9 +274,60 @@ function ProductsData({ view }: { view: string }) {
               onClearAll={clearFilters}
             />
 
-            <div className="text-sm text-muted-foreground">
-              Mostrando {filteredAndSortedProducts.length} de {products.length}{' '}
-              productos.
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">
+                Mostrando {filteredAndSortedProducts.length} de {products.length}{' '}
+                productos.
+              </div>
+
+              <div className="flex items-center gap-2">
+                {/* Sprint 7 Responsive: Mobile - ToolsSheet */}
+                <div className="md:hidden">
+                  <ToolsSheet
+                    products={filteredAndSortedProducts}
+                    onExportExcel={handleQuickExportExcel}
+                    onExportCSV={handleQuickExportCSV}
+                    savedFiltersCount={presets.length}
+                    savedFilters={presets}
+                    onLoadFilter={handleLoadFilterPreset}
+                    onDeleteFilter={handleDeleteFilterPreset}
+                    selectionMode={selectionMode}
+                    onToggleSelectionMode={toggleSelectionMode}
+                  />
+                </div>
+
+                {/* Sprint 7: Desktop - Individual buttons */}
+                <div className="hidden md:flex md:items-center md:gap-2">
+                  {/* Sprint 7.3: Export to Excel/CSV */}
+                  <ExportMenu products={filteredAndSortedProducts} />
+
+                  {/* Sprint 7.2: Saved Filters */}
+                  <SavedFiltersMenu
+                    currentFilters={currentFilters}
+                    onLoadFilters={handleLoadFilters}
+                  />
+
+                  {/* Sprint 7.1: Toggle selection mode */}
+                  <Button
+                    variant={selectionMode ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={toggleSelectionMode}
+                    className="gap-2"
+                  >
+                    {selectionMode ? (
+                      <>
+                        <X className="h-4 w-4" />
+                        Cancelar selección
+                      </>
+                    ) : (
+                      <>
+                        <CheckSquare className="h-4 w-4" />
+                        Seleccionar múltiples
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -139,10 +343,22 @@ function ProductsData({ view }: { view: string }) {
               products={filteredAndSortedProducts}
               yearFilter={yearFilter}
               quarterFilter={quarterFilter}
+              selectionMode={selectionMode}
+              isSelected={isSelected}
+              onToggleSelection={toggleSelection}
             />
           )}
         </ViewTransitionWrapper>
       </div>
+
+      {/* Sprint 7.1: Bulk Actions Toolbar */}
+      <BulkActionsToolbar
+        selectedCount={selectedCount}
+        onClearSelection={clearSelection}
+        onDeleteSelected={handleDeleteSelected}
+        onChangeStatus={handleChangeStatus}
+        isVisible={selectionMode && selectedCount > 0}
+      />
 
       {/* Floating Action Button for creating new products */}
       <FloatingActionButton />
@@ -150,21 +366,16 @@ function ProductsData({ view }: { view: string }) {
   )
 }
 
-function ViewSkeleton() {
-  return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {[...Array(8)].map((_, i) => (
-        <div key={i} className="space-y-4 rounded-lg border p-4">
-          <Skeleton className="h-6 w-3/4" />
-          <Skeleton className="h-4 w-1/2" />
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-5/6" />
-          </div>
-        </div>
-      ))}
-    </div>
-  )
+/**
+ * Smart Skeleton Screen (Sprint 5.2)
+ * Shows different skeleton based on current view
+ */
+function ViewSkeleton({ view }: { view: string }) {
+  if (view === 'calendar') {
+    return <ProductCalendarSkeleton />
+  }
+
+  return <ProductListSkeleton />
 }
 
 /**
@@ -219,6 +430,9 @@ function useViewParam(): string {
 
 export default function HomePage() {
   const currentView = useViewParam()
+
+  // ✅ QUICK WIN 2: Enable keyboard shortcuts (Cmd+K, Cmd+N)
+  useKeyboardShortcuts()
 
   // ✅ SECURITY: Wrap page in ErrorBoundary to catch React errors (Sprint 4.3)
   return (

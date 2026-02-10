@@ -38,12 +38,19 @@ interface ProductListProps {
   products: Product[]
   yearFilter: number | 'all'
   quarterFilter: number | 'all'
+  // Sprint 7.1: Bulk Operations
+  selectionMode?: boolean
+  isSelected?: (productId: string) => boolean
+  onToggleSelection?: (productId: string) => void
 }
 
 export const ProductList = memo(function ProductList({
   products,
   yearFilter,
   quarterFilter,
+  selectionMode = false,
+  isSelected,
+  onToggleSelection,
 }: ProductListProps) {
   // Memoize expensive year/quarter grouping calculations
   const productsByYear = useMemo(() => {
@@ -171,7 +178,12 @@ export const ProductList = memo(function ProductList({
                                   key={product.id}
                                   variants={cardVariants}
                                 >
-                                  <ProductCard product={product} />
+                                  <ProductCard
+                                    product={product}
+                                    selectionMode={selectionMode}
+                                    isSelected={isSelected?.(product.id)}
+                                    onToggleSelection={onToggleSelection}
+                                  />
                                 </motion.div>
                               ))}
                             </motion.div>
@@ -212,7 +224,12 @@ export const ProductList = memo(function ProductList({
                 >
                   {quarterProducts.map((product) => (
                     <motion.div key={product.id} variants={cardVariants}>
-                      <ProductCard product={product} />
+                      <ProductCard
+                        product={product}
+                        selectionMode={selectionMode}
+                        isSelected={isSelected?.(product.id)}
+                        onToggleSelection={onToggleSelection}
+                      />
                     </motion.div>
                   ))}
                 </motion.div>
@@ -246,7 +263,12 @@ export const ProductList = memo(function ProductList({
             variants={cardVariants}
             className=" h-full"
           >
-            <ProductCard product={product} />
+            <ProductCard
+              product={product}
+              selectionMode={selectionMode}
+              isSelected={isSelected?.(product.id)}
+              onToggleSelection={onToggleSelection}
+            />
           </motion.div>
         ))}
       </motion.div>

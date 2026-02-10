@@ -29,7 +29,7 @@ const chartConfig = {
     color: '#FF2E63',
   },
   DEMO: {
-    label: 'Demo OK',
+    label: 'Demo',
     color: '#FFD700',
   },
   LIVE: {

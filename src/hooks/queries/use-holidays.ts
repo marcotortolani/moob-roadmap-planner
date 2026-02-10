@@ -50,6 +50,10 @@ async function fetchHolidays(year?: number): Promise<Holiday[]> {
 /**
  * Hook to fetch all holidays.
  * Waits for auth to initialize (same reason as useProducts).
+ *
+ * ✅ SPRINT 6.2: Optimized staleTime for holiday data (1 hour)
+ * Holidays are nearly static - they rarely change once created.
+ * Long staleTime reduces unnecessary refetches.
  */
 export function useHolidays(year?: number) {
   const { loading: authLoading } = useAuth()
@@ -57,7 +61,8 @@ export function useHolidays(year?: number) {
   return useQuery({
     queryKey: holidayKeys.list(year),
     queryFn: () => fetchHolidays(year),
-    staleTime: 5 * 60 * 1000, // 5 minutes (holidays don't change often)
+    staleTime: 60 * 60 * 1000, // 1 hour (Sprint 6.2 - was 5 minutes)
+    gcTime: 2 * 60 * 60 * 1000, // 2 hours cache
     enabled: !authLoading,
   })
 }

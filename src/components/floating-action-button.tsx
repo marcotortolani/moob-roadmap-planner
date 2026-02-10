@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -21,6 +21,21 @@ export function FloatingActionButton() {
   const [isOpen, setIsOpen] = useState(false)
   const canCreate = useCan('products', 'create')
 
+  // ✅ QUICK WIN 2: Listen for keyboard shortcut (Cmd+N)
+  useEffect(() => {
+    const handleKeyboardCreate = () => {
+      if (canCreate) {
+        setIsOpen(true)
+      }
+    }
+
+    window.addEventListener('keyboard:create-product', handleKeyboardCreate)
+
+    return () => {
+      window.removeEventListener('keyboard:create-product', handleKeyboardCreate)
+    }
+  }, [canCreate])
+
   // Hide button if user doesn't have create permission (e.g., GUEST role)
   if (!canCreate) {
     return null
@@ -38,6 +53,7 @@ export function FloatingActionButton() {
         }}
         onClick={() => setIsOpen(true)}
         aria-label="Crear nuevo producto"
+        data-create-product-button
       >
         <Plus className="h-6 w-6" />
       </Button>
