@@ -137,9 +137,12 @@ function InfoItem({
   flag?: string | null
 }) {
   const { toast } = useToast()
-  if (!value) return null
+
+  // For non-link items, don't render if empty
+  if (!isLink && !value) return null
 
   const handleCopy = () => {
+    if (!value) return
     navigator.clipboard.writeText(value)
     toast({
       title: 'Copiado!',
@@ -160,8 +163,8 @@ function InfoItem({
         <p className="font-medium text-foreground">{label}</p>
         {isLink ? (
           <div className="flex items-center gap-2">
-            {/* ✅ SECURITY: Validate URL before rendering (Sprint 4.2) */}
-            {isValidUrl(value) ? (
+            {/* Show value if valid URL, otherwise show empty state */}
+            {value && isValidUrl(value) ? (
               <>
                 <a
                   href={value}
@@ -181,8 +184,8 @@ function InfoItem({
                 </Button>
               </>
             ) : (
-              <p className="text-muted-foreground break-all">
-                {value || 'URL inválida'}
+              <p className="text-muted-foreground italic text-xs">
+                {value ? 'URL inválida' : 'Sin URL configurada'}
               </p>
             )}
           </div>

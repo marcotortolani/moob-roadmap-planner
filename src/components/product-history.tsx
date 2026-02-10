@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
-import { format } from 'date-fns'
+import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { Clock, User as UserIcon, Plus, Edit, Trash } from 'lucide-react'
 import { Skeleton } from './ui/skeleton'
@@ -51,7 +51,15 @@ const STATUS_LABELS: Record<string, string> = {
 }
 
 function formatValue(fieldName: string, value: string | null): string {
-  if (!value) return 'N/A'
+  // Distinguish between null (never set) and empty string (explicitly cleared)
+  if (value === null) return 'N/A'
+  if (value === '') {
+    // For URL fields, show a more descriptive message
+    if (fieldName.includes('url')) {
+      return '(sin URL)'
+    }
+    return '(vacío)'
+  }
 
   // If it's a status field
   if (fieldName === 'status') {
@@ -204,11 +212,20 @@ export function ProductHistory({ productId }: ProductHistoryProps) {
                     {getChangeText(change)}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {format(
-                      new Date(change.changed_at),
-                      "d 'de' MMMM, yyyy 'a las' HH:mm",
-                      { locale: es },
-                    )}
+                    {(() => {
+                      // IMPORTANT: Database returns timestamp WITHOUT timezone
+                      // We need to treat it as UTC and convert to local
+                      const dateStr = change.changed_at.endsWith('Z')
+                        ? change.changed_at
+                        : change.changed_at + 'Z' // Force UTC interpretation
+                      const date = parseISO(dateStr)
+
+                      return format(
+                        date,
+                        "d 'de' MMMM, yyyy 'a las' HH:mm",
+                        { locale: es },
+                      )
+                    })()}
                   </p>
                 </div>
               </div>

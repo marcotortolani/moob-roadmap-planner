@@ -82,19 +82,34 @@ async function fetchProducts(filters?: ProductFilters): Promise<Product[]> {
     throw new Error(error.message)
   }
 
-  // Transform to match Product type
+  // Transform to match Product type (camelCase)
   return (data || []).map((product) => ({
-    ...product,
-    // Parse dates and normalize to start of day to avoid timezone issues
+    id: product.id,
+    name: product.name,
+    operator: product.operator,
+    country: product.country,
+    language: product.language,
+    status: product.status,
     startDate: startOfDay(parseISO(product.start_date)),
     endDate: startOfDay(parseISO(product.end_date)),
     cardColor: product.card_color || generateRandomColor(),
+    // Map URL fields from snake_case to camelCase
+    productiveUrl: product.productive_url || null,
+    vercelDemoUrl: product.vercel_demo_url || null,
+    wpContentProdUrl: product.wp_content_prod_url || null,
+    wpContentTestUrl: product.wp_content_test_url || null,
+    chatbotUrl: product.chatbot_url || null,
+    comments: product.comments || null,
     milestones: product.milestones?.map((m: { id: string; name: string; start_date: string; end_date: string; status: string; product_id: string }) => ({
       ...m,
       startDate: startOfDay(parseISO(m.start_date)),
       endDate: startOfDay(parseISO(m.end_date)),
     })) || [],
     customUrls: product.customUrls || [],
+    createdById: product.created_by_id,
+    updatedById: product.updated_by_id,
+    createdAt: new Date(product.created_at),
+    updatedAt: new Date(product.updated_at),
   })) as Product[]
 }
 
@@ -146,19 +161,46 @@ async function fetchProduct(id: string): Promise<Product> {
     throw new Error('Product not found')
   }
 
-  // Transform to match Product type
+  // Transform to match Product type (camelCase)
   return {
-    ...data,
-    // Parse dates and normalize to start of day to avoid timezone issues
+    id: data.id,
+    name: data.name,
+    operator: data.operator,
+    country: data.country,
+    language: data.language,
+    status: data.status,
     startDate: startOfDay(parseISO(data.start_date)),
     endDate: startOfDay(parseISO(data.end_date)),
     cardColor: data.card_color || generateRandomColor(),
+    // Map URL fields from snake_case to camelCase
+    productiveUrl: data.productive_url || null,
+    vercelDemoUrl: data.vercel_demo_url || null,
+    wpContentProdUrl: data.wp_content_prod_url || null,
+    wpContentTestUrl: data.wp_content_test_url || null,
+    chatbotUrl: data.chatbot_url || null,
+    comments: data.comments || null,
     milestones: data.milestones?.map((m: { id: string; name: string; start_date: string; end_date: string; status: string; product_id: string }) => ({
       ...m,
       startDate: startOfDay(parseISO(m.start_date)),
       endDate: startOfDay(parseISO(m.end_date)),
     })) || [],
     customUrls: data.customUrls || [],
+    createdById: data.created_by_id,
+    updatedById: data.updated_by_id,
+    createdBy: data.createdBy ? {
+      id: data.createdBy.id,
+      name: `${data.createdBy.first_name || ''} ${data.createdBy.last_name || ''}`.trim(),
+      email: data.createdBy.email,
+      avatarUrl: data.createdBy.avatar_url,
+    } : undefined,
+    updatedBy: data.updatedBy ? {
+      id: data.updatedBy.id,
+      name: `${data.updatedBy.first_name || ''} ${data.updatedBy.last_name || ''}`.trim(),
+      email: data.updatedBy.email,
+      avatarUrl: data.updatedBy.avatar_url,
+    } : undefined,
+    createdAt: new Date(data.created_at),
+    updatedAt: new Date(data.updated_at),
   } as Product
 }
 
@@ -237,11 +279,12 @@ async function createProduct(product: Omit<Product, 'id' | 'createdAt' | 'update
       language: product.language,
       start_date: product.startDate.toISOString(),
       end_date: product.endDate.toISOString(),
-      productive_url: product.productiveUrl,
-      vercel_demo_url: product.vercelDemoUrl,
-      wp_content_prod_url: product.wpContentProdUrl,
-      wp_content_test_url: product.wpContentTestUrl,
-      chatbot_url: product.chatbotUrl,
+      // Normalize URL fields: empty strings → null
+      productive_url: product.productiveUrl || null,
+      vercel_demo_url: product.vercelDemoUrl || null,
+      wp_content_prod_url: product.wpContentProdUrl || null,
+      wp_content_test_url: product.wpContentTestUrl || null,
+      chatbot_url: product.chatbotUrl || null,
       comments: product.comments,
       card_color: cardColor,
       status: product.status,
@@ -380,11 +423,12 @@ async function updateProduct({ id, ...updates }: Partial<Product> & { id: string
   if (updates.language !== undefined) updateData.language = updates.language
   if (updates.startDate !== undefined) updateData.start_date = updates.startDate.toISOString()
   if (updates.endDate !== undefined) updateData.end_date = updates.endDate.toISOString()
-  if (updates.productiveUrl !== undefined) updateData.productive_url = updates.productiveUrl
-  if (updates.vercelDemoUrl !== undefined) updateData.vercel_demo_url = updates.vercelDemoUrl
-  if (updates.wpContentProdUrl !== undefined) updateData.wp_content_prod_url = updates.wpContentProdUrl
-  if (updates.wpContentTestUrl !== undefined) updateData.wp_content_test_url = updates.wpContentTestUrl
-  if (updates.chatbotUrl !== undefined) updateData.chatbot_url = updates.chatbotUrl
+  // Normalize URL fields: empty strings → null
+  if (updates.productiveUrl !== undefined) updateData.productive_url = updates.productiveUrl || null
+  if (updates.vercelDemoUrl !== undefined) updateData.vercel_demo_url = updates.vercelDemoUrl || null
+  if (updates.wpContentProdUrl !== undefined) updateData.wp_content_prod_url = updates.wpContentProdUrl || null
+  if (updates.wpContentTestUrl !== undefined) updateData.wp_content_test_url = updates.wpContentTestUrl || null
+  if (updates.chatbotUrl !== undefined) updateData.chatbot_url = updates.chatbotUrl || null
   if (updates.comments !== undefined) updateData.comments = updates.comments
   if (updates.cardColor !== undefined) updateData.card_color = updates.cardColor
   if (updates.status !== undefined) updateData.status = updates.status
@@ -394,11 +438,30 @@ async function updateProduct({ id, ...updates }: Partial<Product> & { id: string
   const now = new Date().toISOString()
   updateData.updated_at = now
 
-  // 1. Update the product
-  const { error } = await supabase
+  // Skip session check - RLS will handle permissions
+  // (getSession() was causing intermittent hangs)
+
+  const updatePromise = supabase
     .from('products')
     .update(updateData)
     .eq('id', id)
+    .select()
+    .single()
+
+  // Add 10 second timeout
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('UPDATE timeout after 10 seconds')), 10000)
+  )
+
+  let updatedData, error
+  try {
+    const result = await Promise.race([updatePromise, timeoutPromise]) as any
+    updatedData = result.data
+    error = result.error
+  } catch (timeoutError) {
+    console.error('⏱️ Timeout updating product:', timeoutError)
+    throw timeoutError
+  }
 
   if (error) {
     console.error('Error updating product:', error)
@@ -473,9 +536,27 @@ export function useUpdateProduct() {
       // ✅ OPTIMISTIC: Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: productKeys.all })
 
-      // Snapshot the previous value for rollback
+      // Snapshot the previous value for rollback AND status tracking
       const previousProducts = queryClient.getQueryData(productKeys.all)
-      const previousProduct = queryClient.getQueryData(productKeys.detail(updatedProduct.id))
+      const previousProduct = queryClient.getQueryData<Product>(productKeys.detail(updatedProduct.id))
+
+      // Save the previous status BEFORE optimistic update (for email detection)
+      // Try detail cache first, then list cache
+      let previousStatus = previousProduct?.status
+
+      if (!previousStatus) {
+        // If not in detail cache, try to find in lists cache
+        const listQueries = queryClient.getQueriesData<Product[]>({
+          queryKey: productKeys.lists(),
+        })
+        for (const [, data] of listQueries) {
+          const product = data?.find((p) => p.id === updatedProduct.id)
+          if (product) {
+            previousStatus = product.status
+            break
+          }
+        }
+      }
 
       // Optimistically update the cache
       queryClient.setQueriesData<Product[]>(
@@ -498,23 +579,18 @@ export function useUpdateProduct() {
         )
       }
 
-      return { previousProducts, previousProduct }
+      return { previousProducts, previousProduct, previousStatus }
     },
-    onSuccess: async (data, variables) => {
-      // Get previous product state to detect status changes
-      const oldProduct = queryClient.getQueryData<Product>(productKeys.detail(data.id))
-
+    onSuccess: async (data, variables, context) => {
       // Update specific product in cache with server response
       queryClient.setQueryData(productKeys.detail(data.id), data)
 
-      // Detect if status changed to LIVE
+      // Detect if status changed to LIVE using the PREVIOUS status from onMutate
       const statusChangedToLive =
         variables.status === 'LIVE' &&
-        oldProduct?.status !== 'LIVE'
+        context?.previousStatus !== 'LIVE'
 
       if (statusChangedToLive) {
-        console.log('🚀 Product status changed to LIVE, sending notifications...')
-
         // Send product LIVE notification via API route (fire-and-forget)
         fetch('/api/emails/send-product-live', {
           method: 'POST',
@@ -527,7 +603,7 @@ export function useUpdateProduct() {
             language: data.language,
           }),
         }).catch(error => {
-          console.error('❌ Failed to send product LIVE emails:', error)
+          console.error('Failed to send product LIVE emails:', error)
           // Don't throw - product update was successful
         })
       }
