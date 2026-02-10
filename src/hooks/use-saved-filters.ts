@@ -4,6 +4,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Status } from '@/lib/types'
+import type { SortOption } from './use-product-filtering'
 
 export interface FilterPreset {
   id: string
@@ -16,7 +17,7 @@ export interface FilterPreset {
     languageFilter?: string
     yearFilter?: number | 'all'
     quarterFilter?: number | 'all'
-    sortOption?: string
+    sortOption?: SortOption
   }
   createdAt: string
 }
