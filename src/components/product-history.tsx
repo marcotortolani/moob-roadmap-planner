@@ -46,7 +46,7 @@ const FIELD_LABELS: Record<string, string> = {
 const STATUS_LABELS: Record<string, string> = {
   PLANNED: 'Programado',
   IN_PROGRESS: 'En Proceso',
-  DEMO: 'Demo',
+  DEMO_OK: 'Demo',
   LIVE: 'Productivo',
 }
 

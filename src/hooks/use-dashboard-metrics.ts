@@ -54,7 +54,7 @@ export function useDashboardMetrics(products: Product[]): DashboardMetrics {
     const inProgressCount = products.filter(
       (p) => p.status === 'IN_PROGRESS',
     ).length
-    const demoOkCount = products.filter((p) => p.status === 'DEMO').length
+    const demoOkCount = products.filter((p) => p.status === 'DEMO_OK').length
     const liveCount = products.filter((p) => p.status === 'LIVE').length
 
     // Completion Rate: (LIVE + DEMO) / Total * 100
@@ -96,7 +96,7 @@ export function useDashboardMetrics(products: Product[]): DashboardMetrics {
     // Timeline Health: on-time vs delayed vs upcoming
     const timelineHealth = products.reduce(
       (acc, p) => {
-        const isCompleted = p.status === 'LIVE' || p.status === 'DEMO'
+        const isCompleted = p.status === 'LIVE' || p.status === 'DEMO_OK'
         const isPastDue = p.endDate < now && !isCompleted
         const isFuture = p.startDate > now
 
@@ -121,7 +121,7 @@ export function useDashboardMetrics(products: Product[]): DashboardMetrics {
       const weekEnd = endOfWeek(weekStart)
 
       const completed = products.filter((p) => {
-        const completedStatuses = ['LIVE', 'DEMO']
+        const completedStatuses = ['LIVE', 'DEMO_OK']
         return (
           completedStatuses.includes(p.status) &&
           p.endDate &&
@@ -155,7 +155,7 @@ export function useDashboardMetrics(products: Product[]): DashboardMetrics {
     })
 
     const quarterCompleted = quarterProducts.filter(
-      (p) => p.status === 'LIVE' || p.status === 'DEMO',
+      (p) => p.status === 'LIVE' || p.status === 'DEMO_OK',
     ).length
     const quarterTotal = quarterProducts.length
 

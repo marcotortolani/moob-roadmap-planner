@@ -16,7 +16,7 @@ export type User = {
 export enum Status {
   PLANNED = 'PLANNED',
   IN_PROGRESS = 'IN_PROGRESS',
-  DEMO = 'DEMO',
+  DEMO_OK = 'DEMO_OK',
   LIVE = 'LIVE',
 }
 

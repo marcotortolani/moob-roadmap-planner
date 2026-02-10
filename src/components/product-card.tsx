@@ -85,7 +85,7 @@ const getStatusBadgeVariant = (status: Status) => {
   switch (status) {
     case 'IN_PROGRESS':
       return 'inProgress' as const
-    case 'DEMO':
+    case 'DEMO_OK':
       return 'demoOk' as const
     case 'LIVE':
       return 'live' as const

@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 const STATUS_COLORS = {
   PLANNED: '#94a3b8',
   IN_PROGRESS: '#ef4444',
-  DEMO: '#eab308',
+  DEMO_OK: '#eab308',
   LIVE: '#22c55e',
 }
 

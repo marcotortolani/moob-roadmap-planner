@@ -28,7 +28,7 @@ const chartConfig = {
     label: 'En Proceso',
     color: '#FF2E63',
   },
-  DEMO: {
+  DEMO_OK: {
     label: 'Demo',
     color: '#FFD700',
   },

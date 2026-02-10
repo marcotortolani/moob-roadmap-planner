@@ -122,7 +122,7 @@ export const statusColors = {
     text: 'text-red-700',
     border: 'border-red-500/30',
   },
-  DEMO: {
+  DEMO_OK: {
     bg: 'bg-yellow-500/20',
     text: 'text-yellow-700',
     border: 'border-yellow-500/30',

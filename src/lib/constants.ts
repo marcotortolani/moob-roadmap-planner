@@ -1,7 +1,7 @@
 export const STATUS_OPTIONS = [
   { value: 'PLANNED', label: 'Programado' },
   { value: 'IN_PROGRESS', label: 'En Proceso' },
-  { value: 'DEMO', label: 'Demo' },
+  { value: 'DEMO_OK', label: 'Demo' },
   { value: 'LIVE', label: 'Productivo' },
 ] as const
 

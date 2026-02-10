@@ -349,13 +349,13 @@ export function ProductDetailModal({
                             ? '#6B7280'
                             : product.status === 'IN_PROGRESS'
                               ? '#FF2E63'
-                              : product.status === 'DEMO'
+                              : product.status === 'DEMO_OK'
                                 ? '#FFD700'
                                 : product.status === 'LIVE'
                                   ? '#2EBD59'
                                   : '#6B7280',
                         color:
-                          product.status === 'DEMO' ? '#000000' : '#FFFFFF',
+                          product.status === 'DEMO_OK' ? '#000000' : '#FFFFFF',
                       }}
                     >
                       <SelectValue />
@@ -380,7 +380,7 @@ export function ProductDetailModal({
                           ? 'planned'
                           : product.status === 'IN_PROGRESS'
                             ? 'inProgress'
-                            : product.status === 'DEMO'
+                            : product.status === 'DEMO_OK'
                               ? 'demoOk'
                               : product.status === 'LIVE'
                                 ? 'live'
