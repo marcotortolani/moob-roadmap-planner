@@ -69,18 +69,6 @@ export function ProductCalendar({ products }: { products: Product[] }) {
     return eachDayOfInterval({ start: startDate, end: endDate })
   }, [currentMonth])
 
-  // Create holiday map for fast lookups
-  const holidayMap = useMemo(() => {
-    const map = new Map<string, Holiday>()
-    holidays.forEach((h) => {
-      // Ensure date is valid before formatting
-      if (h.date && !isNaN(h.date.getTime())) {
-        map.set(format(h.date, 'yyyy-MM-dd'), h)
-      }
-    })
-    return map
-  }, [holidays])
-
   // Month navigation handlers
   const nextMonth = useCallback(
     () => setCurrentMonth(addMonths(currentMonth, 1)),
@@ -173,7 +161,6 @@ export function ProductCalendar({ products }: { products: Product[] }) {
             currentMonth={currentMonth}
             products={products}
             holidays={holidays}
-            holidayMap={holidayMap}
             onSelectProduct={handleSelectProduct}
             dragState={dragState}
             previewDates={previewDates}

@@ -136,11 +136,23 @@ export type Holiday = {
   name: string
 }
 
-export const HolidaySchema = z.object({
-  id: z.string().optional(),
-  name: z.string().min(1, 'El nombre es requerido.'),
-  date: z.date({ required_error: 'La fecha es requerida.' }),
-})
+export const HolidaySchema = z
+  .object({
+    id: z.string().optional(),
+    name: z.string().min(1, 'El nombre es requerido.'),
+    date: z.date({ required_error: 'La fecha de inicio es requerida.' }),
+    endDate: z.date().optional(),
+  })
+  .refine(
+    (data) => {
+      if (!data.endDate) return true
+      return data.endDate >= data.date
+    },
+    {
+      message: 'La fecha de fin no puede ser anterior a la fecha de inicio.',
+      path: ['endDate'],
+    },
+  )
 
 export type HolidayFormData = z.infer<typeof HolidaySchema>
 

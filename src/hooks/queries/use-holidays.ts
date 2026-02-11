@@ -2,8 +2,8 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase/client'
-import { parseISO, startOfDay } from 'date-fns'
-import type { Holiday } from '@/lib/types'
+import { parseISO, startOfDay, addDays, differenceInDays } from 'date-fns'
+import type { Holiday, HolidayFormData } from '@/lib/types'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/context/auth-context'
 
@@ -68,14 +68,55 @@ export function useHolidays(year?: number) {
 }
 
 /**
- * Create a new holiday
+ * Create a new holiday (or range of holidays if endDate is provided)
  */
-async function createHoliday(holiday: Omit<Holiday, 'id'>): Promise<Holiday> {
+async function createHoliday(
+  holidayData: HolidayFormData,
+): Promise<Holiday | Holiday[]> {
+  // If endDate is provided, create multiple holidays (one per day in range)
+  if (holidayData.endDate) {
+    const startDate = startOfDay(holidayData.date)
+    const endDate = startOfDay(holidayData.endDate)
+    const daysDiff = differenceInDays(endDate, startDate)
+
+    // Generate all dates in the range
+    const holidaysToInsert = []
+    for (let i = 0; i <= daysDiff; i++) {
+      const currentDate = addDays(startDate, i)
+      holidaysToInsert.push({
+        id: crypto.randomUUID(),
+        date: currentDate.toISOString(),
+        name: holidayData.name,
+      })
+    }
+
+    // Insert all holidays at once
+    const { data, error } = await supabase
+      .from('holidays')
+      .insert(holidaysToInsert)
+      .select()
+
+    if (error) {
+      console.error('Error creating holidays:', error)
+      throw new Error(error.message)
+    }
+
+    // Return array of created holidays
+    return (data || []).map((h) => ({
+      ...h,
+      date: startOfDay(parseISO(h.date)),
+    })) as Holiday[]
+  }
+
+  // Single holiday creation (original behavior)
+  const newId = crypto.randomUUID()
+
   const { data, error } = await supabase
     .from('holidays')
     .insert({
-      date: holiday.date.toISOString(),
-      name: holiday.name,
+      id: newId,
+      date: holidayData.date.toISOString(),
+      name: holidayData.name,
     })
     .select()
     .single()
@@ -87,13 +128,12 @@ async function createHoliday(holiday: Omit<Holiday, 'id'>): Promise<Holiday> {
 
   return {
     ...data,
-    // Parse dates and normalize to start of day to avoid timezone issues
     date: startOfDay(parseISO(data.date)),
   } as Holiday
 }
 
 /**
- * Hook to create a new holiday
+ * Hook to create a new holiday (or range of holidays)
  */
 export function useCreateHoliday() {
   const queryClient = useQueryClient()
@@ -101,12 +141,17 @@ export function useCreateHoliday() {
 
   return useMutation({
     mutationFn: createHoliday,
-    onSuccess: () => {
+    onSuccess: (data) => {
       // Invalidate all holiday queries
       queryClient.invalidateQueries({ queryKey: holidayKeys.all })
+
+      // Show different message for single vs multiple holidays
+      const isMultiple = Array.isArray(data)
       toast({
         title: 'Éxito',
-        description: 'Festivo agregado exitosamente',
+        description: isMultiple
+          ? `${data.length} días no laborables agregados exitosamente`
+          : 'Festivo agregado exitosamente',
       })
     },
     onError: (error: Error) => {

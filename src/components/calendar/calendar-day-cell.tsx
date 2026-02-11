@@ -42,7 +42,7 @@ interface PreviewDates {
 interface CalendarDayCellProps {
   day: Date
   currentMonth: Date
-  holiday: Holiday | undefined
+  dayHolidays: Holiday[]
   productEvents: Product[]
   getMilestoneForDay: (day: Date, productId: string) => Milestone | undefined
   onSelectProduct: (product: Product) => void
@@ -57,7 +57,7 @@ interface CalendarDayCellProps {
 export const CalendarDayCell = memo(function CalendarDayCell({
   day,
   currentMonth,
-  holiday,
+  dayHolidays,
   productEvents,
   getMilestoneForDay,
   onSelectProduct,
@@ -71,12 +71,13 @@ export const CalendarDayCell = memo(function CalendarDayCell({
   const [isHolidayModalOpen, setIsHolidayModalOpen] = useState(false)
   const dateStr = format(day, 'yyyy-MM-dd')
   const isBusinessDayValue = businessDayMap.get(dateStr) || false
+  const hasHolidays = dayHolidays.length > 0
 
   const { setNodeRef, isOver } = useDroppable({
     id: `cell-${dateStr}`,
     data: {
       date: day,
-      isHoliday: !!holiday,
+      isHoliday: hasHolidays,
       isBusinessDay: isBusinessDayValue,
     } as DayCellDropData,
   })
@@ -86,7 +87,7 @@ export const CalendarDayCell = memo(function CalendarDayCell({
       ref={setNodeRef}
       animate={{
         backgroundColor:
-          isOver && isBusinessDayValue && !holiday
+          isOver && isBusinessDayValue && !hasHolidays
             ? 'rgba(100, 116, 139, 0.1)'
             : 'rgba(0, 0, 0, 0)',
       }}
@@ -95,12 +96,12 @@ export const CalendarDayCell = memo(function CalendarDayCell({
         'border-2 border-black relative min-h-[100px] sm:min-h-[120px] p-1.5 flex flex-col',
         isToday(day) && 'border-4 border-destructive',
         !isSameMonth(day, currentMonth) && 'bg-muted/30 text-muted-foreground',
-        holiday && 'bg-holiday-stripes text-black dark:text-orange-200',
-        !isBusinessDayValue && !holiday && 'bg-neutral-100 dark:bg-neutral-900',
+        hasHolidays && 'bg-holiday-stripes text-black dark:text-orange-200',
+        !isBusinessDayValue && !hasHolidays && 'bg-neutral-100 dark:bg-neutral-900',
         isOver && !isBusinessDayValue && 'ring-2 ring-destructive',
       )}
       role="gridcell"
-      aria-label={`${format(day, 'd')} de ${format(day, 'MMMM yyyy')}${holiday ? ` - Feriado: ${holiday.name}` : ''}`}
+      aria-label={`${format(day, 'd')} de ${format(day, 'MMMM yyyy')}${hasHolidays ? ` - Feriados: ${dayHolidays.map((h) => h.name).join(', ')}` : ''}`}
     >
       <time
         dateTime={dateStr}
@@ -108,7 +109,7 @@ export const CalendarDayCell = memo(function CalendarDayCell({
           'text-xs h-6 w-6 flex items-center justify-center rounded-full',
           isToday(day) && 'bg-primary font-bold text-primary-foreground',
           !isSameMonth(day, currentMonth) && 'text-muted-foreground/60',
-          holiday && !isToday(day) && 'bg-neutral-300 dark:bg-white text-black',
+          hasHolidays && !isToday(day) && 'bg-neutral-300 dark:bg-white text-black',
         )}
       >
         {format(day, 'd')}
@@ -150,43 +151,53 @@ export const CalendarDayCell = memo(function CalendarDayCell({
           )
         })}
       </div>
-      {holiday && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none pt-4 px-1">
-          <div
-            onClick={() => setIsHolidayModalOpen(true)}
-            className="text-[10px] sm:text-xs p-1.5 sm:p-2 bg-neutral-300 dark:bg-white rounded-full px-2 sm:px-3 text-black pointer-events-auto max-w-[95%] line-clamp-2 text-center leading-tight cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-100 transition-colors"
-            role="button"
-            aria-label={`Ver detalles del feriado: ${holiday.name}`}
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault()
-                setIsHolidayModalOpen(true)
-              }
-            }}
-          >
-            {holiday.name}
-          </div>
+      {hasHolidays && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pt-4 px-1 gap-1">
+          {dayHolidays.map((holiday) => (
+            <div
+              key={holiday.id}
+              onClick={() => setIsHolidayModalOpen(true)}
+              className="text-[10px] sm:text-xs p-1.5 sm:p-2 bg-neutral-300 dark:bg-white rounded-full px-2 sm:px-3 text-black pointer-events-auto max-w-[95%] line-clamp-1 text-center leading-tight cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-100 transition-colors"
+              role="button"
+              aria-label={`Ver detalles del feriado: ${holiday.name}`}
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  setIsHolidayModalOpen(true)
+                }
+              }}
+            >
+              {holiday.name}
+            </div>
+          ))}
         </div>
       )}
 
       {/* Holiday Detail Modal */}
-      {holiday && (
+      {hasHolidays && (
         <Dialog open={isHolidayModalOpen} onOpenChange={setIsHolidayModalOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle className="text-xl font-semibold text-center">
-                {holiday.name}
+                {dayHolidays.length === 1
+                  ? dayHolidays[0].name
+                  : 'Días No Laborables'}
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4 text-center pt-2">
               <div className="text-lg font-medium text-foreground">
                 {format(day, "d 'de' MMMM 'de' yyyy", { locale: es })}
               </div>
-              <div className="flex justify-center">
-                <div className="inline-block px-4 py-2 bg-orange-100 dark:bg-orange-950/20 text-orange-800 dark:text-orange-200 rounded-full text-sm font-medium">
-                  Feriado Nacional
-                </div>
+              <div className="flex flex-col items-center gap-2">
+                {dayHolidays.map((holiday) => (
+                  <div
+                    key={holiday.id}
+                    className="inline-block px-4 py-2 bg-orange-100 dark:bg-orange-950/20 text-orange-800 dark:text-orange-200 rounded-full text-sm font-medium"
+                  >
+                    {holiday.name}
+                  </div>
+                ))}
               </div>
             </div>
           </DialogContent>

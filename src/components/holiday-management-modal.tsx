@@ -52,16 +52,23 @@ function HolidayForm({
   onCancel: () => void
 }) {
   const createHoliday = useCreateHoliday()
+  const deleteHoliday = useDeleteHoliday()
   const form = useForm<HolidayFormData>({
     resolver: zodResolver(HolidaySchema),
     defaultValues: {
       name: holiday?.name || '',
       date: holiday?.date ? new Date(holiday.date) : undefined,
+      endDate: undefined,
     },
   })
 
-  const onFormSubmit = (data: HolidayFormData) => {
-    // Currently only supporting create (not update) since we don't have useUpdateHoliday
+  const onFormSubmit = async (data: HolidayFormData) => {
+    // If editing an existing holiday, delete it first to avoid date conflict
+    if (holiday?.id) {
+      await deleteHoliday.mutateAsync(holiday.id)
+    }
+
+    // Then create the new holiday (or range of holidays)
     createHoliday.mutate(data, {
       onSuccess: () => {
         onSave()
@@ -90,7 +97,23 @@ function HolidayForm({
           name="date"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Fecha</FormLabel>
+              <FormLabel>Fecha de Inicio</FormLabel>
+              <DatePicker value={field.value} onChange={field.onChange} />
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="endDate"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                Fecha de Fin{' '}
+                <span className="text-muted-foreground text-xs">
+                  (opcional, para rangos)
+                </span>
+              </FormLabel>
               <DatePicker value={field.value} onChange={field.onChange} />
               <FormMessage />
             </FormItem>

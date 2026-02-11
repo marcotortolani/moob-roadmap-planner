@@ -32,7 +32,6 @@ interface CalendarGridProps {
   currentMonth: Date
   products: Product[]
   holidays: Holiday[]
-  holidayMap: Map<string, Holiday>
   onSelectProduct: (product: Product) => void
   dragState: DragState | null
   previewDates: PreviewDates | null
@@ -44,7 +43,6 @@ export function CalendarGrid({
   currentMonth,
   products,
   holidays,
-  holidayMap,
   onSelectProduct,
   dragState,
   previewDates,
@@ -172,15 +170,19 @@ export function CalendarGrid({
           return null
         }
 
-        const holiday = holidayMap.get(format(day, 'yyyy-MM-dd'))
-        const productEvents = !holiday ? getProductsForDay(day) : []
+        // Get ALL holidays for this day (can be multiple)
+        const dayHolidays = holidays.filter((h) =>
+          isSameDay(startOfDay(h.date), startOfDay(day)),
+        )
+        const productEvents =
+          dayHolidays.length === 0 ? getProductsForDay(day) : []
 
         return (
           <CalendarDayCell
             key={day.toString()}
             day={day}
             currentMonth={currentMonth}
-            holiday={holiday}
+            dayHolidays={dayHolidays}
             productEvents={productEvents}
             getMilestoneForDay={getMilestoneForDay}
             onSelectProduct={onSelectProduct}
