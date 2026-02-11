@@ -31,7 +31,7 @@ export function CalendarHeader({
           <ChevronLeft className="h-4 w-4" />
         </Button>
         <h2
-          className="font-headline text-lg sm:text-xl font-semibold capitalize text-center w-40"
+          className="font-headline text-lg sm:text-xl font-semibold capitalize text-center w-40 sm:w-48 xl:w-52"
           aria-live="polite"
         >
           {format(currentMonth, 'MMMM yyyy', { locale: es })}
