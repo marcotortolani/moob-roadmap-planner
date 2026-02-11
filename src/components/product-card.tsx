@@ -8,7 +8,6 @@ import {
   MoreVertical,
   Trash2,
   Edit,
-  MessageSquare,
   Check,
 } from 'lucide-react'
 import { format } from 'date-fns'
@@ -315,13 +314,6 @@ export const ProductCard = memo(function ProductCard({
                 />
                 <InfoLine icon={Globe} text={languageName} />
               </div>
-
-              {product.comments && (
-                <div className="flex items-start gap-2 text-sm border-2 border-black p-3 mt-auto bg-neo-gray-light">
-                  <MessageSquare className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                  <p className="flex-1">{product.comments}</p>
-                </div>
-              )}
             </CardContent>
           </button>
         </Card>

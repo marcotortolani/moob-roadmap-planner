@@ -83,7 +83,9 @@ const isValidUrl = (url: string | null | undefined): boolean => {
   }
 }
 
-const getMilestoneStatusInfo = (status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED') => {
+const getMilestoneStatusInfo = (
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED',
+) => {
   const statusOption = MILESTONE_STATUS_OPTIONS.find((s) => s.value === status)
   switch (status) {
     case 'COMPLETED':
@@ -570,23 +572,12 @@ export function ProductDetailModal({
               </InfoSection>
             </motion.div>
 
-            {(product.createdBy || product.updatedBy) && (
-              <motion.div variants={itemVariants}>
-                <Separator className="bg-black" style={{ height: '2px' }} />
-              </motion.div>
-            )}
-
             <motion.div variants={itemVariants}>
-              <InfoSection title="Historial de Cambios">
-                <ProductHistory productId={product.id} />
-              </InfoSection>
+              <Separator className="bg-black" style={{ height: '2px' }} />
             </motion.div>
 
             {product.comments && (
               <>
-                <motion.div variants={itemVariants}>
-                  <Separator className="bg-black" style={{ height: '2px' }} />
-                </motion.div>
                 <motion.div variants={itemVariants}>
                   <InfoSection title="Comentarios">
                     <div className="flex items-start gap-3 text-sm text-muted-foreground p-4 border-2 border-black bg-neo-gray-light">
@@ -597,8 +588,17 @@ export function ProductDetailModal({
                     </div>
                   </InfoSection>
                 </motion.div>
+                <motion.div variants={itemVariants}>
+                  <Separator className="bg-black" style={{ height: '2px' }} />
+                </motion.div>
               </>
             )}
+
+            <motion.div variants={itemVariants}>
+              <InfoSection title="Historial de Cambios">
+                <ProductHistory productId={product.id} />
+              </InfoSection>
+            </motion.div>
           </motion.div>
         </motion.div>
       </DialogContent>

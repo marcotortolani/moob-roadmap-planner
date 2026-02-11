@@ -52,6 +52,7 @@ async function fetchProducts(filters?: ProductFilters): Promise<Product[]> {
       wp_content_prod_url,
       wp_content_test_url,
       chatbot_url,
+      comments,
       created_at,
       updated_at,
       created_by_id,
