@@ -337,7 +337,7 @@ function ProductsData({ view }: { view: string }) {
       <div className="relative flex-1 overflow-hidden">
         <ViewTransitionWrapper view={view}>
           {view === 'calendar' ? (
-            <ProductCalendar products={filteredAndSortedProducts} />
+            <ProductCalendar products={products} />
           ) : (
             <ProductList
               products={filteredAndSortedProducts}

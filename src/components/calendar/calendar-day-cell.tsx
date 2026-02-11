@@ -120,6 +120,7 @@ export const CalendarDayCell = memo(function CalendarDayCell({
           const milestoneEvent = getMilestoneForDay(day, productEvent.id)
           const isDraggable =
             canEditProducts &&
+            productEvent.status !== 'LIVE' &&
             (cardType === 'first' ||
               cardType === 'last' ||
               cardType === 'single')

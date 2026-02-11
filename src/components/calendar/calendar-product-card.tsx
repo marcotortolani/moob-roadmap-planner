@@ -160,9 +160,17 @@ export const CalendarProductCard = memo(function CalendarProductCard({
           {businessDaysCount === 1 ? 'día laborable' : 'días laborables'}
         </p>
 
-        {isDraggable && (
+        {product.status === 'LIVE' ? (
+          <p className="text-xs text-green-500 mt-1 font-semibold">
+            ✓ Producto en productivo - Haz clic para ver detalles
+          </p>
+        ) : isDraggable ? (
           <p className="text-xs text-yellow-600 mt-1">
             Arrastra para reprogramar
+          </p>
+        ) : (
+          <p className="text-xs text-muted-foreground mt-1">
+            Haz clic para ver detalles
           </p>
         )}
       </TooltipContent>
