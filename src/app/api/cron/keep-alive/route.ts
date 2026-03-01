@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createAdminSupabaseClient } from '@/lib/supabase/server'
 
 /**
  * Keep-Alive Endpoint for Supabase Free Tier
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
 
     console.log('🔄 [Keep-Alive] Starting keep-alive check...')
 
-    const supabase = await createServerSupabaseClient()
+    const supabase = createAdminSupabaseClient()
 
     // Perform a simple query to keep the database active
     // We'll just count users (lightweight operation)
