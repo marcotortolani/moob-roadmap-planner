@@ -29,6 +29,39 @@ npm run genkit:watch     # Start Genkit with file watching
 
 Note: AI features are configured but not actively used in the current implementation.
 
+## Repository Structure
+
+```text
+.
+├── src/                        # Application source code
+│   ├── app/                    # Next.js App Router pages
+│   │   ├── (main)/             # Authenticated routes (dashboard, profile)
+│   │   └── login/              # Public auth page
+│   ├── components/             # React components
+│   │   ├── charts/             # Recharts visualizations
+│   │   └── ui/                 # ShadCN/UI primitives (do not modify)
+│   ├── context/                # React contexts (auth)
+│   ├── hooks/queries/          # React Query hooks
+│   ├── lib/                    # Utilities, types, actions, data
+│   └── ai/                     # Genkit AI config (not actively used)
+│
+├── sql/                        # Supabase SQL scripts
+│   ├── setup/                  # One-time infrastructure (buckets, pg_cron)
+│   ├── schema/                 # Triggers, indexes, RLS policies
+│   ├── fixes/                  # Applied patches and security fixes
+│   └── diagnostics/            # Ad-hoc repair and verification scripts
+│
+├── docs/                       # Documentation (gitignored, local only)
+│   ├── architecture/           # Blueprint, design decisions
+│   ├── database/               # DB setup guides, migration docs
+│   ├── integrations/           # Email providers (Resend, SendGrid)
+│   └── sprints/                # Sprint history and completion notes
+│
+├── prisma/                     # Prisma schema
+├── scripts/                    # Utility scripts
+└── email-templates/            # Email HTML templates
+```
+
 ## Architecture
 
 ### App Structure (Next.js App Router)
