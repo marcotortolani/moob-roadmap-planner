@@ -24,7 +24,7 @@ const spaceGrotesk = Space_Grotesk({
 
 export const metadata: Metadata = {
   title: 'Product Roadmap Planner',
-  description: 'Plan and visualize your product roadmap with ease.',
+  description: `Plan and visualize your product roadmap with ease. v${process.env.NEXT_PUBLIC_APP_VERSION}`,
 };
 
 export default function RootLayout({

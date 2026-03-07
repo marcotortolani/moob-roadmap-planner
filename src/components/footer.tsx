@@ -29,9 +29,14 @@ export function Footer() {
             />
           </a>
         </Button>
-        <p className="mt-1 text-xs font-medium">
-          &copy; {currentYear} All rights reserved.
-        </p>
+        <div className=" flex gap-2 items-center">
+          <p className="text-xs font-medium">
+            &copy; {currentYear} All rights reserved.
+          </p>
+          <span className="text-xs text-muted-foreground">
+            v{process.env.NEXT_PUBLIC_APP_VERSION}
+          </span>
+        </div>
       </div>
     </footer>
   )
