@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase/client'
+import { getSupabaseClient } from '@/lib/supabase/client'
 import type { User as SupabaseUser, AuthChangeEvent, Session } from '@supabase/supabase-js'
 import type { User } from '@/lib/types'
 import type { DbUser } from '@/types/database'
@@ -33,6 +33,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const supabase = getSupabaseClient()
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const isUpdatingPassword = useRef(false)
@@ -151,6 +152,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(null)
         }
       } else if (event === 'SIGNED_OUT') {
+        getQueryClient().clear()
         setUser(null)
         router.push('/login')
       } else if (event === 'TOKEN_REFRESHED') {
@@ -158,18 +160,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const { user: userData, error } = await getCurrentUser()
           if (error || !userData) {
             setUser(null)
+            router.push('/login')
           } else {
             setUser(userData)
+            // Invalidate React Query cache so hooks refetch with the new token
+            getQueryClient().invalidateQueries()
           }
         } catch {
-          // Token refresh failed silently - user stays logged in with current data
+          // Token refresh failed — log out to avoid stuck state
+          setUser(null)
+          router.push('/login')
         }
       }
     })
 
+    // Validate session when user returns to the tab after being away.
+    // autoRefreshToken handles background refresh, but if the tab was
+    // suspended (mobile, heavy CPU) the token may have expired completely.
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState !== 'visible') return
+
+      const { data, error } = await supabase.auth.getSession()
+      if (error || !data.session) {
+        // Session gone — clean up locally and redirect to login
+        try { await supabase.auth.signOut() } catch { /* ignore */ }
+        setUser(null)
+        router.push('/login')
+      }
+      // If session is valid, autoRefreshToken already keeps it fresh — no-op
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
     return () => {
       clearTimeout(safetyTimeout)
       subscription.unsubscribe()
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [router])
 
@@ -284,8 +310,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const queryClient = getQueryClient()
     queryClient.clear()
 
-    await supabase.auth.signOut()
+    // Always redirect even if signOut fails (e.g. token already expired)
+    try {
+      await supabase.auth.signOut()
+    } catch (err) {
+      console.warn('[logout] signOut failed, proceeding with local cleanup:', err)
+    }
     setUser(null)
+    router.push('/login')
   }
 
   // Update user - using API route instead of direct Supabase client

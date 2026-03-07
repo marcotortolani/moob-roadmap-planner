@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/auth-context'
 import { useIsAdmin } from '@/lib/rbac/hooks'
-import { supabase } from '@/lib/supabase/client'
+import { getSupabaseClient } from '@/lib/supabase/client'
 import { Loader2, ShieldAlert } from 'lucide-react'
 
 import { InvitationForm } from './components/invitation-form'
@@ -38,6 +38,7 @@ export interface User {
 }
 
 export default function InvitationsPage() {
+  const supabase = getSupabaseClient()
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
   const isAdmin = useIsAdmin()

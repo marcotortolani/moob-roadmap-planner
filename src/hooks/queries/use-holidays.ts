@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '@/lib/supabase/client'
+import { getSupabaseClient } from '@/lib/supabase/client'
 import { parseISO, startOfDay, addDays, differenceInDays } from 'date-fns'
 import type { Holiday, HolidayFormData } from '@/lib/types'
 import { useToast } from '@/hooks/use-toast'
@@ -20,6 +20,7 @@ export const holidayKeys = {
  * Fetch all holidays, optionally filtered by year
  */
 async function fetchHolidays(year?: number): Promise<Holiday[]> {
+  const supabase = getSupabaseClient()
   let query = supabase
     .from('holidays')
     .select('*')
@@ -56,14 +57,14 @@ async function fetchHolidays(year?: number): Promise<Holiday[]> {
  * Long staleTime reduces unnecessary refetches.
  */
 export function useHolidays(year?: number) {
-  const { loading: authLoading } = useAuth()
+  const { loading: authLoading, user } = useAuth()
 
   return useQuery({
-    queryKey: holidayKeys.list(year),
+    queryKey: [...holidayKeys.list(year), user?.id],
     queryFn: () => fetchHolidays(year),
     staleTime: 60 * 60 * 1000, // 1 hour (Sprint 6.2 - was 5 minutes)
     gcTime: 2 * 60 * 60 * 1000, // 2 hours cache
-    enabled: !authLoading,
+    enabled: !authLoading && !!user,
   })
 }
 
@@ -73,6 +74,7 @@ export function useHolidays(year?: number) {
 async function createHoliday(
   holidayData: HolidayFormData,
 ): Promise<Holiday | Holiday[]> {
+  const supabase = getSupabaseClient()
   // If endDate is provided, create multiple holidays (one per day in range)
   if (holidayData.endDate) {
     const startDate = startOfDay(holidayData.date)
@@ -169,6 +171,7 @@ export function useCreateHoliday() {
  * Delete a holiday
  */
 async function deleteHoliday(id: string): Promise<void> {
+  const supabase = getSupabaseClient()
   const { error } = await supabase
     .from('holidays')
     .delete()

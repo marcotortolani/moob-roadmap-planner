@@ -2,9 +2,10 @@ import type { IOperatorRepository } from '../../operator.repository'
 import type { Operator } from '@/lib/types'
 import type { ActionResult } from '@/lib/errors'
 import { success, failure, StorageError } from '@/lib/errors'
-import { supabase } from '@/lib/supabase/client'
+import { getSupabaseClient } from '@/lib/supabase/client'
 
 export class SupabaseOperatorRepository implements IOperatorRepository {
+  private get supabase() { return getSupabaseClient() }
   private tableName = 'operators'
 
   /**
@@ -16,7 +17,7 @@ export class SupabaseOperatorRepository implements IOperatorRepository {
 
   async getAll(): Promise<ActionResult<Operator[]>> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await this.supabase
         .from(this.tableName)
         .select('*')
         .order('name', { ascending: true })
@@ -38,7 +39,7 @@ export class SupabaseOperatorRepository implements IOperatorRepository {
 
   async getById(id: string): Promise<ActionResult<Operator | null>> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await this.supabase
         .from(this.tableName)
         .select('*')
         .eq('id', id)
@@ -68,7 +69,7 @@ export class SupabaseOperatorRepository implements IOperatorRepository {
   ): Promise<ActionResult<Operator | null>> {
     try {
       const normalized = this.normalizeName(name)
-      const { data, error } = await supabase
+      const { data, error } = await this.supabase
         .from(this.tableName)
         .select('*')
         .eq('normalized_name', normalized)
@@ -116,7 +117,7 @@ export class SupabaseOperatorRepository implements IOperatorRepository {
       // Generate ID client-side (Prisma's cuid is client-side, not database default)
       const id = crypto.randomUUID()
 
-      const { data, error } = await supabase
+      const { data, error } = await this.supabase
         .from(this.tableName)
         .insert({
           id,
@@ -152,7 +153,7 @@ export class SupabaseOperatorRepository implements IOperatorRepository {
 
   async search(term: string): Promise<ActionResult<Operator[]>> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await this.supabase
         .from(this.tableName)
         .select('*')
         .ilike('name', `%${term}%`)
@@ -181,7 +182,7 @@ export class SupabaseOperatorRepository implements IOperatorRepository {
       // Generate ID client-side
       const id = crypto.randomUUID()
 
-      const { data, error } = await supabase
+      const { data, error } = await this.supabase
         .from(this.tableName)
         .insert({
           id,
@@ -219,7 +220,7 @@ export class SupabaseOperatorRepository implements IOperatorRepository {
         updateData.normalized_name = this.normalizeName(item.name)
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await this.supabase
         .from(this.tableName)
         .update(updateData)
         .eq('id', id)
@@ -243,7 +244,7 @@ export class SupabaseOperatorRepository implements IOperatorRepository {
 
   async delete(id: string): Promise<ActionResult<void>> {
     try {
-      const { error } = await supabase
+      const { error } = await this.supabase
         .from(this.tableName)
         .delete()
         .eq('id', id)
@@ -265,7 +266,7 @@ export class SupabaseOperatorRepository implements IOperatorRepository {
 
   async exists(id: string): Promise<ActionResult<boolean>> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await this.supabase
         .from(this.tableName)
         .select('id')
         .eq('id', id)

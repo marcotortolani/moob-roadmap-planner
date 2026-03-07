@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '@/lib/supabase/client'
+import { getSupabaseClient } from '@/lib/supabase/client'
 import { parseISO, startOfDay } from 'date-fns'
 import type { Product } from '@/lib/types'
 import { useToast } from '@/hooks/use-toast'
@@ -35,6 +35,7 @@ export interface ProductFilters {
  * use fetchProduct(id) or useProduct(id) hook.
  */
 async function fetchProducts(filters?: ProductFilters): Promise<Product[]> {
+  const supabase = getSupabaseClient()
   let query = supabase
     .from('products')
     .select(`
@@ -126,14 +127,14 @@ async function fetchProducts(filters?: ProductFilters): Promise<Product[]> {
  * Optimistic updates handle real-time mutations anyway.
  */
 export function useProducts(filters?: ProductFilters) {
-  const { loading: authLoading } = useAuth()
+  const { loading: authLoading, user } = useAuth()
 
   return useQuery({
-    queryKey: productKeys.list(filters),
+    queryKey: [...productKeys.list(filters), user?.id],
     queryFn: () => fetchProducts(filters),
     staleTime: 2 * 60 * 1000, // 2 minutes (Sprint 6.2 - was 30 seconds)
     gcTime: 10 * 60 * 1000, // 10 minutes cache
-    enabled: !authLoading,
+    enabled: !authLoading && !!user,
   })
 }
 
@@ -141,6 +142,7 @@ export function useProducts(filters?: ProductFilters) {
  * Fetch a single product by ID
  */
 async function fetchProduct(id: string): Promise<Product> {
+  const supabase = getSupabaseClient()
   const { data, error } = await supabase
     .from('products')
     .select(`
@@ -262,6 +264,7 @@ function generateRandomColor(): string {
  * Create a new product
  */
 async function createProduct(product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Promise<Product> {
+  const supabase = getSupabaseClient()
   // Generate ID (Prisma uses cuid, but UUID is compatible)
   const newId = crypto.randomUUID()
   const now = new Date().toISOString()
@@ -416,6 +419,7 @@ export function useCreateProduct() {
  * Update an existing product
  */
 async function updateProduct({ id, ...updates }: Partial<Product> & { id: string }): Promise<Product> {
+  const supabase = getSupabaseClient()
   const updateData: Record<string, unknown> = {}
 
   if (updates.name !== undefined) updateData.name = updates.name
@@ -645,6 +649,7 @@ export function useUpdateProduct() {
  * Delete a product
  */
 async function deleteProduct(id: string): Promise<void> {
+  const supabase = getSupabaseClient()
   const { error } = await supabase
     .from('products')
     .delete()

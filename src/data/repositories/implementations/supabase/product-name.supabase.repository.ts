@@ -2,11 +2,12 @@ import type { IProductNameRepository } from '../../product-name.repository'
 import type { ProductName } from '@/lib/types'
 import type { ActionResult } from '@/lib/errors'
 import { success, failure, StorageError } from '@/lib/errors'
-import { supabase } from '@/lib/supabase/client'
+import { getSupabaseClient } from '@/lib/supabase/client'
 
 export class SupabaseProductNameRepository
   implements IProductNameRepository
 {
+  private get supabase() { return getSupabaseClient() }
   private tableName = 'product_names'
 
   /**
@@ -18,7 +19,7 @@ export class SupabaseProductNameRepository
 
   async getAll(): Promise<ActionResult<ProductName[]>> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await this.supabase
         .from(this.tableName)
         .select('*')
         .order('name', { ascending: true })
@@ -40,7 +41,7 @@ export class SupabaseProductNameRepository
 
   async getById(id: string): Promise<ActionResult<ProductName | null>> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await this.supabase
         .from(this.tableName)
         .select('*')
         .eq('id', id)
@@ -70,7 +71,7 @@ export class SupabaseProductNameRepository
   ): Promise<ActionResult<ProductName | null>> {
     try {
       const normalized = this.normalizeName(name)
-      const { data, error } = await supabase
+      const { data, error } = await this.supabase
         .from(this.tableName)
         .select('*')
         .eq('normalized_name', normalized)
@@ -119,7 +120,7 @@ export class SupabaseProductNameRepository
       // Generate ID client-side (Prisma's cuid is client-side, not database default)
       const id = crypto.randomUUID()
 
-      const { data, error } = await supabase
+      const { data, error } = await this.supabase
         .from(this.tableName)
         .insert({
           id,
@@ -156,7 +157,7 @@ export class SupabaseProductNameRepository
 
   async search(term: string): Promise<ActionResult<ProductName[]>> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await this.supabase
         .from(this.tableName)
         .select('*')
         .ilike('name', `%${term}%`)
@@ -185,7 +186,7 @@ export class SupabaseProductNameRepository
       // Generate ID client-side
       const id = crypto.randomUUID()
 
-      const { data, error } = await supabase
+      const { data, error } = await this.supabase
         .from(this.tableName)
         .insert({
           id,
@@ -227,7 +228,7 @@ export class SupabaseProductNameRepository
         updateData.description = item.description
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await this.supabase
         .from(this.tableName)
         .update(updateData)
         .eq('id', id)
@@ -251,7 +252,7 @@ export class SupabaseProductNameRepository
 
   async delete(id: string): Promise<ActionResult<void>> {
     try {
-      const { error } = await supabase
+      const { error } = await this.supabase
         .from(this.tableName)
         .delete()
         .eq('id', id)
@@ -273,7 +274,7 @@ export class SupabaseProductNameRepository
 
   async exists(id: string): Promise<ActionResult<boolean>> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await this.supabase
         .from(this.tableName)
         .select('id')
         .eq('id', id)

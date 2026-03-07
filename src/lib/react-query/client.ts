@@ -20,10 +20,11 @@ function makeQueryClient() {
         // Cache time: Keep unused data for 10 minutes before garbage collection
         gcTime: 10 * 60 * 1000, // 10 minutes (was 5 minutes)
 
-        // ✅ SPRINT 6.2: Disable refetch on window focus
-        // Optimistic updates + manual invalidations are sufficient
-        // This prevents annoying refetches when switching tabs
-        refetchOnWindowFocus: false, // (was true)
+        // Enable refetch on window focus so returning to a tab after token
+        // refresh picks up fresh data. With staleTime: 5min, switching tabs
+        // within 5 minutes produces zero requests. After 5+ minutes it
+        // silently refetches in the background — correct for long sessions.
+        refetchOnWindowFocus: true,
 
         // Keep refetch on reconnect for data freshness after network loss
         refetchOnReconnect: true,

@@ -1,7 +1,9 @@
 'use client'
 
-import { createBrowserClient, type SupabaseClient } from '@supabase/ssr'
+import { createBrowserClient } from '@supabase/ssr'
 import type { Database } from './database.types'
+
+type BrowserSupabaseClient = ReturnType<typeof createBrowserClient<Database>>
 
 /**
  * Singleton instance of Supabase client
@@ -10,15 +12,23 @@ import type { Database } from './database.types'
  * - Multiple connection pools
  * - State inconsistencies
  */
-let supabaseInstance: SupabaseClient<Database> | null = null
+let supabaseInstance: BrowserSupabaseClient | null = null
 
 /**
- * Get Supabase client for browser
- * Uses SSR-compatible client from @supabase/ssr
+ * Get Supabase client for browser.
+ * Uses createBrowserClient from @supabase/ssr (cookie-based session storage).
+ * Cookies are required so the middleware can read the session server-side.
  *
- * Returns singleton instance to ensure auth state and connection pool stability
+ * Returns null during SSR — all callers are inside useEffect/event handlers.
  */
-export function getSupabaseClient() {
+export function getSupabaseClient(): BrowserSupabaseClient {
+  // Guard: createBrowserClient requires browser context.
+  // During SSR, 'use client' components still render on the server but never
+  // access supabase (all usage is inside useEffect / event handlers).
+  if (typeof window === 'undefined') {
+    return null as unknown as BrowserSupabaseClient
+  }
+
   // Return existing instance if available
   if (supabaseInstance) {
     return supabaseInstance
@@ -32,6 +42,3 @@ export function getSupabaseClient() {
 
   return supabaseInstance
 }
-
-// Export singleton instance
-export const supabase = getSupabaseClient()
