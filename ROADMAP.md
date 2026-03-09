@@ -1,7 +1,7 @@
 # Roadmap — Roadmap Planner App
 
 Documento vivo de planificación. Se actualiza junto con `CHANGELOG.md` en cada release.
-Última revisión: 2026-03-07 · Versión actual: v0.7.0
+Última revisión: 2026-03-09 · Versión actual: v0.8.0
 
 ---
 
@@ -82,25 +82,21 @@ Documento vivo de planificación. Se actualiza junto con `CHANGELOG.md` en cada 
 
 ## Mejoras Planificadas
 
-### FEAT-01 · Infraestructura de tests (Jest / Vitest)
+### ~~FEAT-01~~ ✅ Infraestructura de tests (Vitest)
 
-- **Problema:** 0% cobertura de tests — sin Jest, sin Vitest, sin archivos `.test.ts`
-- **Alcance mínimo:**
-  - Unit tests para `src/lib/actions.ts` (CRUD)
-  - Unit tests para Zod schemas en `src/lib/types.ts`
-  - Integration test para auth flow
-- **Stack sugerido:** Vitest + Testing Library (compatible con Next.js App Router)
+- **Completado:** Vitest v4 instalado, 60 tests pasando en 4 archivos (`business-days`, `types`, `data-mappers`, `rate-limit`)
 
-### FEAT-02 · Rate limiting en API routes
+### ~~FEAT-02~~ ✅ Rate limiting en API routes
 
-- **Problema:** Las rutas `/api/email/*` y `/api/invitations/*` no tienen rate limiting
-- **Riesgo:** Abuso de envío de emails de invitación
-- **Solución sugerida:** Upstash Ratelimit + Redis (compatible con Vercel Edge)
+- **Completado:** In-memory rate limiter (`src/lib/rate-limit.ts`) en login, change-password, invitaciones y emails
 
-### FEAT-03 · Protección CSRF
+### ~~FEAT-03~~ ✅ Protección CSRF
 
-- **Problema:** No hay verificación de tokens CSRF en las API routes de mutación
-- **Solución sugerida:** `next-csrf` o usar el patrón de `SameSite=Strict` cookies
+- **Completado:** `src/lib/csrf.ts` — verificación Origin/Referer en todas las rutas de mutación sensibles
+
+### ~~FEAT-05~~ ✅ Sanitización/validación de inputs
+
+- **Completado:** Email regex, max lengths y validación estricta en todas las API routes
 
 ### FEAT-04 · Supabase Realtime (actualizaciones en vivo)
 
@@ -113,6 +109,16 @@ Documento vivo de planificación. Se actualiza junto con `CHANGELOG.md` en cada 
 - **Problema:** Los campos de texto libre (nombre de producto, URLs) no pasan por sanitización explícita
 - **Contexto:** Zod valida tipos/longitud pero no escapa HTML
 - **Solución:** Agregar `DOMPurify` o `sanitize-html` para campos que renderizan HTML
+
+### FEAT-08 · Regenerar Supabase generated types
+
+- **Problema:** `src/lib/supabase/database.types.ts` no refleja el esquema actual (tablas operators, product_names, audit_logs, etc.)
+- **Fix:** `npx supabase gen types typescript --project-id <id> > src/lib/supabase/database.types.ts`
+
+### FEAT-09 · Quitar `ignoreBuildErrors: true` en next.config.ts
+
+- **Problema:** Los errores de TypeScript no bloquean el build (DT-02)
+- **Alcance:** Resolver ~20 errores TS pre-existentes (params como Promise en route handlers, tipos Framer Motion)
 
 ### FEAT-06 · Export de roadmap a PDF / imagen
 
@@ -141,6 +147,16 @@ Documento vivo de planificación. Se actualiza junto con `CHANGELOG.md` en cada 
 
 Ver `CHANGELOG.md` para el historial completo de versiones.
 
+- **Sprint Seguridad/Calidad (2026-03-09):**
+  - ✅ CSP headers + X-Frame-Options + X-Content-Type-Options + Referrer-Policy (middleware)
+  - ✅ Audit logging — tabla `audit_logs` + `src/lib/audit-logger.ts`
+  - ✅ Data mapper centralizado — `src/lib/data-mappers.ts`
+  - ✅ Error boundaries Next.js App Router — `src/app/(main)/error.tsx` + `src/app/error.tsx`
+  - ✅ Reenvío de invitaciones expiradas/revocadas — `POST /api/invitations/resend`
+  - ✅ Infraestructura Vitest — 60 tests en 4 archivos
+  - ✅ Rate limiting en-memory — login, passwords, invitaciones, emails
+  - ✅ Protección CSRF — `src/lib/csrf.ts`
+  - ✅ Validación/sanitización de inputs en API routes
 - v0.7.0 — Performance indexes, pg_cron keep-alive, fix calendario y feriados
 - v0.6.0 — Bulk operations, filtros guardados, exportación de datos
 - v0.5.0 — Mejoras iterativas de UI/UX

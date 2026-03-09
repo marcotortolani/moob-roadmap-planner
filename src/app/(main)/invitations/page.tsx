@@ -162,6 +162,8 @@ export default function InvitationsPage() {
               <InvitationList
                 invitations={invitations || []}
                 onRevoke={fetchData}
+                onResend={fetchData}
+                onDelete={fetchData}
               />
             </div>
           </div>

@@ -1,7 +1,7 @@
 // src/components/header.tsx
 'use client'
 
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import {
   Sheet,
   SheetContent,
@@ -36,7 +36,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { usePathname, useRouter } from 'next/navigation'
 
-export function Header() {
+export const Header = memo(function Header() {
   const { user, loading, logout } = useAuth()
   const { canCreateInvitations, canCreateProducts } = usePermissionChecks()
   const router = useRouter()
@@ -393,4 +393,4 @@ export function Header() {
       </nav>
     </header>
   )
-}
+})

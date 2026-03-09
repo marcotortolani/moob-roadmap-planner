@@ -4,8 +4,34 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getSupabaseClient } from '@/lib/supabase/client'
 import type { Product } from '@/lib/types'
 import { mapDbProduct, type DbProduct, generateRandomColor } from '@/lib/data-mappers'
+import type { Milestone, CustomUrl } from '@/lib/types'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/context/auth-context'
+import { logAuditEventFromClient } from '@/lib/audit-client'
+
+/** Maps app Milestone objects to DB row format for insert operations. */
+function buildMilestoneRows(milestones: Milestone[], productId: string, now: string, preserveIds = false) {
+  return milestones.map((m) => ({
+    id: (preserveIds && m.id) ? m.id : crypto.randomUUID(),
+    name: m.name,
+    start_date: m.startDate.toISOString(),
+    end_date: m.endDate.toISOString(),
+    status: m.status,
+    product_id: productId,
+    created_at: now,
+    updated_at: now,
+  }))
+}
+
+/** Maps app CustomUrl objects to DB row format for insert operations. */
+function buildCustomUrlRows(customUrls: CustomUrl[], productId: string, preserveIds = false) {
+  return customUrls.map((url) => ({
+    id: (preserveIds && url.id) ? url.id : crypto.randomUUID(),
+    label: url.label,
+    url: url.url,
+    product_id: productId,
+  }))
+}
 
 /**
  * Query Keys for Products
@@ -215,44 +241,18 @@ async function createProduct(product: Omit<Product, 'id' | 'createdAt' | 'update
 
   // 2. Insert milestones if any
   if (product.milestones && product.milestones.length > 0) {
-    const milestonesToInsert = product.milestones.map((m) => ({
-      id: crypto.randomUUID(),
-      name: m.name,
-      start_date: m.startDate.toISOString(),
-      end_date: m.endDate.toISOString(),
-      status: m.status,
-      product_id: newId,
-      created_at: now,
-      updated_at: now,
-    }))
-
     const { error: milestonesError } = await supabase
       .from('milestones')
-      .insert(milestonesToInsert)
-
-    if (milestonesError) {
-      console.error('Error creating milestones:', milestonesError)
-      // Don't throw - product was created successfully
-    }
+      .insert(buildMilestoneRows(product.milestones, newId, now))
+    if (milestonesError) console.error('Error creating milestones:', milestonesError)
   }
 
   // 3. Insert custom URLs if any
   if (product.customUrls && product.customUrls.length > 0) {
-    const urlsToInsert = product.customUrls.map((url) => ({
-      id: crypto.randomUUID(),
-      label: url.label,
-      url: url.url,
-      product_id: newId,
-    }))
-
     const { error: urlsError } = await supabase
       .from('custom_urls')
-      .insert(urlsToInsert)
-
-    if (urlsError) {
-      console.error('Error creating custom URLs:', urlsError)
-      // Don't throw - product was created successfully
-    }
+      .insert(buildCustomUrlRows(product.customUrls, newId))
+    if (urlsError) console.error('Error creating custom URLs:', urlsError)
   }
 
   return fetchProduct(data.id)
@@ -296,6 +296,13 @@ export function useCreateProduct() {
     onSuccess: async (newProduct) => {
       // Invalidate triggers automatic refetch to sync with server
       await queryClient.invalidateQueries({ queryKey: productKeys.all })
+
+      logAuditEventFromClient({
+        action: 'PRODUCT_CREATED',
+        resourceType: 'product',
+        resourceId: newProduct.id,
+        metadata: { name: newProduct.name, operator: newProduct.operator, country: newProduct.country },
+      })
 
       toast({
         title: '✓ Producto creado',
@@ -386,26 +393,12 @@ async function updateProduct({ id, ...updates }: Partial<Product> & { id: string
     // Delete existing milestones
     await supabase.from('milestones').delete().eq('product_id', id)
 
-    // Insert new milestones
+    // Insert new milestones (preserving existing IDs)
     if (updates.milestones.length > 0) {
-      const milestonesToInsert = updates.milestones.map((m) => ({
-        id: m.id || crypto.randomUUID(),
-        name: m.name,
-        start_date: m.startDate.toISOString(),
-        end_date: m.endDate.toISOString(),
-        status: m.status,
-        product_id: id,
-        created_at: now,
-        updated_at: now,
-      }))
-
       const { error: milestonesError } = await supabase
         .from('milestones')
-        .insert(milestonesToInsert)
-
-      if (milestonesError) {
-        console.error('Error updating milestones:', milestonesError)
-      }
+        .insert(buildMilestoneRows(updates.milestones, id, now, true))
+      if (milestonesError) console.error('Error updating milestones:', milestonesError)
     }
   }
 
@@ -414,22 +407,12 @@ async function updateProduct({ id, ...updates }: Partial<Product> & { id: string
     // Delete existing custom URLs
     await supabase.from('custom_urls').delete().eq('product_id', id)
 
-    // Insert new custom URLs
+    // Insert new custom URLs (preserving existing IDs)
     if (updates.customUrls.length > 0) {
-      const urlsToInsert = updates.customUrls.map((url) => ({
-        id: url.id || crypto.randomUUID(),
-        label: url.label,
-        url: url.url,
-        product_id: id,
-      }))
-
       const { error: urlsError } = await supabase
         .from('custom_urls')
-        .insert(urlsToInsert)
-
-      if (urlsError) {
-        console.error('Error updating custom URLs:', urlsError)
-      }
+        .insert(buildCustomUrlRows(updates.customUrls, id, true))
+      if (urlsError) console.error('Error updating custom URLs:', urlsError)
     }
   }
 
@@ -521,6 +504,13 @@ export function useUpdateProduct() {
         })
       }
 
+      logAuditEventFromClient({
+        action: 'PRODUCT_UPDATED',
+        resourceType: 'product',
+        resourceId: data.id,
+        metadata: { name: data.name, changedFields: Object.keys(variables).filter((k) => k !== 'id') },
+      })
+
       toast({
         title: '✓ Producto actualizado',
         description: 'Los cambios se han guardado exitosamente',
@@ -585,6 +575,14 @@ export function useDeleteProduct() {
       // Snapshot the previous value for rollback
       const previousProducts = queryClient.getQueryData(productKeys.all)
 
+      // Capture product name before removing from cache (for audit log)
+      const listQueries = queryClient.getQueriesData<Product[]>({ queryKey: productKeys.lists() })
+      let deletedProductName: string | undefined
+      for (const [, data] of listQueries) {
+        const found = data?.find((p) => p.id === productId)
+        if (found) { deletedProductName = found.name; break }
+      }
+
       // Optimistically remove the product from cache
       queryClient.setQueriesData<Product[]>(
         { queryKey: productKeys.lists() },
@@ -597,9 +595,16 @@ export function useDeleteProduct() {
       // Also remove from detail cache
       queryClient.removeQueries({ queryKey: productKeys.detail(productId) })
 
-      return { previousProducts }
+      return { previousProducts, deletedProductName }
     },
-    onSuccess: () => {
+    onSuccess: (_, productId, context) => {
+      logAuditEventFromClient({
+        action: 'PRODUCT_DELETED',
+        resourceType: 'product',
+        resourceId: productId,
+        metadata: { name: context?.deletedProductName },
+      })
+
       toast({
         title: '✓ Producto eliminado',
         description: 'El producto se ha eliminado exitosamente',

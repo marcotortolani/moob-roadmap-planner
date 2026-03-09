@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { logAuditEvent, getIpAddress } from '@/lib/audit-logger'
+import { isSameOrigin, csrfRejected } from '@/lib/csrf'
 
 export async function POST(request: NextRequest) {
+  if (!isSameOrigin(request)) {
+    const { error, status } = csrfRejected()
+    return NextResponse.json({ error }, { status })
+  }
+
   try {
     const supabase = await createServerSupabaseClient()
 
@@ -112,6 +119,17 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('✅ [Update Role] Role updated successfully:', updateData[0])
+
+    // Audit log: role changed
+    logAuditEvent({
+      action: 'USER_ROLE_CHANGED',
+      resourceType: 'user',
+      resourceId: userId,
+      actorId: session.user.id,
+      actorEmail: session.user.email,
+      ipAddress: getIpAddress(request),
+      metadata: { newRole, previousRole: updateData[0]?.role },
+    })
 
     return NextResponse.json({
       success: true,

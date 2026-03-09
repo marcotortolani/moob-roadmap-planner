@@ -95,7 +95,8 @@ export async function middleware(request: NextRequest) {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https://placehold.co https://images.unsplash.com https://picsum.photos https://*.supabase.co",
     "font-src 'self'",
-    "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+    // In dev, Next.js HMR uses ws://127.0.0.1:<random-port> for hot reload
+    `connect-src 'self' https://*.supabase.co wss://*.supabase.co${process.env.NODE_ENV === 'development' ? ' ws://localhost:* ws://127.0.0.1:*' : ''}`,
     "frame-src 'none'",
     "frame-ancestors 'none'",
     "object-src 'none'",

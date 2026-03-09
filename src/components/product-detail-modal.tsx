@@ -179,10 +179,11 @@ function InfoItem({
                 <Button
                   variant="ghost"
                   size="icon"
+                  aria-label="Copiar URL"
                   className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
                   onClick={handleCopy}
                 >
-                  <Copy className="h-3 w-3" />
+                  <Copy className="h-3 w-3" aria-hidden="true" />
                 </Button>
               </>
             ) : (
@@ -269,6 +270,154 @@ const itemVariants = {
   },
 }
 
+// ─── ProductDetailHeader ──────────────────────────────────────────────────────
+
+const STATUS_BG_COLORS: Record<string, string> = {
+  PLANNED: '#6B7280',
+  IN_PROGRESS: '#FF2E63',
+  DEMO_OK: '#FFD700',
+  LIVE: '#2EBD59',
+}
+
+function ProductDetailHeader({
+  product,
+  onDeleteClick,
+  updatePending,
+  onStatusChange,
+}: {
+  product: Product
+  onDeleteClick: () => void
+  updatePending: boolean
+  onStatusChange: (status: Status) => void
+}) {
+  const { canEditProducts, canDeleteProducts } = usePermissionChecks()
+  const status = STATUS_OPTIONS.find((s) => s.value === product.status)
+  const bgColor = STATUS_BG_COLORS[product.status] ?? '#6B7280'
+  const textColor = product.status === 'DEMO_OK' ? '#000000' : '#FFFFFF'
+
+  return (
+    <div className="flex items-start justify-between">
+      <div>
+        <DialogTitle className="text-left font-medium text-xl md:text-2xl font-headline text-foreground">
+          {product.name}
+        </DialogTitle>
+        <DialogDescription className="text-left font-light">
+          Detalles completos del producto
+        </DialogDescription>
+      </div>
+      <div className="flex items-center gap-2">
+        {canEditProducts ? (
+          <Select
+            value={product.status}
+            onValueChange={onStatusChange}
+            disabled={updatePending}
+          >
+            <SelectTrigger
+              className="w-auto h-auto text-xs md:text-sm border-2 border-black px-3 md:py-1.5 lg:py-2 md:mr-4 lg:mr-6 xl:mr-8 2xl:mr-10 font-bold uppercase"
+              style={{ borderRadius: '4px', backgroundColor: bgColor, color: textColor }}
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value} className="text-black">
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          status && (
+            <Badge
+              variant={
+                product.status === 'PLANNED' ? 'planned'
+                : product.status === 'IN_PROGRESS' ? 'inProgress'
+                : product.status === 'DEMO_OK' ? 'demoOk'
+                : product.status === 'LIVE' ? 'live'
+                : 'planned'
+              }
+              className="text-xs md:text-sm md:mr-4 lg:mr-6 xl:mr-8"
+            >
+              {status.label}
+            </Badge>
+          )
+        )}
+        {canEditProducts && (
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="default" size="icon" aria-label="Editar producto" className="rounded-sm">
+                <Edit className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent className="w-full sm:max-w-3xl overflow-y-auto">
+              <SheetTitle className="sr-only">Editar producto</SheetTitle>
+              <SheetDescription className="sr-only">
+                Formulario para editar los detalles del producto
+              </SheetDescription>
+              <ProductForm product={product} />
+            </SheetContent>
+          </Sheet>
+        )}
+        {canDeleteProducts && (
+          <Button
+            variant="default"
+            size="icon"
+            aria-label="Eliminar producto"
+            onClick={onDeleteClick}
+            className="text-destructive hover:bg-destructive hover:text-destructive-foreground rounded-sm"
+          >
+            <Trash2 className="h-4 w-4" aria-hidden="true" />
+          </Button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── ProductMilestonesList ────────────────────────────────────────────────────
+
+function ProductMilestonesList({ milestones }: { milestones: Product['milestones'] }) {
+  if (!milestones || milestones.length === 0) return null
+
+  return (
+    <>
+      <motion.div variants={itemVariants}>
+        <InfoSection title="Hitos Clave">
+          <div className="space-y-4">
+            {milestones.map((milestone) => {
+              const statusInfo = getMilestoneStatusInfo(milestone.status)
+              return (
+                <div
+                  key={milestone.id}
+                  className="flex items-start gap-4 border-2 border-black p-3 bg-neo-gray-light"
+                >
+                  <statusInfo.Icon
+                    className={`h-6 w-6 mt-1 flex-shrink-0 ${statusInfo.color}`}
+                  />
+                  <div className="flex-1">
+                    <p className="font-semibold">{milestone.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {format(milestone.startDate, 'dd MMM', { locale: es })}{' '}
+                      -{' '}
+                      {format(milestone.endDate, 'dd MMM yyyy', { locale: es })}
+                    </p>
+                  </div>
+                  <Badge variant="default">{statusInfo.label}</Badge>
+                </div>
+              )
+            })}
+          </div>
+        </InfoSection>
+      </motion.div>
+      <motion.div variants={itemVariants}>
+        <Separator className="bg-black" style={{ height: '2px' }} />
+      </motion.div>
+    </>
+  )
+}
+
+// ─── ProductDetailModal ───────────────────────────────────────────────────────
+
 export function ProductDetailModal({
   product,
   isOpen,
@@ -278,12 +427,10 @@ export function ProductDetailModal({
   isOpen: boolean
   onClose: () => void
 }) {
-  const { canEditProducts, canDeleteProducts } = usePermissionChecks()
   const deleteProductMutation = useDeleteProduct()
   const updateProductMutation = useUpdateProduct()
   const { toast } = useToast()
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const status = STATUS_OPTIONS.find((s) => s.value === product.status)
   const country = COUNTRIES.find((c) => c.code === product.country)
 
   const handleDelete = async () => {
@@ -291,8 +438,9 @@ export function ProductDetailModal({
       await deleteProductMutation.mutateAsync(product.id)
       setShowDeleteConfirm(false)
       onClose()
-    } catch (error) {
-      console.error('Error deleting product:', error)
+    } catch {
+      // Error is already handled by the mutation's onError (shows a toast)
+      setShowDeleteConfirm(false)
     }
   }
 
@@ -306,12 +454,8 @@ export function ProductDetailModal({
         title: 'Estado actualizado',
         description: `El estado del producto ha sido cambiado a ${STATUS_OPTIONS.find((s) => s.value === newStatus)?.label}`,
       })
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'No se pudo actualizar el estado del producto',
-        variant: 'destructive',
-      })
+    } catch {
+      // Error is already handled by the mutation's onError (shows a toast)
     }
   }
 
@@ -327,107 +471,12 @@ export function ProductDetailModal({
           transition={{ duration: 0.2 }}
         >
           <DialogHeader>
-            <div className=" flex items-start justify-between">
-              <div className="">
-                <DialogTitle className="text-left font-medium text-xl md:text-2xl font-headline text-foreground">
-                  {product.name}
-                </DialogTitle>
-                <DialogDescription className="text-left font-light">
-                  Detalles completos del producto
-                </DialogDescription>
-              </div>
-              <div className="flex items-center gap-2">
-                {canEditProducts ? (
-                  <Select
-                    value={product.status}
-                    onValueChange={handleStatusChange}
-                  >
-                    <SelectTrigger
-                      className="w-auto h-auto text-xs md:text-sm border-2 border-black px-3 md:py-1.5 lg:py-2 md:mr-4 lg:mr-6 xl:mr-8 2xl:mr-10 font-bold uppercase"
-                      style={{
-                        borderRadius: '4px',
-                        backgroundColor:
-                          product.status === 'PLANNED'
-                            ? '#6B7280'
-                            : product.status === 'IN_PROGRESS'
-                              ? '#FF2E63'
-                              : product.status === 'DEMO_OK'
-                                ? '#FFD700'
-                                : product.status === 'LIVE'
-                                  ? '#2EBD59'
-                                  : '#6B7280',
-                        color:
-                          product.status === 'DEMO_OK' ? '#000000' : '#FFFFFF',
-                      }}
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {STATUS_OPTIONS.map((option) => (
-                        <SelectItem
-                          key={option.value}
-                          value={option.value}
-                          className=" text-black"
-                        >
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  status && (
-                    <Badge
-                      variant={
-                        product.status === 'PLANNED'
-                          ? 'planned'
-                          : product.status === 'IN_PROGRESS'
-                            ? 'inProgress'
-                            : product.status === 'DEMO_OK'
-                              ? 'demoOk'
-                              : product.status === 'LIVE'
-                                ? 'live'
-                                : 'planned'
-                      }
-                      className="text-xs md:text-sm md:mr-4 lg:mr-6 xl:mr-8"
-                    >
-                      {status.label}
-                    </Badge>
-                  )
-                )}
-                {canEditProducts && (
-                  <Sheet>
-                    <SheetTrigger asChild>
-                      <Button
-                        variant="default"
-                        size="icon"
-                        className="rounded-sm"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    </SheetTrigger>
-                    <SheetContent className="w-full sm:max-w-3xl overflow-y-auto">
-                      <SheetTitle className="sr-only">
-                        Editar producto
-                      </SheetTitle>
-                      <SheetDescription className="sr-only">
-                        Formulario para editar los detalles del producto
-                      </SheetDescription>
-                      <ProductForm product={product} />
-                    </SheetContent>
-                  </Sheet>
-                )}
-                {canDeleteProducts && (
-                  <Button
-                    variant="default"
-                    size="icon"
-                    onClick={() => setShowDeleteConfirm(true)}
-                    className="text-destructive hover:bg-destructive hover:text-destructive-foreground rounded-sm"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            </div>
+            <ProductDetailHeader
+              product={product}
+              onDeleteClick={() => setShowDeleteConfirm(true)}
+              updatePending={updateProductMutation.isPending}
+              onStatusChange={handleStatusChange}
+            />
           </DialogHeader>
 
           <motion.div
@@ -482,47 +531,7 @@ export function ProductDetailModal({
               <Separator className="bg-black" style={{ height: '2px' }} />
             </motion.div>
 
-            {product.milestones && product.milestones.length > 0 && (
-              <>
-                <motion.div variants={itemVariants}>
-                  <InfoSection title="Hitos Clave">
-                    <div className="space-y-4">
-                      {product.milestones.map((milestone) => {
-                        const statusInfo = getMilestoneStatusInfo(
-                          milestone.status,
-                        )
-                        return (
-                          <div
-                            key={milestone.id}
-                            className="flex items-start gap-4 border-2 border-black p-3 bg-neo-gray-light"
-                          >
-                            <statusInfo.Icon
-                              className={`h-6 w-6 mt-1 flex-shrink-0 ${statusInfo.color}`}
-                            />
-                            <div className="flex-1">
-                              <p className="font-semibold">{milestone.name}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {format(milestone.startDate, 'dd MMM', {
-                                  locale: es,
-                                })}{' '}
-                                -{' '}
-                                {format(milestone.endDate, 'dd MMM yyyy', {
-                                  locale: es,
-                                })}
-                              </p>
-                            </div>
-                            <Badge variant="default">{statusInfo.label}</Badge>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </InfoSection>
-                </motion.div>
-                <motion.div variants={itemVariants}>
-                  <Separator className="bg-black" style={{ height: '2px' }} />
-                </motion.div>
-              </>
-            )}
+            <ProductMilestonesList milestones={product.milestones} />
 
             <motion.div variants={itemVariants}>
               <InfoSection title="URLs">

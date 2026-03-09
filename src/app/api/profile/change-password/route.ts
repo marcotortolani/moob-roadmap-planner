@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit'
+import { logAuditEvent, getIpAddress } from '@/lib/audit-logger'
 
 /**
  * Validate password complexity:
@@ -134,6 +135,16 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('🔐 [API change-password] Password updated successfully')
+
+    // Audit log: password changed
+    logAuditEvent({
+      action: 'PASSWORD_CHANGED',
+      resourceType: 'auth',
+      resourceId: session.user.id,
+      actorId: session.user.id,
+      actorEmail: session.user.email,
+      ipAddress: getIpAddress(request),
+    })
 
     return NextResponse.json({
       success: true,

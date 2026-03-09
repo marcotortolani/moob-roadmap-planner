@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { Search, X } from 'lucide-react'
 import {
   Select,
@@ -38,7 +39,7 @@ interface FiltersBarProps {
   onClearFilters: () => void
 }
 
-export function FiltersBar({
+export const FiltersBar = memo(function FiltersBar({
   searchTerm,
   onSearchChange,
   yearFilter,
@@ -232,4 +233,4 @@ export function FiltersBar({
       )}
     </div>
   )
-}
+})

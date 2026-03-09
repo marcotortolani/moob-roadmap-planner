@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -20,7 +21,7 @@ interface ActiveFiltersBadgesProps {
   onClearAll: () => void
 }
 
-export function ActiveFiltersBadges({
+export const ActiveFiltersBadges = memo(function ActiveFiltersBadges({
   searchTerm,
   yearFilter,
   quarterFilter,
@@ -129,4 +130,4 @@ export function ActiveFiltersBadges({
       )}
     </div>
   )
-}
+})

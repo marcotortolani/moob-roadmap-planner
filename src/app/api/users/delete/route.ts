@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { createAdminSupabaseClient } from '@/lib/supabase/server'
+import { logAuditEvent, getIpAddress } from '@/lib/audit-logger'
+import { isSameOrigin, csrfRejected } from '@/lib/csrf'
 
 export async function POST(request: NextRequest) {
+  if (!isSameOrigin(request)) {
+    const { error, status } = csrfRejected()
+    return NextResponse.json({ error }, { status })
+  }
+
   try {
     const supabase = await createServerSupabaseClient()
     const adminSupabase = createAdminSupabaseClient()
@@ -174,6 +181,20 @@ export async function POST(request: NextRequest) {
     } else {
       console.log('✅ [Delete User] Deleted from auth.users')
     }
+
+    // Audit log: user deleted
+    logAuditEvent({
+      action: 'USER_DELETED',
+      resourceType: 'user',
+      resourceId: userId,
+      actorId: currentUser.id,
+      actorEmail: session.user.email,
+      ipAddress: getIpAddress(request),
+      metadata: {
+        deletedUserEmail: userToDelete.email,
+        reassignedProducts: reassignProductsResult.data?.length ?? 0,
+      },
+    })
 
     return NextResponse.json({
       success: true,

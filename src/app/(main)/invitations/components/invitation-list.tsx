@@ -11,6 +11,7 @@ import {
   Copy,
   Trash2,
   MoreVertical,
+  RefreshCw,
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -34,6 +35,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
@@ -52,6 +54,8 @@ import { Invitation } from '../page'
 interface InvitationListProps {
   invitations: Invitation[]
   onRevoke?: () => void
+  onResend?: () => void
+  onDelete?: () => void
 }
 
 const STATUS_CONFIG = {
@@ -100,12 +104,15 @@ const ROLE_CONFIG = {
   },
 }
 
-export function InvitationList({ invitations, onRevoke }: InvitationListProps) {
+export function InvitationList({ invitations, onRevoke, onResend, onDelete }: InvitationListProps) {
   const { toast } = useToast()
   const [revokeDialogOpen, setRevokeDialogOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedInvitation, setSelectedInvitation] =
     useState<Invitation | null>(null)
   const [isRevoking, setIsRevoking] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [resendingId, setResendingId] = useState<string | null>(null)
 
   const copyInviteLink = (token: string) => {
     const inviteLink = `${window.location.origin}/signup?token=${token}`
@@ -153,14 +160,91 @@ export function InvitationList({ invitations, onRevoke }: InvitationListProps) {
     }
   }
 
+  const handleDelete = async () => {
+    if (!selectedInvitation) return
+
+    setIsDeleting(true)
+
+    try {
+      const response = await fetch('/api/invitations/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ invitationId: selectedInvitation.id }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Error al eliminar invitación')
+      }
+
+      toast({
+        title: 'Invitación eliminada',
+        description: `La invitación a ${selectedInvitation.email} ha sido eliminada`,
+      })
+
+      setDeleteDialogOpen(false)
+      setSelectedInvitation(null)
+      onDelete?.()
+    } catch {
+      toast({
+        title: 'Error',
+        description: 'No se pudo eliminar la invitación',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const handleResend = async (invitation: Invitation) => {
+    setResendingId(invitation.id)
+
+    try {
+      const response = await fetch('/api/invitations/resend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ invitationId: invitation.id }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al reenviar invitación')
+      }
+
+      if (data.emailSent === false) {
+        toast({
+          title: 'Invitación actualizada',
+          description: `El registro se actualizó pero el email no pudo enviarse a ${invitation.email}. Verifica la configuración de Resend.`,
+          variant: 'destructive',
+        })
+      } else {
+        toast({
+          title: 'Invitación reenviada',
+          description: `Se reenvió la invitación a ${invitation.email}. El enlace vence en 7 días.`,
+        })
+      }
+
+      onResend?.()
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'No se pudo reenviar la invitación',
+        variant: 'destructive',
+      })
+    } finally {
+      setResendingId(null)
+    }
+  }
+
   const isExpired = (expiresAt: string) => {
     return new Date(expiresAt) < new Date()
   }
 
-  const formatSentTime = (sentDate: string) => {
+  // Derives "last sent" time from expires_at - 7 days, so resends show the correct time
+  const formatSentTime = (expiresAt: string) => {
     const now = new Date()
-    // Parse the UTC timestamp and convert to local time
-    const sent = new Date(sentDate + 'Z') // Add 'Z' to ensure it's parsed as UTC
+    const expires = new Date(expiresAt + 'Z')
+    const sent = new Date(expires.getTime() - 7 * 24 * 60 * 60 * 1000)
 
     const days = differenceInDays(now, sent)
     const hours = differenceInHours(now, sent)
@@ -179,11 +263,9 @@ export function InvitationList({ invitations, onRevoke }: InvitationListProps) {
     }
   }
 
-  const formatExpiresTime = (sentDate: string) => {
+  const formatExpiresTime = (expiresAt: string) => {
     const now = new Date()
-    // Parse the UTC timestamp and convert to local time
-    const sent = new Date(sentDate + 'Z') // Add 'Z' to ensure it's parsed as UTC
-    const expires = new Date(sent.getTime() + 7 * 24 * 60 * 60 * 1000) // +7 días
+    const expires = new Date(expiresAt + 'Z')
 
     const days = differenceInDays(expires, now)
     const hours = differenceInHours(expires, now)
@@ -270,14 +352,14 @@ export function InvitationList({ invitations, onRevoke }: InvitationListProps) {
                       </div>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {formatSentTime(invitation.created_at)}
+                      {formatSentTime(invitation.expires_at)}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {invitation.status === 'ACCEPTED'
                         ? '-'
                         : invitation.status === 'EXPIRED' || expired
                           ? 'Expirada'
-                          : formatExpiresTime(invitation.created_at)}
+                          : formatExpiresTime(invitation.expires_at)}
                     </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
@@ -305,13 +387,31 @@ export function InvitationList({ invitations, onRevoke }: InvitationListProps) {
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Revocar
                               </DropdownMenuItem>
+                              <DropdownMenuSeparator />
                             </>
                           )}
-                          {(invitation.status !== 'PENDING' || expired) && (
-                            <DropdownMenuItem disabled>
-                              No hay acciones disponibles
-                            </DropdownMenuItem>
+                          {(invitation.status === 'EXPIRED' || invitation.status === 'REVOKED') && (
+                            <>
+                              <DropdownMenuItem
+                                onClick={() => handleResend(invitation)}
+                                disabled={resendingId === invitation.id}
+                              >
+                                <RefreshCw className={`mr-2 h-4 w-4 ${resendingId === invitation.id ? 'animate-spin' : ''}`} />
+                                {resendingId === invitation.id ? 'Reenviando...' : 'Reenviar invitación'}
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                            </>
                           )}
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setSelectedInvitation(invitation)
+                              setDeleteDialogOpen(true)
+                            }}
+                            className="text-red-600"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Eliminar
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -342,6 +442,28 @@ export function InvitationList({ invitations, onRevoke }: InvitationListProps) {
               className="bg-red-600 hover:bg-red-700"
             >
               {isRevoking ? 'Revocando...' : 'Revocar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar invitación?</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro de que deseas eliminar la invitación de{' '}
+              <strong>{selectedInvitation?.email}</strong>? Esta acción no se
+              puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? 'Eliminando...' : 'Eliminar'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

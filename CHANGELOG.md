@@ -6,6 +6,21 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/) y el p
 
 ---
 
+## [0.8.0] - 2026-03-09
+
+### Added
+
+- **Reenvío de invitaciones expiradas/revocadas** — Nuevo endpoint `POST /api/invitations/resend` que regenera el token, resetea la expiración a 7 días, actualiza el status a PENDING y reenvía el email via SendGrid. Registra evento en `audit_logs` con `metadata.resent = true`.
+- **Eliminación de invitaciones** — Nuevo endpoint `POST /api/invitations/delete` y opción "Eliminar" en el dropdown de acciones para todos los estados de invitación, con AlertDialog de confirmación.
+- **Feedback de email en reenvío** — Si el email falla al enviarse, el toast informa explícitamente en lugar de mostrar éxito silencioso.
+
+### Fixed
+
+- **Columna "Enviada" no se actualizaba al reenviar** — Ahora se deriva de `expires_at - 7 días` en lugar de `created_at`, reflejando la fecha del último envío.
+- **Columna "Expira" calculaba mal la fecha tras reenvío** — Ahora usa `expires_at` directamente en lugar de `created_at + 7 días`.
+
+---
+
 ## [0.7.1] - 2026-03-09
 
 ### Fixed
