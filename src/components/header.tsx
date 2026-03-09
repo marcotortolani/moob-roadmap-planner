@@ -37,7 +37,7 @@ import {
 import { usePathname, useRouter } from 'next/navigation'
 
 export function Header() {
-  const { user, logout } = useAuth()
+  const { user, loading, logout } = useAuth()
   const { canCreateInvitations, canCreateProducts } = usePermissionChecks()
   const router = useRouter()
   const pathname = usePathname()
@@ -82,6 +82,19 @@ export function Header() {
         aria-label="Navegación principal"
       >
         {user && isMainPage && <ViewSwitcher />}
+
+        {/* Fallback logout when user is null but session may still exist (e.g. token refresh race) */}
+        {!user && !loading && (
+          <Button
+            variant="destructive"
+            size="sm"
+            className="rounded-sm"
+            onClick={handleLogout}
+          >
+            <LogOut className="h-4 w-4 mr-2" aria-hidden="true" />
+            Cerrar Sesión
+          </Button>
+        )}
 
         {user && (
           <>

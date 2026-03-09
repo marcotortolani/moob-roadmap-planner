@@ -6,6 +6,15 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/) y el p
 
 ---
 
+## [0.7.1] - 2026-03-09
+
+### Fixed
+
+- **Race condition en TOKEN_REFRESHED (skeleton infinito)** — Al dejar el tab abierto 1+ horas, el access token expiraba y al volver el handler `TOKEN_REFRESHED` llamaba a `getCurrentUser()` (server action) que competía con la propagación de cookies, devolviendo `null` y seteando `user = null`. Esto deshabilitaba React Query mostrando skeleton para siempre. Corregido reemplazando el server action por `fetchUserData(session.user)` que usa el cliente Supabase del browser con el token recién refrescado y ya tiene retry logic incorporado.
+- **Botón de logout inaccesible con `user = null`** — Cuando la race condition ocurría, el menú de usuario (incluido logout) quedaba oculto por el guard `{user && ...}`. Se agregó un botón fallback "Cerrar Sesión" visible siempre que `!user && !loading`.
+
+---
+
 ## [0.7.0] - 2026-03-07
 
 - Optimizaciones de performance en base de datos (9 índices)

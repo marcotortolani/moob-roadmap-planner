@@ -156,18 +156,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null)
         router.push('/login')
       } else if (event === 'TOKEN_REFRESHED') {
-        try {
-          const { user: userData, error } = await getCurrentUser()
-          if (error || !userData) {
-            setUser(null)
-            router.push('/login')
-          } else {
+        if (session?.user) {
+          try {
+            // Use browser-side fetchUserData (has retry logic, uses fresh token)
+            // instead of getCurrentUser() server action which races with cookie propagation
+            const userData = await fetchUserData(session.user)
             setUser(userData)
-            // Invalidate React Query cache so hooks refetch with the new token
             getQueryClient().invalidateQueries()
+          } catch {
+            // fetchUserData failed after all retries — only sign out if session is truly gone
+            const { data } = await supabase.auth.getSession()
+            if (!data.session) {
+              setUser(null)
+              router.push('/login')
+            }
+            // Session still valid — keep existing user state, don't set null
           }
-        } catch {
-          // Token refresh failed — log out to avoid stuck state
+        } else {
+          // TOKEN_REFRESHED with no session — clean up
           setUser(null)
           router.push('/login')
         }
