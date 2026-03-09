@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { sendInvitation } from '@/lib/email/send-invitation'
+import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit'
+
+const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/
 
 export async function POST(request: NextRequest) {
   try {
@@ -50,10 +53,33 @@ export async function POST(request: NextRequest) {
 
     console.log('📧 [Invitations API] Request body:', { email, role })
 
+    // Rate limit: 20 invitations per hour per admin user
+    const rateLimitKey = `send-invitation:${currentUser.id}`
+    const rateLimit = checkRateLimit(rateLimitKey, RATE_LIMITS.invitationSend)
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        {
+          error: `Demasiadas invitaciones enviadas. Espera ${rateLimit.retryAfterSeconds} segundos.`,
+        },
+        {
+          status: 429,
+          headers: { 'Retry-After': String(rateLimit.retryAfterSeconds) },
+        }
+      )
+    }
+
     // Validate input
     if (!email || !role) {
       return NextResponse.json(
         { error: 'Email y rol son requeridos' },
+        { status: 400 }
+      )
+    }
+
+    // Validate email format
+    if (typeof email !== 'string' || !EMAIL_REGEX.test(email) || email.length > 254) {
+      return NextResponse.json(
+        { error: 'Formato de email inválido' },
         { status: 400 }
       )
     }

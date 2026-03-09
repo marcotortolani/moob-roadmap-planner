@@ -86,6 +86,26 @@ export async function middleware(request: NextRequest) {
   // to different users (different cookies = different auth state)
   response.headers.set('Vary', '*')
 
+  // Content Security Policy
+  // unsafe-eval: required by Next.js dev (webpack), kept for compatibility
+  // unsafe-inline: required by Tailwind CSS inline styles and Next.js hydration
+  const cspDirectives = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob: https://placehold.co https://images.unsplash.com https://picsum.photos https://*.supabase.co",
+    "font-src 'self'",
+    "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+    "frame-src 'none'",
+    "frame-ancestors 'none'",
+    "object-src 'none'",
+    "base-uri 'self'",
+  ]
+  response.headers.set('Content-Security-Policy', cspDirectives.join('; '))
+  response.headers.set('X-Content-Type-Options', 'nosniff')
+  response.headers.set('X-Frame-Options', 'DENY')
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+
   return response
 }
 

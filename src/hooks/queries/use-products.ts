@@ -2,8 +2,8 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getSupabaseClient } from '@/lib/supabase/client'
-import { parseISO, startOfDay } from 'date-fns'
 import type { Product } from '@/lib/types'
+import { mapDbProduct, type DbProduct, generateRandomColor } from '@/lib/data-mappers'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/context/auth-context'
 
@@ -84,35 +84,7 @@ async function fetchProducts(filters?: ProductFilters): Promise<Product[]> {
     throw new Error(error.message)
   }
 
-  // Transform to match Product type (camelCase)
-  return (data || []).map((product) => ({
-    id: product.id,
-    name: product.name,
-    operator: product.operator,
-    country: product.country,
-    language: product.language,
-    status: product.status,
-    startDate: startOfDay(parseISO(product.start_date)),
-    endDate: startOfDay(parseISO(product.end_date)),
-    cardColor: product.card_color || generateRandomColor(),
-    // Map URL fields from snake_case to camelCase
-    productiveUrl: product.productive_url || null,
-    vercelDemoUrl: product.vercel_demo_url || null,
-    wpContentProdUrl: product.wp_content_prod_url || null,
-    wpContentTestUrl: product.wp_content_test_url || null,
-    chatbotUrl: product.chatbot_url || null,
-    comments: product.comments || null,
-    milestones: product.milestones?.map((m: { id: string; name: string; start_date: string; end_date: string; status: string; product_id: string }) => ({
-      ...m,
-      startDate: startOfDay(parseISO(m.start_date)),
-      endDate: startOfDay(parseISO(m.end_date)),
-    })) || [],
-    customUrls: product.customUrls || [],
-    createdById: product.created_by_id,
-    updatedById: product.updated_by_id,
-    createdAt: new Date(product.created_at),
-    updatedAt: new Date(product.updated_at),
-  })) as Product[]
+  return (data || []).map((product) => mapDbProduct(product as unknown as DbProduct))
 }
 
 /**
@@ -164,47 +136,7 @@ async function fetchProduct(id: string): Promise<Product> {
     throw new Error('Product not found')
   }
 
-  // Transform to match Product type (camelCase)
-  return {
-    id: data.id,
-    name: data.name,
-    operator: data.operator,
-    country: data.country,
-    language: data.language,
-    status: data.status,
-    startDate: startOfDay(parseISO(data.start_date)),
-    endDate: startOfDay(parseISO(data.end_date)),
-    cardColor: data.card_color || generateRandomColor(),
-    // Map URL fields from snake_case to camelCase
-    productiveUrl: data.productive_url || null,
-    vercelDemoUrl: data.vercel_demo_url || null,
-    wpContentProdUrl: data.wp_content_prod_url || null,
-    wpContentTestUrl: data.wp_content_test_url || null,
-    chatbotUrl: data.chatbot_url || null,
-    comments: data.comments || null,
-    milestones: data.milestones?.map((m: { id: string; name: string; start_date: string; end_date: string; status: string; product_id: string }) => ({
-      ...m,
-      startDate: startOfDay(parseISO(m.start_date)),
-      endDate: startOfDay(parseISO(m.end_date)),
-    })) || [],
-    customUrls: data.customUrls || [],
-    createdById: data.created_by_id,
-    updatedById: data.updated_by_id,
-    createdBy: data.createdBy ? {
-      id: data.createdBy.id,
-      name: `${data.createdBy.first_name || ''} ${data.createdBy.last_name || ''}`.trim(),
-      email: data.createdBy.email,
-      avatarUrl: data.createdBy.avatar_url,
-    } : undefined,
-    updatedBy: data.updatedBy ? {
-      id: data.updatedBy.id,
-      name: `${data.updatedBy.first_name || ''} ${data.updatedBy.last_name || ''}`.trim(),
-      email: data.updatedBy.email,
-      avatarUrl: data.updatedBy.avatar_url,
-    } : undefined,
-    createdAt: new Date(data.created_at),
-    updatedAt: new Date(data.updated_at),
-  } as Product
+  return mapDbProduct(data as unknown as DbProduct)
 }
 
 /**
@@ -234,30 +166,6 @@ export function useProduct(id: string) {
     // fresh data with user relations in background
     initialDataUpdatedAt: 0,
   })
-}
-
-/**
- * Generate a random vibrant color for product cards
- */
-function generateRandomColor(): string {
-  const colors = [
-    '#FF6B6B', // Red
-    '#4ECDC4', // Teal
-    '#45B7D1', // Blue
-    '#FFA07A', // Light Salmon
-    '#98D8C8', // Mint
-    '#F7DC6F', // Yellow
-    '#BB8FCE', // Purple
-    '#85C1E2', // Sky Blue
-    '#F8B195', // Peach
-    '#C06C84', // Mauve
-    '#6C5B7B', // Plum
-    '#355C7D', // Navy
-    '#99B898', // Sage
-    '#E84A5F', // Pink
-    '#2A363B', // Dark Gray
-  ]
-  return colors[Math.floor(Math.random() * colors.length)]
 }
 
 /**

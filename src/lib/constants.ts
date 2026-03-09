@@ -1,3 +1,19 @@
+// ─── Timing ──────────────────────────────────────────────────────────────────
+
+/** Debounce delay in ms for search inputs */
+export const DEBOUNCE_DELAY_MS = 300
+
+/** React Query stale time for product data (2 minutes) */
+export const QUERY_STALE_TIME_MS = 2 * 60 * 1000
+
+/** React Query garbage collection time (10 minutes) */
+export const QUERY_GC_TIME_MS = 10 * 60 * 1000
+
+// ─── UI ──────────────────────────────────────────────────────────────────────
+
+/** Initial year shown when no year filter is active */
+export const INITIAL_YEAR = new Date().getFullYear()
+
 export const STATUS_OPTIONS = [
   { value: 'PLANNED', label: 'Programado' },
   { value: 'IN_PROGRESS', label: 'En Proceso' },
