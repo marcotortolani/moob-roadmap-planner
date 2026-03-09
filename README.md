@@ -4,7 +4,7 @@
 
 **Roadmap Planner** es una aplicación web diseñada para la gestión y visualización de hojas de ruta de productos. Permite a los usuarios planificar, organizar y seguir el progreso de múltiples productos de una manera intuitiva y visual, con vistas de lista y calendario, potentes filtros y un dashboard de estadísticas.
 
-La aplicación está construida como una Single-Page Application (SPA) utilizando tecnologías modernas, con un enfoque en la interactividad y la experiencia de usuario. Todos los datos se gestionan localmente en el navegador a través de `localStorage`, lo que la hace rápida y funcional sin necesidad de una base de datos externa para esta versión demo.
+La aplicación está construida utilizando tecnologías modernas, con un enfoque en la interactividad y la experiencia de usuario. Todos los datos se gestionan localmente en el navegador a través de `localStorage`, lo que la hace rápida y funcional sin necesidad de una base de datos externa para esta versión demo.
 
 ---
 
