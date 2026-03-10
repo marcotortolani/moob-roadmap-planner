@@ -162,6 +162,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         router.push('/login')
       } else if (event === 'TOKEN_REFRESHED') {
         if (session?.user) {
+          let signedOut = false
           try {
             // Use browser-side fetchUserData (has retry logic, uses fresh token)
             // instead of getCurrentUser() server action which races with cookie propagation
@@ -173,14 +174,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (!data.session) {
               setUser(null)
               router.push('/login')
-              return  // early return: don't invalidate after true sign-out
+              signedOut = true
             }
             // Session still valid — keep existing user state, don't set null
           } finally {
-            // RC2 FIX: always invalidate queries when session is valid, even if fetchUserData
-            // failed. Previously only ran on success, leaving React Query cache empty with no
-            // trigger to refetch after a transient DB error during token refresh.
-            getQueryClient().invalidateQueries()
+            // RC2 FIX: invalidate queries when session is valid, but NOT after true sign-out
+            // (signedOut flag prevents firing queries with an expired token)
+            if (!signedOut) getQueryClient().invalidateQueries()
           }
         } else {
           // TOKEN_REFRESHED with no session — clean up

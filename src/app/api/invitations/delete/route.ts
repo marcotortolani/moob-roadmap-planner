@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase/server'
+import { isSameOrigin, csrfRejected } from '@/lib/csrf'
+import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
+  if (!isSameOrigin(request)) {
+    const { error, status } = csrfRejected()
+    return NextResponse.json({ error }, { status })
+  }
+
   try {
     const supabase = await createServerSupabaseClient()
 
@@ -23,6 +30,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'No autorizado. Solo administradores pueden eliminar invitaciones.' },
         { status: 403 }
+      )
+    }
+
+    // Rate limit: 30 deletions per hour per admin
+    const rateLimit = checkRateLimit(`delete-invitation:${currentUser.id}`, RATE_LIMITS.invitationDelete)
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: `Demasiadas solicitudes. Espera ${rateLimit.retryAfterSeconds} segundos.` },
+        { status: 429, headers: { 'Retry-After': String(rateLimit.retryAfterSeconds) } }
       )
     }
 

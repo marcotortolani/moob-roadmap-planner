@@ -95,6 +95,12 @@ export const RATE_LIMITS = {
   passwordChange: { limit: 5, windowMs: 15 * 60 * 1000 },
   /** Invitation send: 20 per hour per admin */
   invitationSend: { limit: 20, windowMs: 60 * 60 * 1000 },
+  /** Invitation revoke: 30 per hour per admin */
+  invitationRevoke: { limit: 30, windowMs: 60 * 60 * 1000 },
+  /** Invitation delete: 30 per hour per admin */
+  invitationDelete: { limit: 30, windowMs: 60 * 60 * 1000 },
+  /** User delete: 10 per hour per admin */
+  userDelete: { limit: 10, windowMs: 60 * 60 * 1000 },
   /** Email send: 10 per hour per IP */
   emailSend: { limit: 10, windowMs: 60 * 60 * 1000 },
 } as const

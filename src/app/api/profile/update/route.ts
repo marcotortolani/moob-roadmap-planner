@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { isSameOrigin, csrfRejected } from '@/lib/csrf'
 
 export async function POST(request: NextRequest) {
+  if (!isSameOrigin(request)) {
+    const { error, status } = csrfRejected()
+    return NextResponse.json({ error }, { status })
+  }
+
   try {
     const supabase = await createServerSupabaseClient()
 
@@ -16,6 +22,14 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     const { name, avatarUrl } = body
+
+    // Validate name
+    if (typeof name !== 'string' || name.trim().length < 1 || name.length > 200) {
+      return NextResponse.json(
+        { error: 'El nombre debe tener entre 1 y 200 caracteres' },
+        { status: 400 }
+      )
+    }
 
     console.log('📝 [Profile API] Update request:', {
       user_id: session.user.id,

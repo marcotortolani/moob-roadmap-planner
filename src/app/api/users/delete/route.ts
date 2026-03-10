@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { createAdminSupabaseClient } from '@/lib/supabase/server'
 import { logAuditEvent, getIpAddress } from '@/lib/audit-logger'
 import { isSameOrigin, csrfRejected } from '@/lib/csrf'
+import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   if (!isSameOrigin(request)) {
@@ -42,6 +43,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'No tienes permisos para eliminar usuarios' },
         { status: 403 }
+      )
+    }
+
+    // Rate limit: 10 user deletions per hour per admin
+    const rateLimit = checkRateLimit(`delete-user:${currentUser.id}`, RATE_LIMITS.userDelete)
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: `Demasiadas solicitudes. Espera ${rateLimit.retryAfterSeconds} segundos.` },
+        { status: 429, headers: { 'Retry-After': String(rateLimit.retryAfterSeconds) } }
       )
     }
 
