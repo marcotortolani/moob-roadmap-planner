@@ -91,12 +91,12 @@ export async function middleware(request: NextRequest) {
   // unsafe-inline: required by Tailwind CSS inline styles and Next.js hydration
   const cspDirectives = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com",
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob: https://placehold.co https://images.unsplash.com https://picsum.photos https://*.supabase.co",
+    "img-src 'self' data: blob: https://placehold.co https://images.unsplash.com https://picsum.photos https://*.supabase.co https://www.google-analytics.com",
     "font-src 'self'",
     // In dev, Next.js HMR uses ws://127.0.0.1:<random-port> for hot reload
-    `connect-src 'self' https://*.supabase.co wss://*.supabase.co${process.env.NODE_ENV === 'development' ? ' ws://localhost:* ws://127.0.0.1:*' : ''}`,
+    `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com${process.env.NODE_ENV === 'development' ? ' ws://localhost:* ws://127.0.0.1:*' : ''}`,
     "frame-src 'none'",
     "frame-ancestors 'none'",
     "object-src 'none'",
