@@ -6,6 +6,18 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/) y el p
 
 ---
 
+## [0.8.2] - 2026-03-10
+
+### Fixed
+
+- **Skeleton infinito post-inactividad (fix definitivo en servidor)** — Corregidos dos bugs encadenados en la capa de servidor que persistían tras los fixes del cliente en v0.8.1.
+
+  **Bug 1 — Middleware cookie handler (causa raíz):** El patrón `set/remove` recreaba el objeto `response` en cada llamada al manejar un token refresh, descartando los cookies chunkeados previos. Cuando Supabase rota el access token (TTL: 1h) escribe múltiples cookies en base64; solo el último sobrevivía. El browser recibía la sesión truncada → `getCurrentUser()` fallaba con "Auth session missing!" en servidor → `setUser(null)` silencioso en cliente. Corregido con el patrón `getAll/setAll` (Supabase SSR v0.5+) que escribe todos los cookies de una vez sobre el mismo objeto `response` (`src/middleware.ts`, `src/lib/supabase/server.ts`).
+
+  **Bug 2 — `initAuth()` sin fallback a login:** Cuando el server action `getCurrentUser()` devolvía error, `initAuth()` hacía `setUser(null)` sin redirigir a `/login`, dejando al usuario en la página protegida con skeleton eterno. Reemplazado por `supabase.auth.getUser()` del browser client (maneja refresh automático) con redirect explícito a `/login` en caso de fallo (`src/context/auth-context.tsx`).
+
+---
+
 ## [0.8.1] - 2026-03-10
 
 ### Fixed

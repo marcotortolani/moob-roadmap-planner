@@ -6,7 +6,6 @@ import { getSupabaseClient } from '@/lib/supabase/client'
 import type { User as SupabaseUser, AuthChangeEvent, Session } from '@supabase/supabase-js'
 import type { User } from '@/lib/types'
 import type { DbUser } from '@/types/database'
-import { getCurrentUser } from '@/app/actions/auth'
 import { getQueryClient } from '@/lib/react-query/client'
 import { getErrorMessage, logError } from '@/lib/errors/error-handler'
 
@@ -113,25 +112,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const initAuth = async () => {
       try {
-        const { user: userData, error } = await getCurrentUser()
+        // Use browser client directly — handles token refresh automatically
+        // without race conditions caused by chunked cookie loss in middleware.
+        const { data: { user: authUser }, error } = await supabase.auth.getUser()
 
-        if (error) {
+        if (error || !authUser) {
           setUser(null)
-        } else if (userData) {
-          // Check if user is BLOCKED (replaces per-request middleware check)
-          if (userData.role === 'BLOCKED') {
-            await supabase.auth.signOut()
-            setUser(null)
-            router.push('/login?error=blocked')
-            return
-          }
-          setUser(userData)
-        } else {
-          setUser(null)
+          router.push('/login')
+          return
         }
+
+        const userData = await fetchUserData(authUser)
+
+        // Check if user is BLOCKED (replaces per-request middleware check)
+        if (userData.role === 'BLOCKED') {
+          await supabase.auth.signOut()
+          setUser(null)
+          router.push('/login?error=blocked')
+          return
+        }
+
+        setUser(userData)
       } catch (error) {
         console.error('Auth initialization error:', error)
         setUser(null)
+        router.push('/login')
       } finally {
         clearTimeout(safetyTimeout)
         setLoading(false)

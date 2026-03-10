@@ -1,38 +1,23 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  })
+  let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value
+        getAll() {
+          return request.cookies.getAll()
         },
-        set(name: string, value: string, options: CookieOptions) {
-          request.cookies.set({ name, value, ...options })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
-          response.cookies.set({ name, value, ...options })
-        },
-        remove(name: string, options: CookieOptions) {
-          request.cookies.set({ name, value: '', ...options })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
-          response.cookies.set({ name, value: '', ...options })
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+          supabaseResponse = NextResponse.next({ request })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          )
         },
       },
     }
@@ -74,17 +59,17 @@ export async function middleware(request: NextRequest) {
 
   // Prevent CDN and browser from caching HTML/RSC responses with stale auth state.
   // Static assets are excluded by the matcher config below.
-  response.headers.set(
+  supabaseResponse.headers.set(
     'Cache-Control',
     'private, no-cache, no-store, max-age=0, must-revalidate'
   )
   // Vercel-specific: Tell Vercel's CDN not to cache this response
-  response.headers.set('CDN-Cache-Control', 'no-store')
+  supabaseResponse.headers.set('CDN-Cache-Control', 'no-store')
   // Standard proxy header: Tell upstream proxies/CDNs not to cache
-  response.headers.set('Surrogate-Control', 'no-store')
+  supabaseResponse.headers.set('Surrogate-Control', 'no-store')
   // Vary on everything to prevent any proxy from serving cached responses
   // to different users (different cookies = different auth state)
-  response.headers.set('Vary', '*')
+  supabaseResponse.headers.set('Vary', '*')
 
   // Content Security Policy
   // unsafe-eval: required by Next.js dev (webpack), kept for compatibility
@@ -102,12 +87,12 @@ export async function middleware(request: NextRequest) {
     "object-src 'none'",
     "base-uri 'self'",
   ]
-  response.headers.set('Content-Security-Policy', cspDirectives.join('; '))
-  response.headers.set('X-Content-Type-Options', 'nosniff')
-  response.headers.set('X-Frame-Options', 'DENY')
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+  supabaseResponse.headers.set('Content-Security-Policy', cspDirectives.join('; '))
+  supabaseResponse.headers.set('X-Content-Type-Options', 'nosniff')
+  supabaseResponse.headers.set('X-Frame-Options', 'DENY')
+  supabaseResponse.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
 
-  return response
+  return supabaseResponse
 }
 
 export const config = {
