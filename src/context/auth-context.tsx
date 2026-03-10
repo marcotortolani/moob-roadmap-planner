@@ -110,21 +110,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false)
     }, 10000)
 
-    // initAuth reads from local cookies — NO network call.
-    // Unlike getUser() (v0.8.2), never fails on Vercel cold starts.
-    // Unlike INITIAL_SESSION event, always resolves (not dependent on event timing).
+    // initAuth validates the token server-side via getUser() — no cookie-read hang.
+    // getSession() was causing intermittent hangs in production (documented in use-products.ts).
+    // No router.push('/login') on failure — middleware is the routing authority.
+    // (v0.8.2 used getUser() + router.push → redirect loop. No router.push = no loop.)
     const initAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession()
+        const { data: { user: authUser }, error } = await supabase.auth.getUser()
 
-        if (!session?.user) {
+        if (error || !authUser) {
           setUser(null)
-          // No router.push('/login') — middleware is the routing authority.
-          // Calling router.push here caused the v0.8.2 redirect loop.
           return
         }
 
-        const userData = await fetchUserData(session.user)
+        const userData = await fetchUserData(authUser)
 
         if (userData.role === 'BLOCKED') {
           await supabase.auth.signOut()

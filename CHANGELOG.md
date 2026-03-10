@@ -6,6 +6,20 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/) y el p
 
 ---
 
+## [0.8.4] - 2026-03-10
+
+### Fixed
+
+- **Skeleton infinito — fix definitivo (dos bugs independientes)**
+
+  **Bug 1 — `getSession()` cuelga en producción (`src/context/auth-context.tsx`):**
+  `initAuth()` usaba `getSession()` que lee cookies locales y cuelga intermitentemente en Vercel (cold starts, edge network). Reemplazado por `getUser()` que valida el token server-side y siempre resuelve. Sin `router.push('/login')` en fallo — el middleware es la autoridad de enrutamiento (el patrón `getUser` + `router.push` causaba el loop de v0.8.2).
+
+  **Bug 2 — React Query v5: query desactivada = `isPending: true` eterno (`src/hooks/queries/use-products.ts`):**
+  React Query v5 devuelve `isPending: true` para queries con `enabled: false`. Cuando `user` es `null`, la query se desactiva pero `isPending` permanece `true`, causando skeleton infinito. `useProducts` ahora envuelve `useQuery` y expone `isPending` personalizado: `authLoading || query.isLoading`. `isLoading` solo es `true` cuando la query está activamente fetching — nunca cuando está desactivada.
+
+---
+
 ## [0.8.2] - 2026-03-10
 
 ### Fixed

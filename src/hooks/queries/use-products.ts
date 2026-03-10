@@ -127,7 +127,7 @@ async function fetchProducts(filters?: ProductFilters): Promise<Product[]> {
 export function useProducts(filters?: ProductFilters) {
   const { loading: authLoading, user } = useAuth()
 
-  return useQuery({
+  const query = useQuery({
     queryKey: [...productKeys.list(filters), user?.id],
     queryFn: () => fetchProducts(filters),
     staleTime: 2 * 60 * 1000, // 2 minutes (Sprint 6.2 - was 30 seconds)
@@ -138,6 +138,15 @@ export function useProducts(filters?: ProductFilters) {
     // RC1-RC3 fixes miss an edge case.
     refetchOnWindowFocus: 'always',
   })
+
+  return {
+    ...query,
+    // v0.8.4 FIX: React Query v5 sets isPending=true for disabled queries.
+    // When user=null (not authenticated), the query is disabled but isPending=true,
+    // causing infinite skeleton. Override: show loading only when auth is initializing
+    // OR the query is actively fetching (isLoading = status==='pending' && fetchStatus==='fetching').
+    isPending: authLoading || query.isLoading,
+  }
 }
 
 /**
