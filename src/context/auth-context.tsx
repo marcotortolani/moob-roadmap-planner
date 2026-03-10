@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, useRef } from 'react'
+import { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/supabase/client'
 import type { User as SupabaseUser, AuthChangeEvent, Session } from '@supabase/supabase-js'
@@ -8,6 +8,25 @@ import type { User } from '@/lib/types'
 import type { DbUser } from '@/types/database'
 import { getQueryClient } from '@/lib/react-query/client'
 import { getErrorMessage, logError } from '@/lib/errors/error-handler'
+
+// --- localStorage cache helpers (survive page reloads) ---
+const CACHED_USER_KEY = 'rp-cached-user'
+
+function getCachedUser(): User | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const cached = localStorage.getItem(CACHED_USER_KEY)
+    return cached ? JSON.parse(cached) as User : null
+  } catch { return null }
+}
+
+function setCachedUser(user: User | null): void {
+  if (typeof window === 'undefined') return
+  try {
+    user ? localStorage.setItem(CACHED_USER_KEY, JSON.stringify(user))
+         : localStorage.removeItem(CACHED_USER_KEY)
+  } catch { /* non-fatal */ }
+}
 
 interface AuthContextType {
   user: User | null
@@ -33,11 +52,17 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const supabase = getSupabaseClient()
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState<User | null>(() => getCachedUser())
+  const [loading, setLoading] = useState(() => getCachedUser() === null)
   const isUpdatingPassword = useRef(false)
   const hasInitialized = useRef(false) // Prevent double initialization
   const router = useRouter()
+
+  // Always update both React state and localStorage cache together
+  const setUserAndCache = useCallback((newUser: User | null) => {
+    setUser(newUser)
+    setCachedUser(newUser)
+  }, [])
 
   // Transform Supabase user to app User
   const transformUser = (supabaseUser: SupabaseUser, dbUser?: DbUser): User => {
@@ -110,121 +135,126 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false)
     }, 10000)
 
-    // initAuth reads the session from browser cookies via getSession().
-    // getUser() (v0.8.4) broke Vercel: createBrowserClient can't find the session
-    // that createServerClient sets server-side (cookie attribute differences in prod).
-    // getSession() hangs (pre-v0.8.2) were caused by client-side token refresh racing
-    // with cookie propagation — fixed in v0.8.2 via middleware getAll/setAll.
-    // JWT validation security: middleware calls getUser() server-side on every request.
-    // Pattern confirmed by AUTH-GUIDE.md (working project): getSession() browser-side.
-    // No router.push('/login') on failure — middleware is the routing authority.
-    const initAuth = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession()
-
-        if (error || !session?.user) {
-          setUser(null)
-          return
-        }
-
-        const userData = await fetchUserData(session.user)
-
-        if (userData.role === 'BLOCKED') {
-          await supabase.auth.signOut()
-          setUser(null)
-          router.push('/login?error=blocked')
-          return
-        }
-
-        setUser(userData)
-      } catch {
-        setUser(null)
-        // No router.push — middleware handles routing for unauthenticated state
-      } finally {
-        clearTimeout(safetyTimeout)
-        setLoading(false)
-      }
-    }
-
-    initAuth()
-
-    // onAuthStateChange handles SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED ONLY
-    // (no INITIAL_SESSION handler — initAuth() handles initialization)
+    // v0.8.7: No more manual initAuth() with getSession().
+    // onAuthStateChange fires INITIAL_SESSION as its first event, which replaces initAuth().
+    // Warm start: if localStorage has a cached user, React state is already populated
+    // (loading=false, user!=null) so queries fire immediately. INITIAL_SESSION then
+    // validates/updates the cached user in the background.
+    // Security: middleware calls getUser() server-side on every request.
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
+      if (event === 'INITIAL_SESSION') {
+        if (session?.user) {
+          try {
+            const userData = await fetchUserData(session.user)
+            if (userData.role === 'BLOCKED') {
+              await supabase.auth.signOut()
+              setUserAndCache(null)
+              router.push('/login?error=blocked')
+            } else {
+              setUserAndCache(userData)
+            }
+          } catch {
+            // fetchUserData failed — keep cached user (middleware already validated)
+          }
+        } else {
+          // SDK didn't find a session.
+          // If we have a cached user and middleware let us through, try getSession() with delay
+          const cached = getCachedUser()
+          if (cached) {
+            setTimeout(async () => {
+              try {
+                const { data: { session: retry } } = await supabase.auth.getSession()
+                if (retry?.user) {
+                  try {
+                    const userData = await fetchUserData(retry.user)
+                    setUserAndCache(userData)
+                  } catch { /* keep cached */ }
+                } else {
+                  setUserAndCache(null)
+                }
+              } catch {
+                setUserAndCache(null)
+              }
+            }, 500)
+          } else {
+            setUserAndCache(null)
+          }
+        }
+        clearTimeout(safetyTimeout)
+        setLoading(false)
+        return
+      }
+
       if (event === 'SIGNED_IN' && session?.user) {
         try {
           const userData = await fetchUserData(session.user)
-          setUser(userData)
+          setUserAndCache(userData)
         } catch {
-          setUser(null)
+          setUserAndCache(null)
         }
       } else if (event === 'SIGNED_OUT') {
         getQueryClient().clear()
-        setUser(null)
+        setUserAndCache(null)
         router.push('/login')
       } else if (event === 'TOKEN_REFRESHED') {
         if (session?.user) {
           let signedOut = false
           try {
-            // Use browser-side fetchUserData (has retry logic, uses fresh token)
-            // instead of getCurrentUser() server action which races with cookie propagation
             const userData = await fetchUserData(session.user)
-            setUser(userData)
+            setUserAndCache(userData)
           } catch {
-            // fetchUserData failed after all retries — only sign out if session is truly gone
             const { data } = await supabase.auth.getSession()
             if (!data.session) {
-              setUser(null)
+              setUserAndCache(null)
               router.push('/login')
               signedOut = true
             }
-            // Session still valid — keep existing user state, don't set null
           } finally {
-            // RC2 FIX: invalidate queries when session is valid, but NOT after true sign-out
-            // (signedOut flag prevents firing queries with an expired token)
             if (!signedOut) getQueryClient().invalidateQueries()
           }
         } else {
-          // TOKEN_REFRESHED with no session — clean up
-          setUser(null)
+          setUserAndCache(null)
           router.push('/login')
         }
       }
     })
 
     // Validate session when user returns to the tab after being away.
-    // autoRefreshToken handles background refresh, but if the tab was
-    // suspended (mobile, heavy CPU) the token may have expired completely.
     const handleVisibilityChange = async () => {
       if (document.visibilityState !== 'visible') return
 
       const { data, error } = await supabase.auth.getSession()
       if (error || !data.session) {
-        // Session gone — clean up locally and redirect to login
         try { await supabase.auth.signOut() } catch { /* ignore */ }
-        setUser(null)
+        setUserAndCache(null)
         router.push('/login')
         return
       }
 
-      // RC3 FIX: Session valid but data may be stale after long inactivity.
-      // TOKEN_REFRESHED only fires when token actually expires; if the tab was
-      // inactive with a non-expired token, no event fires. Explicitly invalidate
-      // so React Query re-fetches products when user returns to the tab.
-      // staleTime (2min) throttles this: no extra requests if data is fresh.
       getQueryClient().invalidateQueries()
     }
 
     document.addEventListener('visibilitychange', handleVisibilityChange)
 
+    // Cross-tab sync: if another tab logs out, detect via storage event
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === CACHED_USER_KEY && e.newValue === null) {
+        setUser(null)
+        setLoading(false)
+        router.push('/login')
+      }
+    }
+    window.addEventListener('storage', handleStorageChange)
+
     return () => {
       clearTimeout(safetyTimeout)
       subscription.unsubscribe()
       document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('storage', handleStorageChange)
     }
-  }, [router])
+  }, [router, setUserAndCache])
 
   // Login
   const login = async (email: string, password: string) => {
@@ -246,7 +276,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             throw new Error('Tu cuenta ha sido bloqueada. Contacta al administrador.')
           }
 
-          setUser(userData)
+          setUserAndCache(userData)
 
           // Invalidate all React Query caches to ensure fresh data after login
           const queryClient = getQueryClient()
@@ -294,7 +324,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (data.user) {
         try {
           const userData = await fetchUserData(data.user)
-          setUser(userData)
+          setUserAndCache(userData)
 
           // Send welcome email via API route (fire-and-forget - don't block signup if email fails)
           console.log('📧 Sending welcome email to:', email)
@@ -343,7 +373,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (err) {
       console.warn('[logout] signOut failed, proceeding with local cleanup:', err)
     }
-    setUser(null)
+    setUserAndCache(null)
     router.push('/login')
   }
 
@@ -367,7 +397,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error(result.error || 'Error al actualizar el perfil')
       }
 
-      setUser({
+      setUserAndCache({
         ...user,
         name: result.data.firstName && result.data.lastName
           ? `${result.data.firstName} ${result.data.lastName}`

@@ -45,6 +45,14 @@ export function getSupabaseClient(): BrowserSupabaseClient {
         persistSession: true,
         detectSessionInUrl: true,
       },
+      // v0.8.7: Explicit cookie options to fix Chrome cookie handling.
+      // Chrome may silently drop cookies without `secure` on HTTPS origins.
+      // sameSite: 'lax' matches Supabase defaults and middleware behavior.
+      cookieOptions: {
+        path: '/',
+        secure: true,
+        sameSite: 'lax' as const,
+      },
     }
   )
 

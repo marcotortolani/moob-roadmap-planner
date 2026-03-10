@@ -16,7 +16,16 @@ export async function middleware(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           supabaseResponse = NextResponse.next({ request })
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
+            supabaseResponse.cookies.set(name, value, {
+              ...options,
+              // v0.8.7: Explicit cookie attributes to ensure Chrome compatibility.
+              // Without these, Chrome may not expose cookies to document.cookie,
+              // causing createBrowserClient to lose the session on reload.
+              path: '/',
+              secure: true,
+              sameSite: 'lax' as const,
+              httpOnly: false, // Must be false so createBrowserClient can read via document.cookie
+            })
           )
         },
       },

@@ -1,7 +1,7 @@
 // src/components/header.tsx
 'use client'
 
-import { useState, memo } from 'react'
+import { useState, useEffect, memo } from 'react'
 import {
   Sheet,
   SheetContent,
@@ -42,6 +42,15 @@ export const Header = memo(function Header() {
   const router = useRouter()
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  // Delay showing fallback logout to avoid flash when cached user loads instantly
+  const [showFallback, setShowFallback] = useState(false)
+  useEffect(() => {
+    if (!user && !loading) {
+      const timer = setTimeout(() => setShowFallback(true), 2000)
+      return () => clearTimeout(timer)
+    }
+    setShowFallback(false)
+  }, [user, loading])
 
   const handleLogout = () => {
     logout()
@@ -84,7 +93,7 @@ export const Header = memo(function Header() {
         {user && isMainPage && <ViewSwitcher />}
 
         {/* Fallback logout when user is null but session may still exist (e.g. token refresh race) */}
-        {!user && !loading && (
+        {!user && !loading && showFallback && (
           <Button
             variant="destructive"
             size="sm"

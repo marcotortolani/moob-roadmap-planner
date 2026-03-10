@@ -20,7 +20,13 @@ export async function createServerSupabaseClient() {
         setAll(cookiesToSet) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
+              cookieStore.set(name, value, {
+                ...options,
+                path: '/',
+                secure: true,
+                sameSite: 'lax' as const,
+                httpOnly: false,
+              })
             )
           } catch {
             // Handle error when called from Server Component (read-only context)

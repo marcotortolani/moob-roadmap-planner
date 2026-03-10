@@ -6,6 +6,20 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/) y el p
 
 ---
 
+## [0.8.7] - 2026-03-10
+
+### Fixed
+
+- **Auth resiliente con localStorage cache — fix definitivo para Chrome/Vercel (`src/context/auth-context.tsx`)** — La causa raíz del skeleton/"0 de 0 productos" tras reload en Vercel era que `createBrowserClient` depende de `document.cookie` para leer la sesión, y Chrome no expone correctamente las cookies auth al JavaScript tras reload (Firefox y Safari limpio sí funcionan). Implementado patrón de caché en localStorage (confirmado en proyecto de referencia Workmap360/AUTH-GUIDE.md): el usuario se persiste en `rp-cached-user` y se restaura instantáneamente en el `useState` initializer, eliminando la dependencia de cookies para la hidratación. `onAuthStateChange('INITIAL_SESSION')` reemplaza el `initAuth()` manual y valida/actualiza el cache en background.
+
+- **Cookie options explícitas para Chrome (`src/lib/supabase/client.ts`, `src/middleware.ts`, `src/lib/supabase/server.ts`)** — Agregado `secure: true`, `sameSite: 'lax'`, `httpOnly: false`, `path: '/'` en los tres puntos donde se crean/setean cookies de Supabase (browser client, middleware, server client). Chrome puede silenciosamente ignorar cookies sin el flag `secure` en orígenes HTTPS. La consistencia entre server y client previene que el middleware setee atributos distintos a los que `createBrowserClient` espera.
+
+- **Cross-tab logout sync (`src/context/auth-context.tsx`)** — Listener de `StorageEvent` detecta cuando otra pestaña hace logout (elimina `rp-cached-user`) y redirige a `/login` automáticamente.
+
+- **Fallback logout con delay (`src/components/header.tsx`)** — El botón "Cerrar Sesión" fallback (visible cuando `user=null && !loading`) ahora espera 2 segundos antes de aparecer, evitando flash innecesario cuando el cached user se restaura instantáneamente.
+
+---
+
 ## [0.8.6] - 2026-03-10
 
 ### Fixed
