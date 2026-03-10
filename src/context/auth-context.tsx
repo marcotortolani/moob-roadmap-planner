@@ -110,38 +110,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false)
     }, 10000)
 
-    // Listen for auth changes.
-    // INITIAL_SESSION fires immediately on subscription with the current session
-    // read from local cookie storage — no network call, no cold-start failures.
-    // This replaces initAuth() which used getUser() (network call) and could
-    // fail on Vercel cold starts, triggering router.push('/login') in a loop.
+    // initAuth reads from local cookies — NO network call.
+    // Unlike getUser() (v0.8.2), never fails on Vercel cold starts.
+    // Unlike INITIAL_SESSION event, always resolves (not dependent on event timing).
+    const initAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+
+        if (!session?.user) {
+          setUser(null)
+          // No router.push('/login') — middleware is the routing authority.
+          // Calling router.push here caused the v0.8.2 redirect loop.
+          return
+        }
+
+        const userData = await fetchUserData(session.user)
+
+        if (userData.role === 'BLOCKED') {
+          await supabase.auth.signOut()
+          setUser(null)
+          router.push('/login?error=blocked')
+          return
+        }
+
+        setUser(userData)
+      } catch {
+        setUser(null)
+        // No router.push — middleware handles routing for unauthenticated state
+      } finally {
+        clearTimeout(safetyTimeout)
+        setLoading(false)
+      }
+    }
+
+    initAuth()
+
+    // onAuthStateChange handles SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED ONLY
+    // (no INITIAL_SESSION handler — initAuth() handles initialization)
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
-      if (event === 'INITIAL_SESSION') {
-        clearTimeout(safetyTimeout)
-        if (session?.user) {
-          try {
-            const userData = await fetchUserData(session.user)
-            if (userData.role === 'BLOCKED') {
-              await supabase.auth.signOut()
-              setUser(null)
-              router.push('/login?error=blocked')
-              setLoading(false)
-              return
-            }
-            setUser(userData)
-          } catch {
-            setUser(null)
-          }
-        } else {
-          setUser(null)
-          // No router.push('/login') — middleware handles unauthenticated access
-        }
-        setLoading(false)
-        return
-      }
-
       if (event === 'SIGNED_IN' && session?.user) {
         try {
           const userData = await fetchUserData(session.user)
