@@ -6,6 +6,29 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/) y el p
 
 ---
 
+## [0.8.6] - 2026-03-10
+
+### Fixed
+
+- **Auth rota en Vercel: `user=null` tras page load (`src/context/auth-context.tsx`)** — `getUser()` (introducido en v0.8.4) rompía la inicialización en producción: `createBrowserClient` no encontraba la sesión en cookies por diferencias de atributos (`Secure`, `SameSite`) entre HTTPS Vercel y localhost, devolviendo `null` sin hacer ningún request de red. Revertido a `getSession()` que lee la sesión ya refrescada por el middleware desde cookies del browser. Los hangs previos de `getSession()` (pre-v0.8.2) estaban causados por race conditions en token refresh — corregidos en v0.8.2 con el patrón `getAll/setAll`. La validación JWT de seguridad se mantiene en el middleware (server-side `getUser()` en cada request).
+- **Opciones auth explícitas en browser client (`src/lib/supabase/client.ts`)** — `createBrowserClient` ahora declara explícitamente `autoRefreshToken: true`, `persistSession: true`, `detectSessionInUrl: true` para evitar variaciones por versión en Vercel prod.
+
+---
+
+## [0.8.5] - 2026-03-10
+
+### Fixed
+
+- **`TOKEN_REFRESHED` con sign-out verdadero (`src/context/auth-context.tsx`)** — Cuando `fetchUserData` fallaba y `getSession()` confirmaba que la sesión estaba realmente expirada, `invalidateQueries()` se ejecutaba en el bloque `finally` antes del `return`, disparando queries con token inválido. Corregido con flag `signedOut` que evita `invalidateQueries()` solo cuando ocurre un sign-out real.
+- **CSRF + rate limiting en endpoints de admin** — Agregado check de origen (`isSameOrigin`) y rate limiting a los endpoints que faltaban:
+  - `POST /api/invitations/revoke` — CSRF check + 30 revocaciones/hora por admin
+  - `POST /api/invitations/delete` — CSRF check + 30 eliminaciones/hora por admin
+  - `POST /api/users/delete` — rate limiting de 10 eliminaciones/hora por admin
+  - `POST /api/profile/update` — CSRF check + validación de longitud de nombre (1-200 chars)
+- **Nuevos presets en `RATE_LIMITS` (`src/lib/rate-limit.ts`)** — Agregados `invitationRevoke`, `invitationDelete`, `userDelete`.
+
+---
+
 ## [0.8.4] - 2026-03-10
 
 ### Fixed
@@ -39,6 +62,8 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/) y el p
 - **Skeleton infinito post-inactividad (bug de producción)** — Tras horas de inactividad, la app quedaba congelada en estado de carga infinita sin hacer ninguna petición de red. El problema eran tres fallos compuestos del lado del cliente:
 
   - **RC1:** El `networkMode: 'online'` por defecto de React Query pausaba silenciosamente todas las queries cuando `navigator.onLine` era brevemente `false` al despertar el dispositivo. El evento `online` del navegador a veces nunca se dispara tras un sueño largo → queries pausadas indefinidamente. Corregido con `networkMode: 'always'` en los defaults del QueryClient (`src/lib/react-query/client.ts`).
+
+
 
   - **RC2:** `invalidateQueries()` en el handler de `TOKEN_REFRESHED` solo se ejecutaba si `fetchUserData` tenía éxito. Un error transitorio de DB dejaba la caché de React Query vacía sin trigger para refetch. Corregido moviendo `invalidateQueries()` a un bloque `finally` para que siempre se ejecute mientras la sesión sea válida (`src/context/auth-context.tsx`).
 

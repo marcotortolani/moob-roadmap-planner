@@ -110,20 +110,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false)
     }, 10000)
 
-    // initAuth validates the token server-side via getUser() — no cookie-read hang.
-    // getSession() was causing intermittent hangs in production (documented in use-products.ts).
+    // initAuth reads the session from browser cookies via getSession().
+    // getUser() (v0.8.4) broke Vercel: createBrowserClient can't find the session
+    // that createServerClient sets server-side (cookie attribute differences in prod).
+    // getSession() hangs (pre-v0.8.2) were caused by client-side token refresh racing
+    // with cookie propagation — fixed in v0.8.2 via middleware getAll/setAll.
+    // JWT validation security: middleware calls getUser() server-side on every request.
+    // Pattern confirmed by AUTH-GUIDE.md (working project): getSession() browser-side.
     // No router.push('/login') on failure — middleware is the routing authority.
-    // (v0.8.2 used getUser() + router.push → redirect loop. No router.push = no loop.)
     const initAuth = async () => {
       try {
-        const { data: { user: authUser }, error } = await supabase.auth.getUser()
+        const { data: { session }, error } = await supabase.auth.getSession()
 
-        if (error || !authUser) {
+        if (error || !session?.user) {
           setUser(null)
           return
         }
 
-        const userData = await fetchUserData(authUser)
+        const userData = await fetchUserData(session.user)
 
         if (userData.role === 'BLOCKED') {
           await supabase.auth.signOut()

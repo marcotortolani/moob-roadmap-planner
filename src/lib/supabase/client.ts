@@ -35,9 +35,17 @@ export function getSupabaseClient(): BrowserSupabaseClient {
   }
 
   // Create new instance only if none exists
+  // Explicit auth options confirm defaults and avoid version-level variations in Vercel prod
   supabaseInstance = createBrowserClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
+      },
+    }
   )
 
   return supabaseInstance
