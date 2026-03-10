@@ -110,45 +110,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false)
     }, 10000)
 
-    const initAuth = async () => {
-      try {
-        // Use browser client directly — handles token refresh automatically
-        // without race conditions caused by chunked cookie loss in middleware.
-        const { data: { user: authUser }, error } = await supabase.auth.getUser()
-
-        if (error || !authUser) {
-          setUser(null)
-          router.push('/login')
-          return
-        }
-
-        const userData = await fetchUserData(authUser)
-
-        // Check if user is BLOCKED (replaces per-request middleware check)
-        if (userData.role === 'BLOCKED') {
-          await supabase.auth.signOut()
-          setUser(null)
-          router.push('/login?error=blocked')
-          return
-        }
-
-        setUser(userData)
-      } catch (error) {
-        console.error('Auth initialization error:', error)
-        setUser(null)
-        router.push('/login')
-      } finally {
-        clearTimeout(safetyTimeout)
-        setLoading(false)
-      }
-    }
-
-    initAuth()
-
-    // Listen for auth changes
+    // Listen for auth changes.
+    // INITIAL_SESSION fires immediately on subscription with the current session
+    // read from local cookie storage — no network call, no cold-start failures.
+    // This replaces initAuth() which used getUser() (network call) and could
+    // fail on Vercel cold starts, triggering router.push('/login') in a loop.
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
+      if (event === 'INITIAL_SESSION') {
+        clearTimeout(safetyTimeout)
+        if (session?.user) {
+          try {
+            const userData = await fetchUserData(session.user)
+            if (userData.role === 'BLOCKED') {
+              await supabase.auth.signOut()
+              setUser(null)
+              router.push('/login?error=blocked')
+              setLoading(false)
+              return
+            }
+            setUser(userData)
+          } catch {
+            setUser(null)
+          }
+        } else {
+          setUser(null)
+          // No router.push('/login') — middleware handles unauthenticated access
+        }
+        setLoading(false)
+        return
+      }
+
       if (event === 'SIGNED_IN' && session?.user) {
         try {
           const userData = await fetchUserData(session.user)
