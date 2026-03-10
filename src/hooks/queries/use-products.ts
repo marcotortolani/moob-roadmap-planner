@@ -133,6 +133,10 @@ export function useProducts(filters?: ProductFilters) {
     staleTime: 2 * 60 * 1000, // 2 minutes (Sprint 6.2 - was 30 seconds)
     gcTime: 10 * 60 * 1000, // 10 minutes cache
     enabled: !authLoading && !!user,
+    // RC4 FIX (defensive): 'always' ignores staleTime and always fetches in background
+    // on window focus. Ensures products recover from post-inactivity freeze even if
+    // RC1-RC3 fixes miss an edge case.
+    refetchOnWindowFocus: 'always',
   })
 }
 

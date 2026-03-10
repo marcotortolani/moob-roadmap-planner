@@ -162,15 +162,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // instead of getCurrentUser() server action which races with cookie propagation
             const userData = await fetchUserData(session.user)
             setUser(userData)
-            getQueryClient().invalidateQueries()
           } catch {
             // fetchUserData failed after all retries — only sign out if session is truly gone
             const { data } = await supabase.auth.getSession()
             if (!data.session) {
               setUser(null)
               router.push('/login')
+              return  // early return: don't invalidate after true sign-out
             }
             // Session still valid — keep existing user state, don't set null
+          } finally {
+            // RC2 FIX: always invalidate queries when session is valid, even if fetchUserData
+            // failed. Previously only ran on success, leaving React Query cache empty with no
+            // trigger to refetch after a transient DB error during token refresh.
+            getQueryClient().invalidateQueries()
           }
         } else {
           // TOKEN_REFRESHED with no session — clean up
@@ -192,8 +197,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try { await supabase.auth.signOut() } catch { /* ignore */ }
         setUser(null)
         router.push('/login')
+        return
       }
-      // If session is valid, autoRefreshToken already keeps it fresh — no-op
+
+      // RC3 FIX: Session valid but data may be stale after long inactivity.
+      // TOKEN_REFRESHED only fires when token actually expires; if the tab was
+      // inactive with a non-expired token, no event fires. Explicitly invalidate
+      // so React Query re-fetches products when user returns to the tab.
+      // staleTime (2min) throttles this: no extra requests if data is fresh.
+      getQueryClient().invalidateQueries()
     }
 
     document.addEventListener('visibilitychange', handleVisibilityChange)

@@ -17,6 +17,11 @@ function makeQueryClient() {
         // Products are considered fresh for 5 minutes (optimistic updates handle mutations)
         staleTime: 5 * 60 * 1000, // 5 minutes (was 1 minute)
 
+        // RC1 FIX: Prevent silent query pause when navigator.onLine is briefly false
+        // on device wake-from-sleep. Default 'online' mode can freeze queries indefinitely
+        // if the browser 'online' event never fires after long inactivity.
+        networkMode: 'always',
+
         // Cache time: Keep unused data for 10 minutes before garbage collection
         gcTime: 10 * 60 * 1000, // 10 minutes (was 5 minutes)
 

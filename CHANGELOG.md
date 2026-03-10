@@ -6,6 +6,22 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/) y el p
 
 ---
 
+## [0.8.1] - 2026-03-10
+
+### Fixed
+
+- **Skeleton infinito post-inactividad (bug de producción)** — Tras horas de inactividad, la app quedaba congelada en estado de carga infinita sin hacer ninguna petición de red. El problema eran tres fallos compuestos del lado del cliente:
+
+  - **RC1:** El `networkMode: 'online'` por defecto de React Query pausaba silenciosamente todas las queries cuando `navigator.onLine` era brevemente `false` al despertar el dispositivo. El evento `online` del navegador a veces nunca se dispara tras un sueño largo → queries pausadas indefinidamente. Corregido con `networkMode: 'always'` en los defaults del QueryClient (`src/lib/react-query/client.ts`).
+
+  - **RC2:** `invalidateQueries()` en el handler de `TOKEN_REFRESHED` solo se ejecutaba si `fetchUserData` tenía éxito. Un error transitorio de DB dejaba la caché de React Query vacía sin trigger para refetch. Corregido moviendo `invalidateQueries()` a un bloque `finally` para que siempre se ejecute mientras la sesión sea válida (`src/context/auth-context.tsx`).
+
+  - **RC3:** `handleVisibilityChange` era un no-op cuando la sesión era válida pero el token no había expirado (y por tanto `TOKEN_REFRESHED` nunca se disparaba). Corregido llamando a `invalidateQueries()` tras confirmar sesión válida al recuperar foco del tab (`src/context/auth-context.tsx`).
+
+  - **RC4 (defensivo):** Añadido `refetchOnWindowFocus: 'always'` en `useProducts` para garantizar un refetch en background al recuperar foco independientemente del staleTime (`src/hooks/queries/use-products.ts`).
+
+---
+
 ## [0.8.0] - 2026-03-09
 
 ### Added
